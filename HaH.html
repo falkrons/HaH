@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en"> <head>
+	<title>Holograms Against Humanity</title>
+</head> <body alpha = 1>
+	<script src="http://sdk.altvr.com/lib/three.min.js"></script>
+	<script src="http://sdk.altvr.com/lib/OBJMTLLoader.js"></script>
+	<script src="http://sdk.altvr.com/lib/MTLLoader.js"></script>
+<script>
+var renderer, scene;
+var firebaseRoot "https://hah.firebaseio.com/";
+var loader;
+
+
+(function init (){
+	scene = new THREE.Scene();
+    renderer = altspace.getThreeJSRenderer();
+    loader = new THREE.AltOBJMTLLoader();
+
+
+}());
+function animate() {
+    window.requestAnimationFrame(animate);
+    renderer.render(scene);
+}
+</script></body></html>
