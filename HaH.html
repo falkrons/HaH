@@ -5,19 +5,32 @@
 	<script src="http://sdk.altvr.com/lib/three.min.js"></script>
 	<script src="http://sdk.altvr.com/lib/OBJMTLLoader.js"></script>
 	<script src="http://sdk.altvr.com/lib/MTLLoader.js"></script>
+	<script src="http://sdk.altvr.com/lib/firebase.js"></script>
+	<script src="http://sdk.altvr.com/src/AltRenderer.js"></script>
 <script>
 var renderer, scene;
-var firebaseRoot "https://hah.firebaseio.com/";
 var loader;
+var firebase;
+var inAltspace = window.hasOwnProperty('altspace');
+
 
 
 (function init (){
 	scene = new THREE.Scene();
-    renderer = altspace.getThreeJSRenderer();
-    loader = new THREE.AltOBJMTLLoader();
-
+	if (inAltspace){
+    	renderer = altspace.getThreeJSRenderer();
+	};
+    loader = new THREE.OBJMTLLoader();
+    firebase = new Firebase("https://hah.firebaseio.com/");
 
 }());
+function load (){
+
+}
+function netConnect(){
+
+}
+
 function animate() {
     window.requestAnimationFrame(animate);
     renderer.render(scene);
