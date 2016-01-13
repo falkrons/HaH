@@ -2,6 +2,8 @@
 <html lang="en"> <head>
 	<title>Holograms Against Humanity</title>
 </head> <body alpha = 1>
+<div id="roomInfo" style="color: #000099; text-align: center; font-size: 40px"></div>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 	<script src="http://sdk.altvr.com/lib/three.min.js"></script>
 	<script src="http://sdk.altvr.com/lib/OBJMTLLoader.js"></script>
 	<script src="http://sdk.altvr.com/lib/MTLLoader.js"></script>
@@ -12,7 +14,7 @@ var renderer, scene;
 var loader;
 var firebase;
 var inAltspace = window.hasOwnProperty('altspace');
-
+var cardBox;
 
 
 (function init (){
@@ -22,13 +24,43 @@ var inAltspace = window.hasOwnProperty('altspace');
 	};
     loader = new THREE.OBJMTLLoader();
     firebase = new Firebase("https://hah.firebaseio.com/");
+    netConnect();
 
 }());
+function addHTML(target,html) {
+  var myTarget = document.getElementById(target);
+    myTarget.innerHTML =html;    
+}
 function load (){
 
+	//we will load the cards here, though it may be better to load them on the fly...over 500 objects may take a bit to load at once and normally no more than 20-30sih cards are active at any given time.
+	loader.load("models/HaH_Box.obj", "HaH_Box.mtl", function (object){
+		cardBox = object;
+		scene.add(cardBox.clone());
+	});
 }
 function netConnect(){
-
+	/* this is for setting up the network connection
+		My thought is to do a room based multi player...
+		just bring up a list and allow the player to choose which one to join.
+	*/
+	firebase.child("Rooms").once("value", function(snapshot){
+    if (snapshot.exists()){
+        console.log(snapshot.numChildren());
+        addHTML("roomInfo", snapshot.key());
+        for (var i = 0; i <= snapshot.numChildren(); i++){
+        	if(snapshot.child("Room_"+ i).exists()){
+        		console.log(snapshot.child("Room_"+ i).key());
+        		$('#roomInfo').append("<p>" + "Join " + snapshot.child("Room_"+ i).key() + " Number of players " + snapshot.child("Room_"+ i).numChildren() + "</p>");
+        	};
+        };
+        
+        
+    } else {
+        firebase.child("Rooms").update({Room_0: 1});
+        console.log("no rooms available, prompt to create one")
+    };
+});
 }
 
 function animate() {
