@@ -52,21 +52,14 @@ function netConnect(){
 	*/
 	firebase.on("child_added", function(snapshot){
         console.log("Checking to see if a room exists.");
-        console.log(snapshot.val());
+        console.log(snapshot.key());
         if (snapshot.exists()){
-            console.log(snapshot.numChildren());
-           // addHTML("roomInfo", snapshot.key());
-            for (var i = 0; i < snapshot.numChildren(); i++){
-            	if(snapshot.exists()){
-            		console.log(snapshot.key());
-            		$('#roomInfo').append("<p>" + "<button onclick=joinRoom(this.id) id=" + snapshot.key() + ">Join</button> " 
-            			+ snapshot.key()
-            			+ " with " 
-            			+ snapshot.numChildren()
-            			+ " player/s." 
-            			+ "</p>");
-            	};
-            };       
+    		$('#roomInfo').append("<p>" + "<button onclick=joinRoom(this.id) id=" + snapshot.key() + ">Join</button> " 
+    			+ snapshot.key()
+    			+ " with " 
+    			+ snapshot.numChildren()
+    			+ " player/s." 
+    			+ "</p>");
         } else {
             console.log("no rooms available, prompt to create one");
             $('#roomInfo').append("<p>" + "No rooms available, would you like to create one?" + "</p>" + "<p>" + "Room Name:" + "<input type =text id=roomName><br>" + "</p>" + "<p>" + "<button onClick=newRoom()>Create Room</button>" + "</p>"); 
@@ -82,7 +75,10 @@ function newRoom(){
 }
 function joinRoom(roomName){
     console.log(roomName);
-    addHTML("roomInfo", "Joining Room: " + roomName);
+    addHTML("roomInfo", "Joining Room: " + roomName + "<p>" + "Current Players:" + "</p>");
+    firebase.child(roomName).on("child_added", function(snapshot){
+       $('#roomInfo').append("<p>" + snapshot.key() + "</p>");
+    });
     //temporary for testing
     $('#roomInfo').append("<p>" + "<button onClick=netConnect()>Return to lobby.</button>" + "</p>")
 }
