@@ -50,20 +50,20 @@ function netConnect(){
 		My thought is to do a room based multiplayer...
 		just bring up a list and allow the player to choose which one to join.
 	*/
-	firebase.once("value", function(snapshot){
+	firebase.on("child_added", function(snapshot){
         console.log("Checking to see if a room exists.");
+        console.log(snapshot.val());
         if (snapshot.exists()){
             console.log(snapshot.numChildren());
-            addHTML("roomInfo", snapshot.key());
-            for (var i = 0; i <= snapshot.numChildren(); i++){
-            	if(snapshot.child("Room "+ i).exists()){
-            		console.log(snapshot.child("Room "+ i).key());
-            		$('#roomInfo').append("<p>" + "<button onclick=joinRoom()>Join</button> " 
-            			+ snapshot.child("Room "+ i).key() 
+           // addHTML("roomInfo", snapshot.key());
+            for (var i = 0; i < snapshot.numChildren(); i++){
+            	if(snapshot.exists()){
+            		console.log(snapshot.key());
+            		$('#roomInfo').append("<p>" + "<button onclick=joinRoom(this.id) id=" + snapshot.key() + ">Join</button> " 
+            			+ snapshot.key()
             			+ " with " 
-            			+ snapshot.child("Room "+ i).numChildren()
-                        //change from number of players to the players names.
-            			+ " players." 
+            			+ snapshot.numChildren()
+            			+ " player/s." 
             			+ "</p>");
             	};
             };       
@@ -78,7 +78,13 @@ function newRoom(){
     console.log(roomName);
     firebase.child(roomName).child(thisUser.displayName).update({"Card Czar": false });
     firebase.child(roomName).child(thisUser.displayName).onDisconnect().remove();
-    $('#roomInfo').replaceWith("Joining Room: " + roomName);
+    addHTML("roomInfo", "Joining Room: " + roomName);
+}
+function joinRoom(roomName){
+    console.log(roomName);
+    addHTML("roomInfo", "Joining Room: " + roomName);
+    //temporary for testing
+    $('#roomInfo').append("<p>" + "<button onClick=netConnect()>Return to lobby.</button>" + "</p>")
 }
 function animate() {
     window.requestAnimationFrame(animate);
