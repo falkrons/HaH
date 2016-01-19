@@ -51,11 +51,12 @@ function netConnect(){
 		just bring up a list and allow the player to choose which one to join.
 	*/
 	firebase.on("child_added", function(snapshot){
+        var tempKey = snapshot.key();
         console.log("Checking to see if a room exists.");
-        console.log(snapshot.key());
+        console.log(tempKey);
         if (snapshot.exists()){
-    		$('#roomInfo').append("<p>" + "<button onclick=joinRoom(this.id) id=" + snapshot.key() + ">Join</button> " 
-    			+ snapshot.key()
+    		$('#roomInfo').append("<p>" + "<button onclick=joinRoom(this.id) id=" + "'" +tempKey + "'" + ">Join</button> " 
+    			+ tempKey
     			+ " with " 
     			+ snapshot.numChildren()
     			+ " player/s." 
@@ -67,11 +68,11 @@ function netConnect(){
     });
 }
 function newRoom(){
-    var roomName = $("#roomName").val();
-    console.log(roomName);
-    firebase.child(roomName).child(thisUser.displayName).update({"Card Czar": false });
-    firebase.child(roomName).child(thisUser.displayName).onDisconnect().remove();
-    addHTML("roomInfo", "Joining Room: " + roomName);
+    var newRoomName = $("#roomName").val();
+    console.log(newRoomName);
+    firebase.child(newRoomName).child(thisUser.displayName).update({"Card Czar": false });
+    firebase.child(newRoomName).child(thisUser.displayName).onDisconnect().remove();
+    addHTML("roomInfo", "Joining Room: " + newRoomName);
 }
 function joinRoom(roomName){
     console.log(roomName);
