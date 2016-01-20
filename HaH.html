@@ -51,6 +51,7 @@ function netConnect(){
 	*/
 	firebase.on("value", function(snapshot){
         $('#roomInfo').empty();
+        $('#playerInfo').empty();
         $('#roomInfo').append("Active Rooms:");
         if (snapshot.exists()){
             snapshot.forEach(function(childSnapshot){
@@ -64,7 +65,12 @@ function netConnect(){
         		+ childSnapshot.numChildren()
         		+ " player/s." 
         		+ "</p>");
+
             });
+            $('#roomInfo').append("<p>" + "Room Name:" + "<input type =text id=roomName><br>" 
+            + "<p>" + "Name can not be blank or include: '.', '#', '$', '[', or ']' " 
+            + "</p>" + "</p>" + "<p>" 
+            + "<button onClick=newRoom()>Create Room</button>" + "</p>");
         } else {
             $('#roomInfo').empty();
             $('#roomInfo').append("<p>" 
@@ -87,7 +93,14 @@ function newRoom(){
     console.log(currentRoom);
     firebase.child(currentRoom).child(thisUser.displayName).update({"Card Czar": false});
     firebase.child(currentRoom).child(thisUser.displayName).onDisconnect().remove();
-    addHTML("roomInfo", "Joining Room: " + currentRoom);
+    addHTML("roomInfo", "Joining Room: " + currentRoom + "<p>" + "Current Players:" + "</p>");
+    firebase.child(currentRoom).on("value", function(snapshot){
+        $('#playerInfo').empty();
+        snapshot.forEach(function(childSnapshot){
+            var tempKey = childSnapshot.key();
+            $('#playerInfo').append("<p>" + tempKey + "</p>");
+        });
+    });
     $('#roomInfo').append("<p>" + "<button onClick=returnToLobby()>Return to lobby.</button>" + "</p>")
     //run the initial logic for syncing the current room
 }
