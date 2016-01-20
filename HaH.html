@@ -3,6 +3,7 @@
 	<title>Holograms Against Humanity</title>
 </head> <body alpha = 1>
 <div id="roomInfo" style="color: #000099; text-align: center; font-size: 40px"></div>
+<div id="playerInfo" style="color: #000099; text-align: center; font-size: 40px"></div>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 	<script src="http://sdk.altvr.com/lib/three.min.js"></script>
 	<script src="http://sdk.altvr.com/lib/OBJMTLLoader.js"></script>
@@ -34,14 +35,12 @@ $(document).ready(function() {
 	};
     loader = new THREE.OBJMTLLoader();
     firebase = new Firebase("https://hah.firebaseio.com/");
-    netConnect();
     altspace.getUser().then(function(localUser) {
         thisUser = localUser;
     });
-
+    netConnect();
 }());
 function load (){
-
 	//we will load the cards here, though it may be better to load them on the fly...over 500 objects may take a bit to load at once and normally no more than 20-30sih cards are active at any given time.
 }
 function netConnect(){
@@ -50,38 +49,65 @@ function netConnect(){
 		My thought is to do a room based multiplayer...
 		just bring up a list and allow the player to choose which one to join.
 	*/
-	firebase.on("child_added", function(snapshot){
-        var tempKey = snapshot.key();
-        console.log("Checking to see if a room exists.");
-        console.log(tempKey);
+	firebase.on("value", function(snapshot){
+        $('#roomInfo').empty();
+        $('#roomInfo').append("Active Rooms:");
         if (snapshot.exists()){
-    		$('#roomInfo').append("<p>" + "<button onclick=joinRoom(this.id) id=" + "'" +tempKey + "'" + ">Join</button> " 
-    			+ tempKey
-    			+ " with " 
-    			+ snapshot.numChildren()
-    			+ " player/s." 
-    			+ "</p>");
+            snapshot.forEach(function(childSnapshot){
+                var tempKey = childSnapshot.key();
+                console.log("Checking to see if a room exists.");
+                console.log(tempKey);
+        		$('#roomInfo').append("<p>" + "<button onclick=joinRoom(this.id) id=" 
+                + "'" +tempKey + "'" + ">Join</button> " 
+        		+ tempKey
+        		+ " with " 
+        		+ childSnapshot.numChildren()
+        		+ " player/s." 
+        		+ "</p>");
+            });
         } else {
-            console.log("no rooms available, prompt to create one");
-            $('#roomInfo').append("<p>" + "No rooms available, would you like to create one?" + "</p>" + "<p>" + "Room Name:" + "<input type =text id=roomName><br>" + "</p>" + "<p>" + "<button onClick=newRoom()>Create Room</button>" + "</p>"); 
+            $('#roomInfo').empty();
+            $('#roomInfo').append("<p>" 
+            + "No rooms available, would you like to create one?" 
+            + "</p>" + "<p>" + "Room Name:" + "<input type =text id=roomName><br>" 
+            + "<p>" + "Name can not be blank or include: '.', '#', '$', '[', or ']' " 
+            + "</p>" + "</p>" + "<p>" 
+            + "<button onClick=newRoom()>Create Room</button>" + "</p>"); 
         };
     });
 }
+function returnToLobby(){
+    firebase.child(currentRoom).child(thisUser.displayName).remove();
+    currentRoom = null;
+    netConnect();
+}
 function newRoom(){
-    var newRoomName = $("#roomName").val();
-    console.log(newRoomName);
-    firebase.child(newRoomName).child(thisUser.displayName).update({"Card Czar": false });
-    firebase.child(newRoomName).child(thisUser.displayName).onDisconnect().remove();
-    addHTML("roomInfo", "Joining Room: " + newRoomName);
+    firebase.off();
+    currentRoom = $("#roomName").val();
+    console.log(currentRoom);
+    firebase.child(currentRoom).child(thisUser.displayName).update({"Card Czar": false});
+    firebase.child(currentRoom).child(thisUser.displayName).onDisconnect().remove();
+    addHTML("roomInfo", "Joining Room: " + currentRoom);
+    $('#roomInfo').append("<p>" + "<button onClick=returnToLobby()>Return to lobby.</button>" + "</p>")
+    //run the initial logic for syncing the current room
 }
 function joinRoom(roomName){
-    console.log(roomName);
-    addHTML("roomInfo", "Joining Room: " + roomName + "<p>" + "Current Players:" + "</p>");
-    firebase.child(roomName).on("child_added", function(snapshot){
-       $('#roomInfo').append("<p>" + snapshot.key() + "</p>");
+    firebase.off();
+    $('#roomInfo').empty();
+    currentRoom = roomName;
+    console.log(currentRoom);
+    addHTML("roomInfo", "Joining Room: " + currentRoom + "<p>" + "Current Players:" + "</p>");
+    firebase.child(currentRoom).child(thisUser.displayName).update({"Card Czar": false});
+    firebase.child(currentRoom).child(thisUser.displayName).onDisconnect().remove();
+    firebase.child(currentRoom).on("value", function(snapshot){
+        $('#playerInfo').empty();
+        snapshot.forEach(function(childSnapshot){
+            var tempKey = childSnapshot.key();
+            $('#playerInfo').append("<p>" + tempKey + "</p>");
+        });
     });
-    //temporary for testing
-    $('#roomInfo').append("<p>" + "<button onClick=netConnect()>Return to lobby.</button>" + "</p>")
+    $('#roomInfo').append("<p>" + "<button onClick=returnToLobby()>Return to lobby.</button>" + "</p>") 
+    //run the initial logic for syncing the current room    
 }
 function animate() {
     window.requestAnimationFrame(animate);
