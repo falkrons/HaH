@@ -1,22 +1,27 @@
 <!DOCTYPE html>
 <html lang="en"> <head>
 	<title>Holograms Against Humanity</title>
-</head> <body alpha = 1>
+</head> <body>
 <div id="roomInfo" style="color: #000099; text-align: center; font-size: 40px"></div>
+<div id="joinTimer" style="color: #000099; text-align: center; font-size: 40px"></div>
 <div id="playerInfo" style="color: #000099; text-align: center; font-size: 40px"></div>
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 	<script src="http://sdk.altvr.com/lib/three.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="http://sdk.altvr.com/libs/altspace.js/0.4.0/altspace.min.js"></script>
 	<script src="http://sdk.altvr.com/lib/OBJMTLLoader.js"></script>
 	<script src="http://sdk.altvr.com/lib/MTLLoader.js"></script>
 	<script src="http://sdk.altvr.com/lib/firebase.js"></script>
-	<script src="http://sdk.altvr.com/src/AltRenderer.js"></script>
 <script>
-var renderer, scene;
+var renderer, scene, camera;
 var loader;
 var firebase;
-var inAltspace = window.hasOwnProperty('altspace');
+var inAltspace = altspace || null;
 var thisUser;
 var currentRoom;
+var joinButton;
+var returnButton;
+var joinTimeout;
+var requests = 0;
 
 function addHTML(target,html) {
   var myTarget = document.getElementById(target);
@@ -38,9 +43,70 @@ $(document).ready(function() {
     altspace.getUser().then(function(localUser) {
         thisUser = localUser;
     });
+    animate();
     netConnect();
 }());
-function load (){
+
+function clickToJoin (){
+    requests ++;
+    console.log("clicked", requests);
+    var czarStatus;
+    firebase.child(currentRoom).child(thisUser.displayName).child("Card Czar").once("value", function(snapshot){czarStatus = snapshot.val()});
+    if(czarStatus === true){
+        console.log("First person in the room, auto accept and Card Czar...the scene now populates");
+        scene.remove(joinButton);
+        $('#roomInfo').append("<p>" + "<button onClick=returnToLobby()>Return to lobby.</button>" + "</p>");
+    }else if(requests <= 5 ){
+            var joinRequest = {};
+            joinRequest[thisUser.displayName] = 2;
+            firebase.child(currentRoom).child('joinRequest').update(joinRequest);
+            firebase.child(currentRoom).child('joinRequest').on('child_changed', function(snapshot){
+                if (snapshot.key() === thisUser.displayName){
+                    if(snapshot.val() === 1){console.log("accepted to play")
+                    }else{console.log("denied from play")};
+                    firebase.child(currentRoom).child('joinRequest').off();
+                    firebase.child(currentRoom).child('joinRequest').child(thisUser.displayName).remove();
+                };
+            });
+        } else {
+            firebase.child(currentRoom).child('joinRequest').off();
+            firebase.child(currentRoom).child('joinRequest').child(thisUser.displayName).remove();
+            console.log("You have requested to join to many times, dont be a troll!");
+            scene.remove(joinButton);
+            firebase.child(currentRoom).child(thisUser.displayName).remove();
+            requests = 0;
+            netConnect();
+        };
+    $("#playerInfo").empty();
+}
+
+//function clickToJoin(){}
+function loadObjects (){
+    loader.load( 'Models/HaH_Box.obj', 'Models/HaH_Box.mtl', function (object) {
+        joinButton = object.clone();
+        joinButton.scale.set(20, 20, 20);
+        joinButton.rotation.set(0, 0, 0);
+        joinButton.position.set(0, -400, 0);
+        joinButton.addEventListener('cursordown', clickToJoin);
+        firebase.child(currentRoom).child('joinRequest').child(thisUser.displayName).onDisconnect().remove();
+        joinButton.addEventListener('cursorenter', function(){joinButton.scale.set(30, 30, 30);});
+        joinButton.addEventListener('cursorleave', function(){joinButton.scale.set(20, 20, 20);});
+        scene.add(joinButton);
+    });
+    /*
+    loader.load( 'models/button.obj', 'models/joinButton.mtl', function ( obj ) {
+        playTable = obj.clone();
+        playTable.scale.set(500, 500, 500);
+        playTable.rotation.set(Math.PI/-2, 0, 0);
+        playTable.position.set(0, 20, 0); 
+    });
+    loader.load( 'models/button.obj', 'models/returnButton.mtl', function ( obj ) {
+        playTable = obj.clone();
+        playTable.scale.set(500, 500, 500);
+        playTable.rotation.set(Math.PI/-2, 0, 0);
+        playTable.position.set(0, 40, 0); 
+    });
+*/
 	//we will load the cards here, though it may be better to load them on the fly...over 500 objects may take a bit to load at once and normally no more than 20-30sih cards are active at any given time.
 }
 function netConnect(){
@@ -85,45 +151,77 @@ function netConnect(){
 function returnToLobby(){
     firebase.child(currentRoom).child(thisUser.displayName).remove();
     currentRoom = null;
+    clearTimeout(joinTimeout);
+    clearInterval(timer);
+    $('#joinTimer').empty();
     netConnect();
 }
 function newRoom(){
     firebase.off();
     currentRoom = $("#roomName").val();
     console.log(currentRoom);
-    firebase.child(currentRoom).child(thisUser.displayName).update({"Card Czar": false});
+    firebase.child(currentRoom).child(thisUser.displayName).update({"Card Czar": true});
     firebase.child(currentRoom).child(thisUser.displayName).onDisconnect().remove();
-    addHTML("roomInfo", "Joining Room: " + currentRoom + "<p>" + "Current Players:" + "</p>");
+    addHTML("roomInfo", "Joining " + currentRoom + " in:");
     firebase.child(currentRoom).on("value", function(snapshot){
         $('#playerInfo').empty();
+        $('#playerInfo').append("Current Players:");
         snapshot.forEach(function(childSnapshot){
             var tempKey = childSnapshot.key();
-            $('#playerInfo').append("<p>" + tempKey + "</p>");
+            if(tempKey !== "joinRequest"){
+                $('#playerInfo').append("<p>" + tempKey + "</p>");
+            };
         });
     });
-    $('#roomInfo').append("<p>" + "<button onClick=returnToLobby()>Return to lobby.</button>" + "</p>")
-    //run the initial logic for syncing the current room
+    $('#roomInfo').append("<p>" + "<button onClick=returnToLobby()>Return to lobby.</button>" + "</p>");
+    instantiateRoom();
 }
 function joinRoom(roomName){
     firebase.off();
     $('#roomInfo').empty();
     currentRoom = roomName;
     console.log(currentRoom);
-    addHTML("roomInfo", "Joining Room: " + currentRoom + "<p>" + "Current Players:" + "</p>");
+    addHTML("roomInfo", "Joining " + currentRoom + " in:");
     firebase.child(currentRoom).child(thisUser.displayName).update({"Card Czar": false});
     firebase.child(currentRoom).child(thisUser.displayName).onDisconnect().remove();
     firebase.child(currentRoom).on("value", function(snapshot){
         $('#playerInfo').empty();
+        $('#playerInfo').append("Current Players:");
         snapshot.forEach(function(childSnapshot){
             var tempKey = childSnapshot.key();
-            $('#playerInfo').append("<p>" + tempKey + "</p>");
+            if(tempKey !== "joinRequest"){
+                $('#playerInfo').append("<p>" + tempKey + "</p>");
+            };
         });
     });
-    $('#roomInfo').append("<p>" + "<button onClick=returnToLobby()>Return to lobby.</button>" + "</p>") 
-    //run the initial logic for syncing the current room    
+    $('#roomInfo').append("<p>" + "<button onClick=returnToLobby()>Return to lobby.</button>" + "</p>");
+    instantiateRoom();   
+}
+function instantiateRoom(){
+    var n = 5;
+    timer = setInterval(countDown,1000);
+    $('#joinTimer').append(n);
+    function countDown(){
+        n--;
+        if(n === 1){clearInterval(timer)}
+        $('#joinTimer').empty();
+        $('#joinTimer').append(n);
+
+    }
+    joinTimeout = setTimeout(function(){       
+        clearTimeout(joinTimeout);
+        $('#roomInfo').empty();
+        $('#joinTimer').empty();
+        $('#playerInfo').empty();
+        loadObjects();
+    }, 5000);
+
+    //load the table
+    //load the button to return to lobby
+    //load a button for joining the game
 }
 function animate() {
     window.requestAnimationFrame(animate);
-    renderer.render(scene);
+    renderer.render(scene, camera);
 }
 </script></body></html>
