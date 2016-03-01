@@ -45,6 +45,14 @@ $(document).ready(function() {
     });
     animate();
     netConnect();
+    loader.load( 'models/LogoTable.obj', 'models/LogoTable.mtl', function ( obj ) {
+        playTable = obj.clone();
+        playTable.scale.set(15, 15, 15);
+        playTable.rotation.set(0, 0, 0);
+        playTable.position.set(0, -750, 0);
+        scene.add(playTable);
+    });
+
 }());
 
 function clickToJoin (){
@@ -84,22 +92,16 @@ function clickToJoin (){
 function loadObjects (){
     loader.load( 'Models/HaH_Box.obj', 'Models/HaH_Box.mtl', function (object) {
         joinButton = object.clone();
-        joinButton.scale.set(20, 20, 20);
+        joinButton.scale.set(10, 10, 10);
         joinButton.rotation.set(0, 0, 0);
-        joinButton.position.set(0, -400, 0);
+        joinButton.position.set(0, -300, 0);
         joinButton.addEventListener('cursordown', clickToJoin);
         firebase.child(currentRoom).child('joinRequest').child(thisUser.displayName).onDisconnect().remove();
-        joinButton.addEventListener('cursorenter', function(){joinButton.scale.set(30, 30, 30);});
-        joinButton.addEventListener('cursorleave', function(){joinButton.scale.set(20, 20, 20);});
+        joinButton.addEventListener('cursorenter', function(){joinButton.scale.set(15, 15, 15);});
+        joinButton.addEventListener('cursorleave', function(){joinButton.scale.set(10, 10, 10);});
         scene.add(joinButton);
-    });
+    });  
     /*
-    loader.load( 'models/button.obj', 'models/joinButton.mtl', function ( obj ) {
-        playTable = obj.clone();
-        playTable.scale.set(500, 500, 500);
-        playTable.rotation.set(Math.PI/-2, 0, 0);
-        playTable.position.set(0, 20, 0); 
-    });
     loader.load( 'models/button.obj', 'models/returnButton.mtl', function ( obj ) {
         playTable = obj.clone();
         playTable.scale.set(500, 500, 500);
