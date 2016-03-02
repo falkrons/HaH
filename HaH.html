@@ -1,10 +1,24 @@
 <!DOCTYPE html>
 <html lang="en"> <head>
 	<title>Holograms Against Humanity</title>
+    <style> 
+#rcorners3 {
+    border-radius: 25px;
+    background: url(BlackCard_back.png);
+    background-position: center;
+    background-repeat: none;
+    padding: 18px; 
+    width: 297px;
+    height: 449px;     
+}
+</style>
 </head> <body>
-<div id="roomInfo" style="color: #000099; text-align: center; font-size: 40px"></div>
-<div id="joinTimer" style="color: #000099; text-align: center; font-size: 40px"></div>
-<div id="playerInfo" style="color: #000099; text-align: center; font-size: 40px"></div>
+<div id="rcorners3"> 
+<div id="roomInfo" style="color: #ffffff; position: relative; top: 200px; text-align: center; font-size: 18px">
+<div id="joinTimer"></div>
+<div id="playerInfo"></div>
+</div></div>
+
 	<script src="http://sdk.altvr.com/lib/three.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <script src="http://sdk.altvr.com/libs/altspace.js/0.4.0/altspace.min.js"></script>
@@ -45,7 +59,7 @@ $(document).ready(function() {
     });
     animate();
     netConnect();
-    loader.load( 'models/LogoTable.obj', 'models/LogoTable.mtl', function ( obj ) {
+    loader.load( 'Models/LogoTable.obj', 'Models/LogoTable.mtl', function ( obj ) {
         playTable = obj.clone();
         playTable.scale.set(15, 15, 15);
         playTable.rotation.set(0, 0, 0);
@@ -102,7 +116,7 @@ function loadObjects (){
         scene.add(joinButton);
     });  
     /*
-    loader.load( 'models/button.obj', 'models/returnButton.mtl', function ( obj ) {
+    loader.load( 'Models/button.obj', 'Models/returnButton.mtl', function ( obj ) {
         playTable = obj.clone();
         playTable.scale.set(500, 500, 500);
         playTable.rotation.set(Math.PI/-2, 0, 0);
@@ -152,10 +166,11 @@ function netConnect(){
 }
 function returnToLobby(){
     firebase.child(currentRoom).child(thisUser.displayName).remove();
+    document.getElementById('rcorners3').style.backgroundImage='url(BlackCard_back.png)';
     currentRoom = null;
     clearTimeout(joinTimeout);
     clearInterval(timer);
-    $('#joinTimer').empty();
+    $('joinTimer').empty();
     netConnect();
 }
 function newRoom(){
@@ -200,21 +215,24 @@ function joinRoom(roomName){
     instantiateRoom();   
 }
 function instantiateRoom(){
+
     var n = 5;
     timer = setInterval(countDown,1000);
-    $('#joinTimer').append(n);
+    $('joinTimer').append(n);
     function countDown(){
         n--;
         if(n === 1){clearInterval(timer)}
-        $('#joinTimer').empty();
-        $('#joinTimer').append(n);
+            console.log(n);
+        $('joinTimer').empty();
+        $('joinTimer').append(n);
 
     }
     joinTimeout = setTimeout(function(){       
         clearTimeout(joinTimeout);
         $('#roomInfo').empty();
-        $('#joinTimer').empty();
+        $('joinTimer').empty();
         $('#playerInfo').empty();
+        document.getElementById('rcorners3').style.backgroundImage='none'; 
         loadObjects();
     }, 5000);
 
