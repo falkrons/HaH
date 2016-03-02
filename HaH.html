@@ -9,15 +9,19 @@
     background-repeat: none;
     padding: 18px; 
     width: 297px;
-    height: 449px;     
+    height: 449px;  
+    color: #ffffff;
+    text-align: center;  
+    font-size: 18px; 
+    margin: auto;
 }
 </style>
 </head> <body>
-<div id="rcorners3"> 
-<div id="roomInfo" style="color: #ffffff; position: relative; top: 200px; text-align: center; font-size: 18px">
+<div id="rcorners3">    
+<div id="roomInfo" style="margin-top: 200px;"></div>
 <div id="joinTimer"></div>
 <div id="playerInfo"></div>
-</div></div>
+</div>
 
 	<script src="http://sdk.altvr.com/lib/three.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
@@ -218,19 +222,18 @@ function instantiateRoom(){
 
     var n = 5;
     timer = setInterval(countDown,1000);
-    $('joinTimer').append(n);
+    $('#joinTimer').append(n);
     function countDown(){
         n--;
         if(n === 1){clearInterval(timer)}
             console.log(n);
-        $('joinTimer').empty();
-        $('joinTimer').append(n);
-
-    }
+        $('#joinTimer').empty();
+        $('#joinTimer').append(n);
+    };
     joinTimeout = setTimeout(function(){       
         clearTimeout(joinTimeout);
         $('#roomInfo').empty();
-        $('joinTimer').empty();
+        $('#joinTimer').empty();
         $('#playerInfo').empty();
         document.getElementById('rcorners3').style.backgroundImage='none'; 
         loadObjects();
