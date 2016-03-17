@@ -1,0 +1,23 @@
+{
+  "name": "holograms-against-humanity",
+  "version": "1.0.0",
+  "description": "A game for terrible Altspacers.",
+  "main": "server/app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/falkrons/HaH.git"
+  },
+  "author": "",
+  "license": "CC-BY-NC-SA-4.0",
+  "bugs": {
+    "url": "https://github.com/falkrons/HaH/issues"
+  },
+  "homepage": "https://github.com/falkrons/HaH#readme",
+  "dependencies": {
+    "express": "^4.13.4",
+    "socketio": "^1.0.0"
+  }
+}
