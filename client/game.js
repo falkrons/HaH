@@ -52,6 +52,30 @@ table.position.setZ(0.8);
 table.rotation.set(Math.PI/2, 0, 0);
 root.add(table);
 
+// attempt to generate procedural text texture
+var bmp = document.createElement('canvas');
+var g = bmp.getContext('2d');
+bmp.width = 128;
+bmp.height = 128;
+g.fillStyle = 'black';
+g.fillRect(0, 0, 128, 128);
+g.font = 'Bold 20px Arial';
+g.fillStyle = 'white';
+g.fillText('Testing testing testing', 0, 20);
+g.strokeStyle = 'white';
+g.strokeText('Testing testing testing', 0, 20);
+
+// add floating card
+var card = new THREE.Mesh(
+	new THREE.PlaneGeometry(1, 1),
+	new THREE.MeshBasicMaterial({map: new THREE.CanvasTexture(bmp)})
+);
+console.log(card.geometry);
+card.position.setZ(1.5);
+card.rotation.set(Math.PI/2, 0, 0);
+
+root.add(card);
+
 
 /***************************
 	Render loop
