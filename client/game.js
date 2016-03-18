@@ -4,6 +4,13 @@
 	Global variables
 **************************/
 
+if(typeof(String.prototype.trim) === "undefined")
+{
+	String.prototype.trim = function(){
+		return String(this).replace(/^\s+|\s+$/g, '');
+	}
+}
+
 var renderer;
 var camera;
 var scene = new THREE.Scene();
@@ -52,29 +59,88 @@ table.position.setZ(0.8);
 table.rotation.set(Math.PI/2, 0, 0);
 root.add(table);
 
-// attempt to generate procedural text texture
-var bmp = document.createElement('canvas');
-var g = bmp.getContext('2d');
-bmp.width = 128;
-bmp.height = 128;
-g.fillStyle = 'black';
-g.fillRect(0, 0, 128, 128);
-g.font = 'Bold 20px Arial';
-g.fillStyle = 'white';
-g.fillText('Testing testing testing', 0, 20);
-g.strokeStyle = 'white';
-g.strokeText('Testing testing testing', 0, 20);
+generateCard(
+	[
+		'The new',
+		'Chevy Tahoe.',
+		'With the power',
+		'and space to take',
+		'_______________',
+		'everywhere you go.'
+	],
+	'black',
+	function(card){
+		card.position.setZ(1.5);
+		card.scale.set(12,12,12);
+		card.rotation.set(Math.PI/2, 0, 0);
 
-// add floating card
-var card = new THREE.Mesh(
-	new THREE.PlaneGeometry(1, 1),
-	new THREE.MeshBasicMaterial({map: new THREE.CanvasTexture(bmp)})
+		root.add(card);
+	}
 );
-console.log(card.geometry);
-card.position.setZ(1.5);
-card.rotation.set(Math.PI/2, 0, 0);
 
-root.add(card);
+
+
+
+/******************************
+	Functions
+******************************/
+
+function generateCard(text, color, cb)
+{
+	if(!cb){
+		cb = color;
+		color = null;
+	}
+	var cardWidth = 256;
+	
+	var loader = new THREE.ColladaLoader();
+	loader.load('models/card.dae', function(result)
+	{
+		// set up canvas
+		var bmp = document.createElement('canvas');
+		var g = bmp.getContext('2d');
+		bmp.width = 2*cardWidth;
+		bmp.height = 2*cardWidth;
+		g.fillStyle = color === 'black' ? 'black' : 'white';
+		g.fillRect(0, 0, 2*cardWidth, 2*cardWidth);
+		
+		// write text
+		g.font = 0.09*cardWidth+'px sans-serif';
+		g.fillStyle = color === 'black' ? 'white' : 'black';
+		for(var i=0; i<text.length; i++){
+			g.fillText(text[i], 0.08*cardWidth, (0.15+0.12*i)*cardWidth);
+		}
+		
+		// draw logo
+		var edgeLength = 15;
+		var x = 0.08*cardWidth, y = 1.33*cardWidth;
+		g.lineWidth = 2;
+		g.strokeStyle = color === 'black' ? 'white' : 'black';
+		g.moveTo(x, y);
+		g.lineTo(x+edgeLength/2, y-edgeLength*Math.sin(Math.PI/3));
+		g.lineTo(x+edgeLength, y);
+		g.moveTo(x+edgeLength/4, y);
+		g.lineTo(x+3*edgeLength/4, y);
+		g.stroke();
+		
+		// draw footer
+		g.font = 0.05*cardWidth+'px sans-serif';
+		g.fillText("Holograms Against Humanity", x+1.5*edgeLength, y);
+		
+		// draw card back
+		g.font = 'bold '+0.15*cardWidth+'px sans-serif';
+		g.fillText('Holograms', 1.1*cardWidth, 0.22*cardWidth);
+		g.fillText('Against', 1.1*cardWidth, 0.37*cardWidth);
+		g.fillText('Humanity', 1.1*cardWidth, 0.52*cardWidth);
+		
+		var card = result.scene.children[0].children[0];
+		card.material = new THREE.MeshBasicMaterial({
+			map: new THREE.CanvasTexture(bmp)
+		});
+		
+		cb(card);
+	});
+}
 
 
 /***************************
