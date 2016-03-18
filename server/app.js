@@ -1,6 +1,8 @@
 var express = require('express'),
 	morgan = require('morgan'),
-	libpath = require('path');
+	libpath = require('path'),
+	socketio = require('socket.io'),
+	liburl = require('url');
 
 // initialize http router
 var app = express();
@@ -18,6 +20,23 @@ app.use(function(req,res,next)
 });
 
 // start server on port 7373
-app.listen(7878, function(){
+var server = app.listen(7878, function(){
 	console.log('Listening on port 7878');
+});
+
+// set up sockets
+var io = socketio(server);
+
+io.on('connection', function(socket)
+{
+	// get gameId, put socket in correct room
+	var url = liburl.parse(socket.request.url, true);
+	if(url.query.gameId)
+	{
+		socket.join(url.query.gameId);
+		console.log('Client connected to', url.query.gameId, '!');
+	}
+	else {
+		socket.emit('error', 'No gameId specified');
+	}
 });
