@@ -59,6 +59,7 @@ table.position.setZ(0.8);
 table.rotation.set(Math.PI/2, 0, 0);
 root.add(table);
 
+// add a big black card
 generateCard(
 	[
 		'The new',
@@ -85,16 +86,33 @@ generateCard(
 	Functions
 ******************************/
 
+var cardModel = null;
 function generateCard(text, color, cb)
 {
+	// color is optional, defaults to white
+	// but callback is mandatory, so reassign if necessary
 	if(!cb){
 		cb = color;
 		color = null;
 	}
+	
+	// card face texture resolution
 	var cardWidth = 256;
 	
-	var loader = new THREE.ColladaLoader();
-	loader.load('models/card.dae', function(result)
+	// load card model if not done yet
+	if(!cardModel){
+		var loader = new THREE.ColladaLoader();
+		loader.load('models/card.dae', function(result){
+			cardModel = result.scene.children[0].children[0];
+			generateTexture(cardModel.clone());
+		});
+	}
+	else {
+		generateTexture(cardModel.clone());
+	}
+	
+	
+	function generateTexture(model)
 	{
 		// set up canvas
 		var bmp = document.createElement('canvas');
@@ -133,13 +151,14 @@ function generateCard(text, color, cb)
 		g.fillText('Against', 1.1*cardWidth, 0.37*cardWidth);
 		g.fillText('Humanity', 1.1*cardWidth, 0.52*cardWidth);
 		
-		var card = result.scene.children[0].children[0];
-		card.material = new THREE.MeshBasicMaterial({
+		// assign texture
+		model.material = new THREE.MeshBasicMaterial({
 			map: new THREE.CanvasTexture(bmp)
 		});
 		
-		cb(card);
-	});
+		// return the new card
+		cb(model);
+	}
 }
 
 
