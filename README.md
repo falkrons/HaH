@@ -1,4 +1,4 @@
-(https://github.com/falkrons/HaH/blob/master/HaH_icon.jpg "Holograms Against Humanity")
+![alt text](https://github.com/adam-p/markdown-here/raw/master/src/common/images/icon48.png "Logo Title Text 1")
 
 Holograms Against Humanity
 ==========================
