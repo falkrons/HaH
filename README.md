@@ -1,4 +1,4 @@
-![alt text](https://github.com/falkrons/HaH/blob/master/HaH_icon.jpg " Holograms Against Humanity ")
+![alt text](https://github.com/falkrons/HaH/blob/master/icon/HaH_icon.jpg "Holograms Against Humanity")
 Holograms Against Humanity
 ==========================
 
