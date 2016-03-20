@@ -9,20 +9,23 @@ Use Case 1: Game Setup
 1. Each "installation" of the game should have some ID token appended to the target URL,
 	uniquely identifying the game in play. E.g. `http://nodriftreality.com/HaH.html?gameId=deadb33f`
 
-2. To start a new game, a player clicks on the *New Game* button (perhaps the marquee in the mockup?). 
-	This reinitializes the game.
 
-3. Each player then clicks on the deck at the center of the table to join in. They are dealt their full
-	hands, and said cards appear on the table in front of them (using the event ray maybe). Alternatively,
-	players may be arranged evenly around the circumference of the table.
+Use Case 2: Joining a Game
+--------------------------
 
-	1. Players may join and leave at any point, but the game cannot continue with fewer than four players.
+1. A new prospective player approaches the table, and clicks on the deck in the center of the table to join.
 
-4. When all players have joined, the player that started the new game clicks the button again (changed to
-	a *Start Game* button), and play begins.
+2. If the current player count is already at maximum, the request to join is denied and a message is displayed
+	to the prospective player.
+	
+3. If the current player count is below the minimum (4), the request to join is accepted, and the player is
+	inserted into the turn order.
+
+4. A prompt appears in the air above the table, saying that a new player is attempting to join. If any current
+	player clicks "yes" on the prompt, the prompt disappears and the player is inserted into the turn order.
 
 
-Use Case 2: Game Play
+Use Case 3: Game Play
 ---------------------
 
 1. One player is assigned as judge by the server (random first round, sequential after that). That player is
@@ -46,28 +49,18 @@ Use Case 2: Game Play
 	player.
 
 
-Use Case 3: Joining a Game in Progress
---------------------------------------
-
-1. A new prospective player approaches the table, and clicks on the deck in the center of the table to join.
-
-2. If the current player count is already at maximum, the request to join is denied and a message is displayed
-	to the prospective player.
-
-3. A prompt appears in the air above the table, saying that a new player is attempting to join. If any current
-	player clicks "yes" on the prompt, the prompt disappears and the player is inserted into the turn order.
-
-
-Use case 4: Deliberately Leaving a Game in Progress
----------------------------------------------------
+Use case 4: Deliberately Leaving a Game
+---------------------------------------
 
 1. A player clicks the "Leave Game" button.
 
 2. They are removed from the turn order. If they were the judge, the round is aborted and the next round begins.
 
+3. If the last player has just left, reshuffle the decks.
 
-Use case 5: Kicking a Player from a Game in Progress
-----------------------------------------------------
+
+Use case 5: Kicking a Player from a Game
+----------------------------------------
 
 1. A player clicks on another player's "Kick Player" button.
 
