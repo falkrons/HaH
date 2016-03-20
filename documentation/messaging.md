@@ -22,7 +22,7 @@ Player Management
 
 1. If player count less than minimum (4), exec `playerJoin` handler.
 2. If player count at maximum (12), emit `playerJoinRejected` event.
-3. Else mirror message to all players.
+3. Else mirror message to all clients.
 
 *Actions (client)*:
 
@@ -39,7 +39,7 @@ Player Management
 
 1. Insert player into turn order, based on position.
 2. Deal new player 10 new cards.
-3. Mirror message to all players.
+3. Mirror message to all clients.
 
 *Actions (client)*:
 
@@ -57,3 +57,34 @@ None
 *Actions (client)*:
 
 1. Display message to all players and the denied client, indicating join failure.
+
+
+### playerLeave(id, displayName, message)
+
+*Triggered by*: Player clicking the "Leave Game" UI element, or player kicked.
+
+*Actions (server)*:
+
+1. Remove given player from turn order.
+2. Do NOT add player cards back to the deck. Effectively added to discard pile.
+3. Mirror event to all clients.
+
+*Actions (client)*:
+
+1. Update table positions based on new player list.
+2. Display message to players, leaving client.
+
+
+### playerKickRequest(playerId, displayName, requesterName)
+
+*Triggered by*: A player clicking on another player's "Kick" button.
+
+*Actions (server)*:
+
+1. Mirror event to all clients.
+
+*Actions (client)*:
+
+1. Display vote dialog to players.
+2. If at least 50% of players accept, emit `playerLeave` event and hide dialog.
+3. If fewer than 50% of players accept, or 30 seconds pass, hide dialog.
