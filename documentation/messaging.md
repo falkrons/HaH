@@ -81,10 +81,45 @@ None
 
 *Actions (server)*:
 
-1. Mirror event to all clients.
+1. Mirror event to all players but the targeted player.
+2. Set a timer for 30 seconds. Emit `kickVoteAborted` if not passed in that time.
 
 *Actions (client)*:
 
-1. Display vote dialog to players.
-2. If at least 50% of players accept, emit `playerLeave` event and hide dialog.
-3. If fewer than 50% of players accept, or 30 seconds pass, hide dialog.
+1. Display vote dialog to client.
+
+
+### playerKickResponse(playerId, displayName, requesterName)
+
+*Triggered by*: A player voting to kick a player.
+
+*Actions (server)*:
+
+1. Tally the "Yes" and "No" votes.
+2. If at least 50% of players accept, exec `playerLeave` handler.
+3. Else if at least 50% of players reject, emit `kickVoteAborted`.
+
+*Actions (client)*:
+
+None
+
+
+### kickVoteAborted(playerId, displayName)
+
+*Triggered by*: A failed vote to kick a player.
+
+*Actions (server)*:
+
+None
+
+*Actions (client)*:
+
+1. Hide vote dialog if visible.
+2. Display message that the vote to kick player failed.
+
+
+
+Game Play
+--------------------------
+
+### 
