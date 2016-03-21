@@ -122,4 +122,15 @@ None
 Game Play
 --------------------------
 
-### 
+### dealCards(newWhiteCards, newBlackCard, czarId)
+
+*Triggered by:* The start of a new round.
+
+*Actions (server)*:
+
+None
+
+*Actions (client)*:
+
+1. Add the contents of the `newWhiteCards` array to the player's hand.
+2. If clientId equals czarId, hide hand, display black card instead, and wait for confirmation.
