@@ -14,7 +14,7 @@ HaH Messaging Protocol
 Player Management
 -----------------
 
-### playerJoinRequest(id, displayName, position)
+### playerJoinRequest(id, displayName)
 
 *Triggered by*: An unregistered client attempting to join the game.
 
@@ -22,23 +22,23 @@ Player Management
 
 1. If player count less than minimum (4), exec `playerJoin` handler.
 2. If player count at maximum (12), emit `playerJoinRejected` event.
-3. Else mirror message to all clients.
+3. Else mirror message to all players.
 
 *Actions (client)*:
 
 1. Display vote dialog to players.
-2. If one player accepts, emit `playerJoin` event and hide dialog.
-3. If one player declines, or 30 seconds pass, hide dialog.
+2. If any player accepts, emit `playerJoin` event and hide dialog.
+3. If any player declines, or 30 seconds pass, emit `playerJoinRejected` and hide dialog.
 
 
-### playerJoin(id, displayName, position)
+### playerJoin(id, displayName, [turnOrder])
 
 *Triggered by*: A current player accepting someone's request to play.
 
 *Actions (server)*:
 
 1. Add player name and id to cache.
-2. Insert player into turn order, based on position.
+2. Insert player into turn order.
 3. Mirror message to all clients.
 
 *Actions (client)*:
@@ -46,18 +46,20 @@ Player Management
 1. Update table positions based on new player list.
 
 
-### playerJoinRejected(id, displayName)
+### playerJoinDenied(id, displayName, [message])
 
 *Triggered by*: A `playerJoinRequest` denied by the server.
 
-*Actions (server)*: None
+*Actions (server)*:
+
+1. Mirror message to the denied client.
 
 *Actions (client)*:
 
-1. Display message to all players and the denied client, indicating join failure.
+1. Display message to the denied client, indicating join failure.
 
 
-### playerLeave(id, displayName, message)
+### playerLeave(id, displayName, [turnOrder], [message])
 
 *Triggered by*: Player clicking the "Leave Game" UI element, or player kicked.
 

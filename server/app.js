@@ -1,8 +1,13 @@
+'use strict';
+
 var express = require('express'),
 	morgan = require('morgan'),
 	libpath = require('path'),
 	socketio = require('socket.io'),
 	liburl = require('url');
+
+var players = require('./players.js');
+
 
 // initialize http router
 var app = express();
@@ -33,10 +38,23 @@ io.on('connection', function(socket)
 	var url = liburl.parse(socket.request.url, true);
 	if(url.query.gameId)
 	{
-		socket.join(url.query.gameId);
-		console.log('Client connected to', url.query.gameId, '!');
+		socket.gameId = url.query.gameId;
+		socket.join(socket.gameId+'_clients');
+		registerGameListeners(socket);
+
+		console.log('Client connected to', socket.gameId);
 	}
 	else {
 		socket.emit('error', 'No gameId specified');
 	}
 });
+
+
+function registerGameListeners(socket)
+{
+	// register player join event
+	socket.on('playerJoinRequest', players.joinRequest);
+	socket.on('playerJoinDenied', players.joinDenied);
+	socket.on('playerJoin', players.join);
+	socket.on('playerLeave', players.leave);
+}

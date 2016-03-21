@@ -8,4 +8,5 @@ function connectToGame(gameId)
 	socket.on('error', function(msg){
 		console.error(msg);
 	});
+	socket.emit('playerJoinRequest', 'asdf', 'stevenp');
 }
