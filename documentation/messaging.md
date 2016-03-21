@@ -37,8 +37,8 @@ Player Management
 
 *Actions (server)*:
 
-1. Insert player into turn order, based on position.
-2. Deal new player 10 new cards.
+1. Add player name and id to cache.
+2. Insert player into turn order, based on position.
 3. Mirror message to all clients.
 
 *Actions (client)*:
@@ -50,9 +50,7 @@ Player Management
 
 *Triggered by*: A `playerJoinRequest` denied by the server.
 
-*Actions (server)*:
-
-None
+*Actions (server)*: None
 
 *Actions (client)*:
 
@@ -99,18 +97,14 @@ None
 2. If at least 50% of players accept, exec `playerLeave` handler.
 3. Else if at least 50% of players reject, emit `kickVoteAborted`.
 
-*Actions (client)*:
-
-None
+*Actions (client)*: None
 
 
 ### kickVoteAborted(playerId, displayName)
 
 *Triggered by*: A failed vote to kick a player.
 
-*Actions (server)*:
-
-None
+*Actions (server)*: None
 
 *Actions (client)*:
 
@@ -124,13 +118,67 @@ Game Play
 
 ### dealCards(newWhiteCards, newBlackCard, czarId)
 
-*Triggered by:* The start of a new round.
+*Triggered by:* A player clicking the card box after completion of the previous round.
 
-*Actions (server)*:
-
-None
+*Actions (server)*: None
 
 *Actions (client)*:
 
 1. Add the contents of the `newWhiteCards` array to the player's hand.
-2. If clientId equals czarId, hide hand, display black card instead, and wait for confirmation.
+2. Save black card for later use.
+3. If clientId equals czarId, hide hand, display black card instead, and wait for confirmation.
+
+
+### roundStart()
+
+*Triggered by*: Czar verifies black card by clicking on it.
+
+*Actions (server)*:
+
+1. Mirror to all clients.
+2. Start listening for card selection events.
+
+*Actions (client)*:
+
+1. Display black card.
+2. Enable card selection from hand.
+
+
+### cardSelection(cardsArray)
+
+*Triggered by*: A player selecting a card (or group of cards) for play.
+
+*Actions (server)*: 
+
+1. Add play to list of round responses.
+2. If round responses is equal to number of players at the start of the round minus one,
+	emit `cardSelectionComplete` with list of responses to all clients.
+
+*Actions (client)*: None
+
+
+### cardSelectionComplete(cardsArrays)
+
+*Triggered by*: All players submitting their plays for the round.
+
+*Actions (server)*: None
+
+*Actions (client)*:
+
+1. If player is czar, present cards for winner selection.
+2. Else save cards for later presentation.
+
+
+### winnerSelection(winningIndex, winnerName)
+
+*Triggered by*: Czar choosing winning hand.
+
+*Actions (server)*:
+
+1. Reward winning player (TBD).
+2. Mirror message to all clients.
+
+*Actions (client)*:
+
+1. Display winning hand alongside black card.
+2. Enable "deal" UI element.
