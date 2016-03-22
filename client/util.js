@@ -39,6 +39,7 @@ function generateCard(text, color, cb)
 		g.fillRect(0, 0, 2*cardWidth, 2*cardWidth);
 		
 		// write text
+		g.textAlign = 'left';
 		g.font = 'bold '+(0.09*cardWidth)+'px '+fontStack;
 		g.fillStyle = color === 'black' ? 'white' : 'black';
 		for(var i=0; i<text.length; i++){
