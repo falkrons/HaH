@@ -28,6 +28,8 @@ function generateCard(text, color, cb)
 	
 	function generateTexture(model)
 	{
+		var fontStack = 'Helvetical Neue, Helvetica,Arial, Sans-Serif';
+		
 		// set up canvas
 		var bmp = document.createElement('canvas');
 		var g = bmp.getContext('2d');
@@ -37,7 +39,7 @@ function generateCard(text, color, cb)
 		g.fillRect(0, 0, 2*cardWidth, 2*cardWidth);
 		
 		// write text
-		g.font = 0.09*cardWidth+'px sans-serif';
+		g.font = 'bold '+(0.09*cardWidth)+'px '+fontStack;
 		g.fillStyle = color === 'black' ? 'white' : 'black';
 		for(var i=0; i<text.length; i++){
 			g.fillText(text[i], 0.08*cardWidth, (0.15+0.12*i)*cardWidth);
@@ -56,11 +58,11 @@ function generateCard(text, color, cb)
 		g.stroke();
 		
 		// draw footer
-		g.font = 0.05*cardWidth+'px sans-serif';
+		g.font = (0.05*cardWidth)+'px '+fontStack;
 		g.fillText("Holograms Against Humanity", x+1.5*edgeLength, y);
 		
 		// draw card back
-		g.font = 'bold '+0.15*cardWidth+'px sans-serif';
+		g.font = 'bold '+(0.15*cardWidth)+'px '+fontStack;
 		g.fillText('Holograms', 1.1*cardWidth, 0.22*cardWidth);
 		g.fillText('Against', 1.1*cardWidth, 0.37*cardWidth);
 		g.fillText('Humanity', 1.1*cardWidth, 0.52*cardWidth);

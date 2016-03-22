@@ -62,12 +62,21 @@ root.add(table);
 // add a big black card
 generateCard(
 	[
-		'The new',
+		/*'The new',
 		'Chevy Tahoe.',
 		'With the power',
 		'and space to take',
 		'_______________',
-		'everywhere you go.'
+		'everywhere you go.'*/
+		'Dear Mom and Dad,',
+		'Camp is fun. I like',
+		'capture the flag.',
+		'Yesterday, one',
+		'of the older kids',
+		'taught me about',
+		'________________.',
+		'I love you,',
+		'Casey'
 	],
 	'black',
 	function(card){
