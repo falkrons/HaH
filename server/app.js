@@ -52,7 +52,11 @@ io.on('connection', function(socket)
 
 function registerGameListeners(socket)
 {
-	// register player join event
+	socket.on('error', function(err){
+		console.error(err);
+	});
+
+	// register player events
 	socket.on('playerJoinRequest', players.joinRequest);
 	socket.on('playerJoinDenied', players.joinDenied);
 	socket.on('playerJoin', players.join);
