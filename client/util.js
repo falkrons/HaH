@@ -28,7 +28,7 @@ function generateCard(text, color, cb)
 	
 	function generateTexture(model)
 	{
-		var fontStack = 'Helvetical Neue, Helvetica,Arial, Sans-Serif';
+		var fontStack = '"Helvetica Neue", Helvetica, Arial, Sans-Serif';
 		
 		// set up canvas
 		var bmp = document.createElement('canvas');
