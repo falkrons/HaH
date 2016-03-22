@@ -76,3 +76,56 @@ function generateCard(text, color, cb)
 		cb(model);
 	}
 }
+
+var blankCard = null;
+generateCard('', 'white', function(obj){
+	blankCard = obj;
+});
+
+
+var nameplateModel = null;
+function generateNameplate(name, cb)
+{
+	// card face texture resolution
+	var texWidth = 256;
+	
+	// load card model if not done yet
+	if(!nameplateModel){
+		var loader = new THREE.ColladaLoader();
+		loader.load('models/nameplate.dae', function(result){
+			nameplateModel = result.scene.children[0].children[0];
+			nameplateModel.scale.set(2,2,2);
+			generateTexture(nameplateModel.clone());
+		});
+	}
+	else {
+		generateTexture(nameplateModel.clone());
+	}
+	
+	function generateTexture(model)
+	{
+		var fontStack = '"Helvetica Neue", Helvetica, Arial, Sans-Serif';
+		
+		// set up canvas
+		var bmp = document.createElement('canvas');
+		var g = bmp.getContext('2d');
+		bmp.width = texWidth;
+		bmp.height = texWidth;
+		g.fillStyle = '#38281C';
+		g.fillRect(0, 0, texWidth, texWidth);
+
+		g.font = 'bold 25px '+fontStack;
+		g.textAlign = 'center';
+		g.fillStyle = 'white';
+		g.fillText(name, texWidth/2, 35);
+		g.fillText(name, texWidth/2, 86);
+
+		// assign texture
+		model.material = new THREE.MeshBasicMaterial({
+			map: new THREE.CanvasTexture(bmp)
+		});
+		
+		// return the new card
+		cb(model);
+	}
+}

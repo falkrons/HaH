@@ -104,6 +104,13 @@ generateCard(
 	}
 );
 
+
+// add nameplates
+var turnOrder = [];
+for(var i=0; i<8; i++)
+	turnOrder.push({displayName: 'Player '+i});
+rebalanceTable(turnOrder);
+
 // grab game id from URL
 var gameId = /[?&]gameId=(\w+)\b/.exec(window.location.search);
 if(gameId) gameId = gameId[1];
