@@ -53,11 +53,27 @@ else
 // add table surface
 var table = new THREE.Mesh(
 	new THREE.CylinderGeometry(1.5, 1.5, 0.05, 12, 1),
-	new THREE.MeshBasicMaterial({color: 0x22aa22})
+	new THREE.MeshBasicMaterial({color: 0x226022})
 );
 table.position.setZ(0.8);
 table.rotation.set(Math.PI/2, 0, 0);
 root.add(table);
+
+// add game box
+var loader = new THREE.ColladaLoader();
+loader.load('/models/box.dae', function(result)
+{
+	var model = result.scene.children[0].children[0];
+	model.position.set(0, 0, 0.8 + 0.025 + 0.035);
+
+	var texLoader = new THREE.TextureLoader();
+	texLoader.load('/models/box.png', function(tex)
+	{
+		model.material = new THREE.MeshBasicMaterial({map: tex});
+		root.add(model);
+	});
+});
+
 
 // add a big black card
 generateCard(
@@ -80,7 +96,7 @@ generateCard(
 	],
 	'black',
 	function(card){
-		card.position.setZ(1.5);
+		card.position.setZ(2);
 		card.scale.set(12,12,12);
 		card.rotation.set(Math.PI/2, 0, 0);
 
