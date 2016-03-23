@@ -130,3 +130,25 @@ function generateNameplate(name, cb)
 		cb(model);
 	}
 }
+
+
+function sphericalToMatrix(theta, phi, radius)
+{
+	// determine position
+	var x = radius * Math.cos(phi) * Math.sin(theta);
+	var y = radius * Math.cos(phi) * Math.cos(theta);
+	var z = radius * Math.sin(phi);
+
+	// determine rotation
+	var basisZ = new THREE.Vector3(-x, -y, -z).normalize();
+	var basisX = new THREE.Vector3().crossVectors( basisZ, new THREE.Vector3(0,0,1) );
+	var basisY = new THREE.Vector3().crossVectors( basisX, basisZ );
+
+	var mat = new THREE.Matrix4();
+	mat.makeBasis( basisX, basisY, basisZ );
+	mat.setPosition( new THREE.Vector3(x, y, z) );
+
+	return mat;
+
+}
+

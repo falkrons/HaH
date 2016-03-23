@@ -137,8 +137,8 @@ function render(timestamp)
 {
 	// update camera if necessary
 	if(camera){
-		camera.position.x = 4 * Math.sin(timestamp * 2*Math.PI/10000);
-		camera.position.y = 4 * Math.cos(timestamp * 2*Math.PI/10000);
+		camera.position.x = 4 * Math.sin(timestamp * 2*Math.PI/20000);
+		camera.position.y = 4 * Math.cos(timestamp * 2*Math.PI/20000);
 		camera.lookAt( new THREE.Vector3(0, 0, 1.5) );
 	}
 
