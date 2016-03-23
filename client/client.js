@@ -49,35 +49,26 @@ else
 	root.add(camera);
 }
 
+preloadModels(init);
 
-// add table surface
-var table = new THREE.Mesh(
-	new THREE.CylinderGeometry(1.5, 1.5, 0.05, 12, 1),
-	new THREE.MeshBasicMaterial({color: 0x226022})
-);
-table.position.setZ(0.8);
-table.rotation.set(Math.PI/2, 0, 0);
-root.add(table);
-
-// add game box
-var loader = new THREE.ColladaLoader();
-loader.load('/models/box.dae', function(result)
+function init()
 {
-	var model = result.scene.children[0].children[0];
-	model.position.set(0, 0, 0.8 + 0.025 + 0.035);
+	// add table surface
+	var table = new THREE.Mesh(
+		new THREE.CylinderGeometry(1.5, 1.5, 0.05, 12, 1),
+		new THREE.MeshBasicMaterial({color: 0x226022})
+	);
+	table.position.setZ(0.8);
+	table.rotation.set(Math.PI/2, 0, 0);
+	root.add(table);
 
-	var texLoader = new THREE.TextureLoader();
-	texLoader.load('/models/box.png', function(tex)
-	{
-		model.material = new THREE.MeshBasicMaterial({map: tex});
-		root.add(model);
-	});
-});
+	// add game box
+	var box = boxModel;
+	box.position.set(0, 0, 0.8 + 0.025 + 0.07);
+	root.add(box);
 
-
-// add a big black card
-generateCard(
-	[
+	// add a big black card
+	var bigBlackCard = generateCard([
 		/*'The new',
 		'Chevy Tahoe.',
 		'With the power',
@@ -92,40 +83,37 @@ generateCard(
 		'taught me about',
 		'________________.',
 		'I love you,',
-		'Casey'
-	],
-	'black',
-	function(card){
-		card.position.setZ(2);
-		card.scale.set(12,12,12);
-		card.rotation.set(Math.PI/2, 0, 0);
+		'Casey'],
+		'black'
+	);
 
-		root.add(card);
+	bigBlackCard.position.setZ(2);
+	bigBlackCard.scale.set(12,12,12);
+	bigBlackCard.rotation.set(Math.PI/2, 0, 0);
+	root.add(bigBlackCard);
+
+	// add nameplates
+	var turnOrder = [];
+	for(var i=0; i<8; i++)
+		turnOrder.push({displayName: 'Player '+i});
+	rebalanceTable(turnOrder);
+
+	// grab game id from URL
+	var gameId = /[?&]gameId=(\w+)\b/.exec(window.location.search);
+	if(gameId) gameId = gameId[1];
+
+	// initialize game
+	if(!gameId)
+	{
+		var message = document.createElement('h1');
+		message.innerHTML = 'No game room specified! Add a "gameId" query argument.';
+		document.body.insertBefore(message, document.body.children[0]);
 	}
-);
-
-
-// add nameplates
-var turnOrder = [];
-for(var i=0; i<8; i++)
-	turnOrder.push({displayName: 'Player '+i});
-rebalanceTable(turnOrder);
-
-// grab game id from URL
-var gameId = /[?&]gameId=(\w+)\b/.exec(window.location.search);
-if(gameId) gameId = gameId[1];
-
-// initialize game
-if(!gameId)
-{
-	var message = document.createElement('h1');
-	message.innerHTML = 'No game room specified! Add a "gameId" query argument.';
-	document.body.insertBefore(message, document.body.children[0]);
-}
-else
-{
-	connectToGame(gameId);
+	else
+	{
+		connectToGame(gameId);
 	
+	}
 }
 
 
