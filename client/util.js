@@ -5,6 +5,7 @@ var nameplateModel = null;
 var blankCard = null;
 var boxModel = null;
 
+
 function preloadModels(cb)
 {
 	var loader = new THREE.ColladaLoader();
@@ -16,7 +17,7 @@ function preloadModels(cb)
 		cardModel = result.scene.children[0].children[0];
 		cardModel.scale.set(2,2,2);
 
-		blankCard = generateCard([''], 'white');
+		blankCard = generateCard(['']);
 
 		modelsToGo--;
 		if(modelsToGo === 0)
@@ -145,6 +146,7 @@ function sphericalToMatrix(theta, phi, radius)
 	var basisX = new THREE.Vector3().crossVectors( basisZ, new THREE.Vector3(0,0,1) );
 	var basisY = new THREE.Vector3().crossVectors( basisX, basisZ );
 
+	// combine into matrix
 	var mat = new THREE.Matrix4();
 	mat.makeBasis( basisX, basisY, basisZ );
 	mat.setPosition( new THREE.Vector3(x, y, z) );

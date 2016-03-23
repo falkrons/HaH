@@ -92,7 +92,7 @@ function init()
 	bigBlackCard.rotation.set(Math.PI/2, 0, 0);
 	root.add(bigBlackCard);
 
-	// add nameplates
+	// add dummy player seats
 	var turnOrder = [];
 	for(var i=0; i<8; i++)
 		turnOrder.push({displayName: 'Player '+i});
