@@ -17,6 +17,8 @@ var scene = new THREE.Scene();
 var root = new THREE.Object3D();
 scene.add(root);
 
+var gameObjects = {};
+
 
 /**************************
 	Initialize scene
@@ -63,18 +65,13 @@ function init()
 	root.add(table);
 
 	// add game box
-	var box = boxModel;
-	box.position.set(0, 0, 0.8 + 0.025 + 0.07);
-	root.add(box);
+	gameObjects.box = boxModel;
+	gameObjects.box.position.set(0, 0, 0.8 + 0.025 + 0.07);
+	gameObjects.box.rotation.set(Math.PI, 0, 0);
+	root.add(gameObjects.box);
 
 	// add a big black card
-	var bigBlackCard = generateCard([
-		/*'The new',
-		'Chevy Tahoe.',
-		'With the power',
-		'and space to take',
-		'_______________',
-		'everywhere you go.'*/
+	/*var bigBlackCard = generateCard([
 		'Dear Mom and Dad,',
 		'Camp is fun. I like',
 		'capture the flag.',
@@ -90,13 +87,14 @@ function init()
 	bigBlackCard.position.setZ(2);
 	bigBlackCard.scale.set(12,12,12);
 	bigBlackCard.rotation.set(Math.PI/2, 0, 0);
-	root.add(bigBlackCard);
+	root.add(bigBlackCard);*/
 
 	// add dummy player seats
-	var turnOrder = [];
+	/*var turnOrder = [];
 	for(var i=0; i<8; i++)
 		turnOrder.push({displayName: 'Player '+i});
 	rebalanceTable(turnOrder);
+	*/
 
 	// grab game id from URL
 	var gameId = /[?&]gameId=(\w+)\b/.exec(window.location.search);

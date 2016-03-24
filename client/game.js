@@ -1,30 +1,46 @@
 'use strict';
 
 var socket;
+var turnOrder = [];
+
 
 function connectToGame(gameId)
 {
+	// initialize the socket connection
 	socket = io('http://localhost:7878/?gameId='+gameId);
 	socket.on('error', function(msg){
 		console.error(msg);
 	});
 
+	box.addEventListener('cursorup', emitPlayerJoinRequest);
+
 	socket.on('playerJoin', playerJoin);
 
-	socket.emit('playerJoinRequest', 'asdf', 'stevenp');
 }
 
-function playerJoin(id, displayName, turnOrder)
+function emitPlayerJoinRequest(evt)
 {
+	altspace.getUser().then(function(userInfo){
+		socket.emit('playerJoinRequest', userInfo.userId, userInfo.displayName);
+	});
+}
 
+function playerJoin(id, displayName, newTurnOrder)
+{
+	rebalanceTable(newTurnOrder);
 }
 
 
 var seatForPlayer = {};
-function rebalanceTable(turnOrder)
+function rebalanceTable(newTurnOrder)
 {
 	var angle = 2*Math.PI/turnOrder.length;
 	var cardRadius = 0.5, row1Angle = Math.PI/5, row2Angle = Math.PI/3, row1Sep = Math.PI/10, row2Sep = 1.5*Math.PI/10;
+
+	for(var i=0; i<newTurnOrder.length; i++)
+	{
+		// attempt to get seat at index
+	}
 
 	for(var i=0; i<turnOrder.length; i++)
 	{
@@ -69,3 +85,4 @@ function rebalanceTable(turnOrder)
 		root.add(seat);
 	}
 }
+

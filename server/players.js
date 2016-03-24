@@ -85,6 +85,11 @@ function join(id, displayName)
 	// let other clients know about new player
 	this.to(this.gameId+'_clients').emit('playerJoin', id, displayName, turnOrder[this.gameId]);
 
+	// trigger leave if socket is disconnected
+	socketForPlayer[id].on('disconnect', function(){
+		leave.call(this, id, displayName, displayName+' has disconnected.');
+	});
+
 	console.log('Player', displayName, 'has joined game', this.gameId);
 }
 
