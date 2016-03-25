@@ -24,7 +24,7 @@ var seatForPlayer = {};
 function rebalanceTable(turnOrder)
 {
 	var angle = 2*Math.PI/turnOrder.length;
-	var cardRadius = 0.5, row1Angle = Math.PI/5, row2Angle = Math.PI/3, row1Sep = Math.PI/10, row2Sep = 1.5*Math.PI/10;
+	var cardRadius = 0.5, row1Angle = Math.PI/5, row2Angle = row1Angle+0.35, row1Sep = Math.PI/10, row2Sep = 1.5*Math.PI/10;
 
 	for(var i=0; i<turnOrder.length; i++)
 	{
