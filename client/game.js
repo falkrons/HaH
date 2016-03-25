@@ -1,88 +1,99 @@
 'use strict';
 
-
-var socket;
-var turnOrder = [];
-var playerInfo = {};
-
-function connectToGame(gameId)
+// don't pollute the global namespace
+(function(exports)
 {
-	// save player info
-	if(altspace.inClient){
-		altspace.getUser().then(function(userInfo)
-		{
-			playerInfo.playerId = userInfo.userId;
-			playerInfo.displayName = userInfo.displayName;
+	var socket;
+	var turnOrder = [];
+	var playerInfo = {};
+
+	function connectToGame(gameId)
+	{
+		// save player info
+		if(altspace.inClient){
+			altspace.getUser().then(function(userInfo)
+			{
+				playerInfo.playerId = userInfo.userId;
+				playerInfo.displayName = userInfo.displayName;
+			});
+		}
+
+		// initialize the socket connection
+		Game.socket = socket = io('/?gameId='+gameId);
+
+		// debug listener
+		var onevent = socket.onevent;
+		socket.onevent = function(packet){
+			var args = packet.data || [];
+			onevent.call(this, packet);
+			packet.data = ['*'].concat(args);
+			onevent.call(this, packet);
+		};
+		socket.on('*', function(){
+			console.log(arguments);
 		});
+
+		socket.on('error', function(msg){
+			console.error(msg);
+		});
+
+		socket.on('init', function(newTurnOrder){
+			Utils.rebalanceTable(newTurnOrder, turnOrder);
+			turnOrder.splice(0); turnOrder.push.apply(turnOrder, newTurnOrder);
+			gameObjects.box.removeEventListener('cursorup');
+			gameObjects.box.addEventListener('cursorup', emitPlayerJoinRequest);
+		});
+
+		socket.on('playerJoin', playerJoin);
+		socket.on('playerLeave', playerLeave);
 	}
 
-	// initialize the socket connection
-	socket = io('/?gameId='+gameId);
-
-	// debug listener
-	var onevent = socket.onevent;
-	socket.onevent = function(packet){
-		var args = packet.data || [];
-		onevent.call(this, packet);
-		packet.data = ['*'].concat(args);
-		onevent.call(this, packet);
-	};
-	socket.on('*', function(){
-		console.log(arguments);
-	});
-
-	socket.on('error', function(msg){
-		console.error(msg);
-	});
-
-	socket.on('init', function(newTurnOrder){
-		rebalanceTable(newTurnOrder, turnOrder);
-		turnOrder = newTurnOrder;
-		gameObjects.box.removeEventListener('cursorup');
-		gameObjects.box.addEventListener('cursorup', emitPlayerJoinRequest);
-	});
-
-	socket.on('playerJoin', playerJoin);
-	socket.on('playerLeave', playerLeave);
-}
-
-function emitPlayerJoinRequest(evt){
-	socket.emit('playerJoinRequest', playerInfo.playerId, playerInfo.displayName);
-}
-
-function emitPlayerLeave(evt){
-	socket.emit('playerLeave', playerInfo.playerId, playerInfo.displayName,
-		playerInfo.displayname+' has left the game.'
-	);
-}
-
-function playerJoin(id, displayName, newTurnOrder)
-{
-	rebalanceTable(newTurnOrder, turnOrder);
-	turnOrder = newTurnOrder;
-
-	if(id === playerInfo.playerId){
-		gameObjects.box.removeEventListener('cursorup');
-		// add listener "deal"
+	function emitPlayerJoinRequest(evt){
+		socket.emit('playerJoinRequest', playerInfo.playerId, playerInfo.displayName);
 	}
 
-	console.log('New player joined:', displayName);
-}
-
-function playerLeave(id, displayName, newTurnOrder)
-{
-	rebalanceTable(newTurnOrder, turnOrder);
-	turnOrder = newTurnOrder;
-
-	if(id === playerInfo.playerId){
-		gameObjects.box.removeEventListener('cursorup');
-		gameObjects.box.addEventListener(emitPlayerJoinRequest);
+	function emitPlayerLeave(evt){
+		socket.emit('playerLeave', playerInfo.playerId, playerInfo.displayName,
+			playerInfo.displayName+' has left the game.'
+		);
 	}
 
-	console.log('Player', displayName, 'has left the game.');
+	function playerJoin(id, displayName, newTurnOrder)
+	{
+		Utils.rebalanceTable(newTurnOrder, turnOrder);
+		turnOrder.splice(0); turnOrder.push.apply(turnOrder, newTurnOrder);
+
+		if(id === playerInfo.playerId){
+			gameObjects.box.removeEventListener('cursorup');
+			// add listener "deal"
+		}
+
+		console.log('New player joined:', displayName);
+	}
+
+	function playerLeave(id, displayName, newTurnOrder)
+	{
+		Utils.rebalanceTable(newTurnOrder, turnOrder);
+		turnOrder.splice(0); turnOrder.push.apply(turnOrder, newTurnOrder);
+
+		if(id === playerInfo.playerId){
+			gameObjects.box.removeEventListener('cursorup');
+			gameObjects.box.addEventListener(emitPlayerJoinRequest);
+		}
+
+		console.log('Player', displayName, 'has left the game.');
 	
-}
+	}
 
+	
+	// export objects from scope
+	exports.socket = socket;
+	exports.turnOrder = turnOrder;
+	exports.playerInfo = playerInfo;
+
+	exports.connectToGame = connectToGame;
+
+})(window.Game = window.Game || {});
 
 /*
 		var hand = [

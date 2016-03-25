@@ -9,12 +9,20 @@ var socketForPlayer = {};
  */
 function joinRequest(id, displayName)
 {
-	// associate given player name with socket
-	if(this.playerId && this.playerId !== id){
+	// initialize game when first player requests to join
+	if( !turnOrder[this.gameId] )
+		turnOrder[this.gameId] = [];
+
+	// don't allow double-register; one player name per socket
+	for(var j=0, playerIn=false; j<turnOrder[this.gameId].length && !playerIn; j++){
+		playerIn = playerIn || turnOrder[this.gameId][j].playerId === id;
+	}
+	if(this.playerId && (this.playerId !== id || playerIn)){
 		console.log('Attempting to double-register client. Ignoring.');
 		return;
 	}
 	else {
+		// associate socket with player
 		this.playerId = id;	
 		socketForPlayer[id] = this;
 	}
@@ -66,10 +74,6 @@ function joinDenied(id, displayName, message)
  */
 function join(id, displayName)
 {
-	// initialize game when first player joins
-	if( !turnOrder[this.gameId] )
-		turnOrder[this.gameId] = [];
-
 	// check if player approving join is actually in the game
 	var joinerInGame = false;
 	for(var i=0; i<turnOrder[this.gameId].length; i++){

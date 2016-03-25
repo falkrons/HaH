@@ -51,7 +51,7 @@ else
 	root.add(camera);
 }
 
-preloadModels(init);
+Utils.preloadModels(init);
 
 function init()
 {
@@ -65,13 +65,13 @@ function init()
 	root.add(table);
 
 	// add game box
-	gameObjects.box = boxModel;
+	gameObjects.box = Models.box;
 	gameObjects.box.position.set(0, 0, 0.8 + 0.025 + 0.07);
 	gameObjects.box.rotation.set(Math.PI, 0, 0);
 	root.add(gameObjects.box);
 
 	// add a big black card
-	gameObjects.titleCard = generateTitleCard();
+	gameObjects.titleCard = Utils.generateTitleCard();
 	gameObjects.titleCard.position.setZ(2);
 	gameObjects.titleCard.scale.set(12,12,12);
 	gameObjects.titleCard.rotation.set(Math.PI/2, 0, 0);
@@ -90,7 +90,7 @@ function init()
 	}
 	else
 	{
-		connectToGame(gameId);
+		Game.connectToGame(gameId);
 	
 	}
 }
@@ -108,6 +108,9 @@ function render(timestamp)
 		camera.position.y = 4 * Math.cos(timestamp * 2*Math.PI/20000);
 		camera.lookAt( new THREE.Vector3(0, 0, 1.5) );
 	}
+
+	// animate
+	scene.updateAllBehaviors();
 
 	// finally, render
 	renderer.render(scene, camera);
