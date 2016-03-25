@@ -1,4 +1,5 @@
 'use strict';
+var config = require('../config.json');
 
 var turnOrder = {};
 var socketForPlayer = {};
@@ -8,15 +9,19 @@ var socketForPlayer = {};
  */
 function joinRequest(id, displayName)
 {
-	this.playerId = id;
-	socketForPlayer[id] = this;
-
-	console.log('joinRequest', id, displayName);
+	// associate given player name with socket
+	if(this.playerId && this.playerId !== id){
+		console.log('Attempting to double-register client. Ignoring.');
+		return;
+	}
+	else {
+		this.playerId = id;	
+		socketForPlayer[id] = this;
+	}
 
 	// automatically accept players when the game is under minimum
 	if( !turnOrder[this.gameId] || turnOrder[this.gameId].length < 4 )
 	{
-		console.log('Passing to `join`');
 		join.call(this, id, displayName);
 	}
 

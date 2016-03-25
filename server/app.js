@@ -6,7 +6,13 @@ var express = require('express'),
 	socketio = require('socket.io'),
 	liburl = require('url');
 
-var players = require('./players.js');
+var players = require('./players.js'),
+	config = require('../config.json');
+
+// set defaults for config
+config.port = config.port || 7878;
+config.minPlayers = config.minPlayers || 4;
+config.maxPlayers = config.maxPlayers || 12;
 
 
 // initialize http router
@@ -25,8 +31,8 @@ app.use(function(req,res,next)
 });
 
 // start server on port 7373
-var server = app.listen(7878, function(){
-	console.log('Listening on port 7878');
+var server = app.listen(config.port || 7878, function(){
+	console.log('Listening on port', config.port || 7878);
 });
 
 // set up sockets
