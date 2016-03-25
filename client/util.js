@@ -163,6 +163,12 @@ function rebalanceTable(newTurnOrder, oldTurnOrder)
 	var angle = 2*Math.PI/newTurnOrder.length;
 	var cardRadius = 0.5, row1Angle = Math.PI/5, row2Angle = Math.PI/3, row1Sep = Math.PI/10, row2Sep = 1.5*Math.PI/10;
 
+	// flip box when first player joins/leaves
+	if(newTurnOrder.length > 0)
+		gameObjects.box.rotation.set(0, 0, 0);
+	else
+		gameObjects.box.rotation.set(Math.PI, 0, 0);
+
 	// add new players, adjust old players
 	for(var i=0; i<newTurnOrder.length; i++)
 	{
@@ -184,9 +190,29 @@ function rebalanceTable(newTurnOrder, oldTurnOrder)
 
 			// add nameplate for the player
 			var nameplate = generateNameplate(newTurnOrder[i].displayName);
+			nameplate.name = 'nameplate';
 			nameplate.position.set(0, 0.3, -0.64);
 			nameplate.rotation.set(0, 0, Math.PI/2);
 			seat.add(nameplate);
+
+			if(newTurnOrder[i].playerId === playerInfo.playerId)
+			{
+				// register "Leave" action
+				nameplate.addEventListener('cursorup', function(evt){
+					socket.emit('playerLeave', playerInfo.playerId, playerInfo.displayName,
+						playerInfo.displayName+' has left the game.'
+					);
+				});
+			}
+			else
+			{
+				// register "Kick" action
+				(function(nameplate, opponentInfo){
+					nameplate.addEventListener('cursorup', function(evt){
+						socket.emit('playerKickRequest', opponentInfo.playerId, opponentInfo.displayName);
+					});
+				})(nameplate, newTurnOrder[i]);
+			}
 
 			// add seat to the table
 			root.add(seat);

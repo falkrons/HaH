@@ -3,22 +3,17 @@
 
 var socket;
 var turnOrder = [];
-var playerInfo = null;
+var playerInfo = {};
 
 function connectToGame(gameId)
 {
 	// save player info
 	if(altspace.inClient){
-		altspace.getUser().then(function(userInfo){
-			playerInfo = {
-				playerId: userInfo.userId,
-				displayName: userInfo.displayName
-			};
-			gameObjects.box.addEventListener('cursorup', emitPlayerJoinRequest);
+		altspace.getUser().then(function(userInfo)
+		{
+			playerInfo.playerId = userInfo.userId;
+			playerInfo.displayName = userInfo.displayName;
 		});
-	}
-	else {
-		playerInfo = {};
 	}
 
 	// initialize the socket connection
@@ -43,25 +38,34 @@ function connectToGame(gameId)
 	socket.on('init', function(newTurnOrder){
 		rebalanceTable(newTurnOrder, turnOrder);
 		turnOrder = newTurnOrder;
+		gameObjects.box.removeEventListener('cursorup');
+		gameObjects.box.addEventListener('cursorup', emitPlayerJoinRequest);
 	});
 
 	socket.on('playerJoin', playerJoin);
 	socket.on('playerLeave', playerLeave);
 }
 
-function emitPlayerJoinRequest(evt)
-{
+function emitPlayerJoinRequest(evt){
 	socket.emit('playerJoinRequest', playerInfo.playerId, playerInfo.displayName);
+}
+
+function emitPlayerLeave(evt){
+	socket.emit('playerLeave', playerInfo.playerId, playerInfo.displayName,
+		playerInfo.displayname+' has left the game.'
+	);
 }
 
 function playerJoin(id, displayName, newTurnOrder)
 {
-	if(id === playerInfo.playerId){
-		gameObjects.box.removeEventListener('cursorup', emitPlayerJoinRequest);
-	}
-
 	rebalanceTable(newTurnOrder, turnOrder);
 	turnOrder = newTurnOrder;
+
+	if(id === playerInfo.playerId){
+		gameObjects.box.removeEventListener('cursorup');
+		// add listener "deal"
+	}
+
 	console.log('New player joined:', displayName);
 }
 
@@ -69,6 +73,12 @@ function playerLeave(id, displayName, newTurnOrder)
 {
 	rebalanceTable(newTurnOrder, turnOrder);
 	turnOrder = newTurnOrder;
+
+	if(id === playerInfo.playerId){
+		gameObjects.box.removeEventListener('cursorup');
+		gameObjects.box.addEventListener(emitPlayerJoinRequest);
+	}
+
 	console.log('Player', displayName, 'has left the game.');
 	
 }
