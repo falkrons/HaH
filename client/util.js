@@ -103,6 +103,40 @@ function generateCard(text, color)
 	return model;
 }
 
+function generateTitleCard()
+{
+	// card face texture resolution
+	var cardWidth = 256;
+	var model = cardModel.clone();
+	var fontStack = '"Helvetica Neue", Helvetica, Arial, Sans-Serif';
+
+	// set up canvas
+	var bmp = document.createElement('canvas');
+	var g = bmp.getContext('2d');
+	bmp.width = 2*cardWidth;
+	bmp.height = 2*cardWidth;
+	g.fillStyle = 'black';
+	g.fillRect(0, 0, 2*cardWidth, 2*cardWidth);
+		
+	// draw card
+	g.font = 'bold '+(0.15*cardWidth)+'px '+fontStack;
+	g.fillStyle = 'white';
+
+	g.fillText('Holograms', 0.1*cardWidth, 0.22*cardWidth);
+	g.fillText('Against', 0.1*cardWidth, 0.37*cardWidth);
+	g.fillText('Humanity', 0.1*cardWidth, 0.52*cardWidth);
+
+	g.fillText('Holograms', 1.1*cardWidth, 0.22*cardWidth);
+	g.fillText('Against', 1.1*cardWidth, 0.37*cardWidth);
+	g.fillText('Humanity', 1.1*cardWidth, 0.52*cardWidth);
+	
+	// assign texture
+	model.material = new THREE.MeshBasicMaterial({
+		map: new THREE.CanvasTexture(bmp)
+	});
+
+	return model;
+}
 
 function generateNameplate(name)
 {
@@ -164,10 +198,14 @@ function rebalanceTable(newTurnOrder, oldTurnOrder)
 	var cardRadius = 0.5, row1Angle = Math.PI/5, row2Angle = Math.PI/3, row1Sep = Math.PI/10, row2Sep = 1.5*Math.PI/10;
 
 	// flip box when first player joins/leaves
-	if(newTurnOrder.length > 0)
+	if(newTurnOrder.length > 0){
 		gameObjects.box.rotation.set(0, 0, 0);
-	else
+		gameObjects.titleCard.visible = false;
+	}
+	else {
 		gameObjects.box.rotation.set(Math.PI, 0, 0);
+		gameObjects.titleCard.visible = true;
+	}
 
 	// add new players, adjust old players
 	for(var i=0; i<newTurnOrder.length; i++)

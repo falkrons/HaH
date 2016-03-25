@@ -71,30 +71,11 @@ function init()
 	root.add(gameObjects.box);
 
 	// add a big black card
-	/*var bigBlackCard = generateCard([
-		'Dear Mom and Dad,',
-		'Camp is fun. I like',
-		'capture the flag.',
-		'Yesterday, one',
-		'of the older kids',
-		'taught me about',
-		'________________.',
-		'I love you,',
-		'Casey'],
-		'black'
-	);
-
-	bigBlackCard.position.setZ(2);
-	bigBlackCard.scale.set(12,12,12);
-	bigBlackCard.rotation.set(Math.PI/2, 0, 0);
-	root.add(bigBlackCard);*/
-
-	// add dummy player seats
-	/*var turnOrder = [];
-	for(var i=0; i<8; i++)
-		turnOrder.push({displayName: 'Player '+i});
-	rebalanceTable(turnOrder);
-	*/
+	gameObjects.titleCard = generateTitleCard();
+	gameObjects.titleCard.position.setZ(2);
+	gameObjects.titleCard.scale.set(12,12,12);
+	gameObjects.titleCard.rotation.set(Math.PI/2, 0, 0);
+	root.add(gameObjects.titleCard);
 
 	// grab game id from URL
 	var gameId = /[?&]gameId=(\w+)\b/.exec(window.location.search);
