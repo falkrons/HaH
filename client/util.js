@@ -155,4 +155,56 @@ function sphericalToMatrix(theta, phi, radius)
 
 }
 
+function rebalanceTable(newTurnOrder, oldTurnOrder)
+{
+	newTurnOrder = newTurnOrder || [];
+	oldTurnOrder = oldTurnOrder || [];
+
+	var angle = 2*Math.PI/newTurnOrder.length;
+	var cardRadius = 0.5, row1Angle = Math.PI/5, row2Angle = Math.PI/3, row1Sep = Math.PI/10, row2Sep = 1.5*Math.PI/10;
+
+	// add new players, adjust old players
+	for(var i=0; i<newTurnOrder.length; i++)
+	{
+		// attempt to get seat at index
+		var seat = root.getObjectByName(newTurnOrder[i].playerId);
+		if(seat)
+		{
+			// player is already in the game, move them to position
+			seat.position.set(-1.6*Math.sin(i*angle), -1.6*Math.cos(i*angle), 1.5);
+			seat.rotation.set(0, 0, -angle*i);
+		}
+		else
+		{
+			// create new seat for player
+			seat = new THREE.Object3D();
+			seat.name = newTurnOrder[i].playerId;
+			seat.position.set(-1.6*Math.sin(i*angle), -1.6*Math.cos(i*angle), 1.5);
+			seat.rotation.set(0, 0, -angle*i);
+
+			// add nameplate for the player
+			var nameplate = generateNameplate(newTurnOrder[i].displayName);
+			nameplate.position.set(0, 0.3, -0.64);
+			nameplate.rotation.set(0, 0, Math.PI/2);
+			seat.add(nameplate);
+
+			// add seat to the table
+			root.add(seat);
+		}
+	}
+
+	// remove absent players
+	for(var i=0; i<oldTurnOrder.length; i++)
+	{
+		// determine if old player is in new turn order
+		for(var j=0, playerIn=false; j<newTurnOrder.length && !playerIn; j++){
+			playerIn = playerIn || newTurnOrder[j].playerId === oldTurnOrder[i].playerId;
+		}
+
+		if(!playerIn){
+			var seat = root.getObjectByName(oldTurnOrder[i].playerId);
+			root.remove(seat);
+		}
+	}
+}
 

@@ -11,22 +11,25 @@ function joinRequest(id, displayName)
 	this.playerId = id;
 	socketForPlayer[id] = this;
 
+	console.log('joinRequest', id, displayName);
+
 	// automatically accept players when the game is under minimum
 	if( !turnOrder[this.gameId] || turnOrder[this.gameId].length < 4 )
 	{
+		console.log('Passing to `join`');
 		join.call(this, id, displayName);
 	}
 
 	// deny new players when the game is at max
 	else if( turnOrder[this.gameId].length >= 12 )
 	{
-		this.to(this.id).emit('playerJoinDenied', 'Game is already full.');
+		this.emit('playerJoinDenied', 'Game is already full.');
 	}
 
 	// otherwise ask current players to join
 	else
 	{
-		this.to(this.gameId+'_players').emit('playerJoinRequest', id, displayName);
+		this.server.to(this.gameId+'_players').emit('playerJoinRequest', id, displayName);
 		console.log('Player', displayName, 'is trying to join', this.gameId);
 	}
 }
@@ -49,7 +52,7 @@ function joinDenied(id, displayName, message)
 		return;
 
 	// inform requester of denial
-	this.on( socketForPlayer[id].id ).emit('playerJoinDenied', id, displayName, 'A player has denied your request to join.');
+	socketForPlayer[id].emit('playerJoinDenied', id, displayName, 'A player has denied your request to join.');
 }
 
 
@@ -71,19 +74,21 @@ function join(id, displayName)
 	// ignore join approval if approver isn't in the same game as player requested
 	// (shouldn't ever happen, but better safe than sorry)
 	if( socketForPlayer[id].gameId !== this.gameId
-		|| turnOrder[this.gameId].length > 0 && !joinerInGame
-	)
+		|| turnOrder[this.gameId].length >=4 && !joinerInGame
+	){
+		console.log('Client not authorized');
 		return;
+	}
 
 	// subscribe client to player-only events
-	socketForPlayer[id].join(this.gameId);
+	socketForPlayer[id].join(this.gameId+'_players');
 
 	// add player to the end of the turn order
 	var newPlayer = {'playerId': id, 'displayName': displayName};
 	turnOrder[this.gameId].push(newPlayer);
 
 	// let other clients know about new player
-	this.to(this.gameId+'_clients').emit('playerJoin', id, displayName, turnOrder[this.gameId]);
+	this.server.to(this.gameId+'_clients').emit('playerJoin', id, displayName, turnOrder[this.gameId]);
 
 	// trigger leave if socket is disconnected
 	socketForPlayer[id].on('disconnect', function(){
@@ -124,7 +129,9 @@ function leave(id, displayName, message)
 	socketForPlayer[id].leave(this.gameId+'_players');
 
 	// inform other clients of player's departure
-	this.to(this.gameId+'_clients').emit('playerLeave', id, displayName, turnOrder[this.gameId], message);
+	this.server.to(this.gameId+'_clients').emit('playerLeave', id, displayName, turnOrder[this.gameId], message);
+
+	console.log('Player', displayName, 'has left the game.');
 }
 
 

@@ -41,6 +41,7 @@ io.on('connection', function(socket)
 		socket.gameId = url.query.gameId;
 		socket.join(socket.gameId+'_clients');
 		registerGameListeners(socket);
+		socket.emit('init', players.turnOrder[socket.gameId]);
 
 		console.log('Client connected to', socket.gameId);
 	}

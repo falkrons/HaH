@@ -1,61 +1,80 @@
 'use strict';
 
+
 var socket;
 var turnOrder = [];
-
+var playerInfo = null;
 
 function connectToGame(gameId)
 {
+	// save player info
+	if(altspace.inClient){
+		altspace.getUser().then(function(userInfo){
+			playerInfo = {
+				playerId: userInfo.userId,
+				displayName: userInfo.displayName
+			};
+			gameObjects.box.addEventListener('cursorup', emitPlayerJoinRequest);
+		});
+	}
+	else {
+		playerInfo = {};
+	}
+
 	// initialize the socket connection
-	socket = io('http://localhost:7878/?gameId='+gameId);
+	socket = io('/?gameId='+gameId);
+
+	// debug listener
+	var onevent = socket.onevent;
+	socket.onevent = function(packet){
+		var args = packet.data || [];
+		onevent.call(this, packet);
+		packet.data = ['*'].concat(args);
+		onevent.call(this, packet);
+	};
+	socket.on('*', function(){
+		console.log(arguments);
+	});
+
 	socket.on('error', function(msg){
 		console.error(msg);
 	});
 
-	box.addEventListener('cursorup', emitPlayerJoinRequest);
+	socket.on('init', function(newTurnOrder){
+		rebalanceTable(newTurnOrder, turnOrder);
+		turnOrder = newTurnOrder;
+	});
 
 	socket.on('playerJoin', playerJoin);
-
+	socket.on('playerLeave', playerLeave);
 }
 
 function emitPlayerJoinRequest(evt)
 {
-	altspace.getUser().then(function(userInfo){
-		socket.emit('playerJoinRequest', userInfo.userId, userInfo.displayName);
-	});
+	socket.emit('playerJoinRequest', playerInfo.playerId, playerInfo.displayName);
 }
 
 function playerJoin(id, displayName, newTurnOrder)
 {
-	rebalanceTable(newTurnOrder);
+	if(id === playerInfo.playerId){
+		gameObjects.box.removeEventListener('cursorup', emitPlayerJoinRequest);
+	}
+
+	rebalanceTable(newTurnOrder, turnOrder);
+	turnOrder = newTurnOrder;
+	console.log('New player joined:', displayName);
+}
+
+function playerLeave(id, displayName, newTurnOrder)
+{
+	rebalanceTable(newTurnOrder, turnOrder);
+	turnOrder = newTurnOrder;
+	console.log('Player', displayName, 'has left the game.');
+	
 }
 
 
-var seatForPlayer = {};
-function rebalanceTable(newTurnOrder)
-{
-	var angle = 2*Math.PI/turnOrder.length;
-	var cardRadius = 0.5, row1Angle = Math.PI/5, row2Angle = Math.PI/3, row1Sep = Math.PI/10, row2Sep = 1.5*Math.PI/10;
-
-	for(var i=0; i<newTurnOrder.length; i++)
-	{
-		// attempt to get seat at index
-	}
-
-	for(var i=0; i<turnOrder.length; i++)
-	{
-		// create origin point for player's UI
-		var seat = new THREE.Object3D();
-		seat.name = 'seat'+i;
-		seat.position.set(-1.6*Math.sin(i*angle), -1.6*Math.cos(i*angle), 1.5);
-		seat.rotation.set(0, 0, -angle*i);
-
-		// add nameplate for the player
-		var nameplate = generateNameplate(turnOrder[i].displayName);
-		nameplate.position.set(0, 0.3, -0.64);
-		nameplate.rotation.set(0, 0, Math.PI/2);
-		seat.add(nameplate);
-
+/*
 		var hand = [
 			['Being on fire.'],
 			['Racism'],
@@ -85,4 +104,4 @@ function rebalanceTable(newTurnOrder)
 		root.add(seat);
 	}
 }
-
+*/
