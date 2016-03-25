@@ -7,12 +7,12 @@
 	models.nameplate = null;
 	models.blankCard = null;
 	models.box = null;
-
+	models.dialog = null;
 
 	function preloadModels(cb)
 	{
 		var loader = new THREE.ColladaLoader();
-		var modelsToGo = 3;
+		var modelsToGo = 4;
 
 		// pre-load card model
 		loader.load('models/card.dae', function(result)
@@ -50,6 +50,15 @@
 				if(modelsToGo === 0)
 					cb();
 			});
+		});
+
+		loader.load('models/dialog.dae', function(result)
+		{
+			models.dialog = result.scene.children[0];
+
+			modelsToGo--;
+			if(modelsToGo === 0)
+				cb();
 		});
 	}
 
@@ -170,6 +179,41 @@
 		return model;
 	}
 
+	function generateDialog(text, acceptCb, declineCb)
+	{
+		// card face texture resolution
+		var texWidth = 512;
+		var model = models.dialog.clone();
+		var fontStack = '"Helvetica Neue", Helvetica, Arial, Sans-Serif';
+		
+		// set up canvas
+		var bmp = document.createElement('canvas');
+		var g = bmp.getContext('2d');
+		bmp.width = texWidth;
+		bmp.height = texWidth;
+
+		// draw background
+		g.fillStyle = 'blue';
+		g.fillRect(0, 0, texWidth, texWidth-170);
+		g.fillStyle = 'red';
+		g.fillRect(0, texWidth-170, texWidth/2, 170);
+		g.fillStyle = 'green';
+		g.fillRect(texWidth/2, texWidth-170, texWidth/2, 170);
+
+		g.font = 'bold 25px '+fontStack;
+		g.textAlign = 'center';
+		g.fillStyle = 'black';
+
+		// assign texture
+		model.traverse(function(mesh){
+			mesh.material = new THREE.MeshBasicMaterial({
+				map: new THREE.CanvasTexture(bmp)
+			});
+		});
+
+
+		return model;
+	}
 
 	function sphericalToMatrix(theta, phi, radius)
 	{
@@ -206,7 +250,7 @@
 		}
 		else {
 			gameObjects.box.rotation.set(Math.PI, 0, 0);
-			gameObjects.titleCard.visible = true;
+			gameObjects.titleCard.visible = false;
 		}
 
 		// add new players, adjust old players
@@ -248,7 +292,9 @@
 				{
 					// register "Kick" action
 					(function(nameplate, opponentInfo){
+						console.log('Registering kick event');
 						nameplate.addEventListener('cursorup', function(evt){
+							console.log('kicking');
 							Game.socket.emit('playerKickRequest', opponentInfo.playerId, opponentInfo.displayName);
 						});
 					})(nameplate, newTurnOrder[i]);
@@ -278,6 +324,7 @@
 	exports.generateCard = generateCard;
 	exports.generateTitleCard = generateTitleCard;
 	exports.generateNameplate = generateNameplate;
+	exports.generateDialog = generateDialog;
 	exports.sphericalToMatrix = sphericalToMatrix;
 	exports.rebalanceTable = rebalanceTable;
 

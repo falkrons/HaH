@@ -57,7 +57,7 @@ function init()
 {
 	// add table surface
 	var table = new THREE.Mesh(
-		new THREE.CylinderGeometry(1.5, 1.5, 0.05, 12, 1),
+		new THREE.CylinderGeometry(1.5, 1.5, 0.05, 36, 1),
 		new THREE.MeshBasicMaterial({color: 0x226022})
 	);
 	table.position.setZ(0.8);
@@ -76,6 +76,18 @@ function init()
 	gameObjects.titleCard.scale.set(12,12,12);
 	gameObjects.titleCard.rotation.set(Math.PI/2, 0, 0);
 	root.add(gameObjects.titleCard);
+
+	gameObjects.dialog = Utils.generateDialog(
+		'Do you want to kick\nSteven?',
+		function(){
+			console.log('dialog accepted');
+		},
+		function(){
+			console.log('dialog rejected');
+		}
+	);
+	gameObjects.dialog.position.setZ(2.3);
+	root.add(gameObjects.dialog);
 
 	// grab game id from URL
 	var gameId = /[?&]gameId=(\w+)\b/.exec(window.location.search);
