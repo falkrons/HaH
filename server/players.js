@@ -123,6 +123,20 @@ function leave(id, displayName, message)
 }
 
 
+module.exports = {
+	//export player info
+	turnOrder: turnOrder,
+	socketForPlayer: socketForPlayer,
+
+	// export event handlers
+	joinRequest: joinRequest,
+	joinDenied: joinDenied,
+	join: join,
+	leave: leave,
+};
+
+
+/*
 // export player info
 exports.turnOrder = turnOrder;
 exports.socketForPlayer = socketForPlayer;
@@ -132,4 +146,6 @@ exports.joinRequest = joinRequest;
 exports.joinDenied = joinDenied;
 exports.join = join;
 exports.leave = leave;
+
+*/
 

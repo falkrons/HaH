@@ -24,7 +24,7 @@ app.use(function(req,res,next)
 	res.status(404).send('404 File Not Found');
 });
 
-// start server on port 7373
+// start server on port 7878
 var server = app.listen(7878, function(){
 	console.log('Listening on port 7878');
 });
