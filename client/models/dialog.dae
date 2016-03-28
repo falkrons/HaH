@@ -5,8 +5,8 @@
       <author>Blender User</author>
       <authoring_tool>Blender 2.76.0 commit date:2015-11-03, commit time:10:56, hash:f337fea</authoring_tool>
     </contributor>
-    <created>2016-03-25T15:56:21</created>
-    <modified>2016-03-25T15:56:21</modified>
+    <created>2016-03-28T17:23:10</created>
+    <modified>2016-03-28T17:23:10</modified>
     <unit name="meter" meter="1"/>
     <up_axis>Z_UP</up_axis>
   </asset>
@@ -68,7 +68,7 @@
           </technique_common>
         </source>
         <source id="Plane_001-mesh-map">
-          <float_array id="Plane_001-mesh-map-array" count="12">0.9909784 0.05007064 0.9909784 0.2826668 0.5257861 0.2826668 0.5257861 0.05007064 0.9909784 0.05007064 0.5257861 0.2826668</float_array>
+          <float_array id="Plane_001-mesh-map-array" count="12">0.9960938 0.046875 0.9960938 0.2929688 0.5039063 0.2929688 0.5039063 0.046875 0.9960938 0.046875 0.5039063 0.2929688</float_array>
           <technique_common>
             <accessor source="#Plane_001-mesh-map-array" count="6" stride="2">
               <param name="S" type="float"/>
@@ -111,7 +111,7 @@
           </technique_common>
         </source>
         <source id="Plane_002-mesh-map">
-          <float_array id="Plane_002-mesh-map-array" count="12">0.5148656 0.03589677 0.5148656 0.2919191 0.002820909 0.2919191 0.002820909 0.03589677 0.5148656 0.03589677 0.002820909 0.2919191</float_array>
+          <float_array id="Plane_002-mesh-map-array" count="12">0.4960938 0.046875 0.4960938 0.2929688 0.00390625 0.2929688 0.00390625 0.046875 0.4960938 0.046875 0.00390625 0.2929688</float_array>
           <technique_common>
             <accessor source="#Plane_002-mesh-map-array" count="6" stride="2">
               <param name="S" type="float"/>

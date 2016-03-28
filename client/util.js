@@ -193,7 +193,7 @@
 		bmp.height = texWidth;
 
 		// draw background
-		g.fillStyle = 'blue';
+		g.fillStyle = 'whitesmoke';
 		g.fillRect(0, 0, texWidth, texWidth-170);
 		g.fillStyle = 'red';
 		g.fillRect(0, texWidth-170, texWidth/2, 170);
@@ -205,10 +205,11 @@
 		g.fillStyle = 'black';
 
 		// assign texture
+		var dMaterial = new THREE.MeshBasicMaterial({
+			map: new THREE.CanvasTexture(bmp)
+		});
 		model.traverse(function(mesh){
-			mesh.material = new THREE.MeshBasicMaterial({
-				map: new THREE.CanvasTexture(bmp)
-			});
+			mesh.material = dMaterial;
 		});
 
 
