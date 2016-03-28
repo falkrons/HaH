@@ -261,7 +261,7 @@
 			if(seat)
 			{
 				// player is already in the game, move them to position
-				seat.position.set(-1.6*Math.sin(i*angle), -1.6*Math.cos(i*angle), 1.5);
+				seat.position.set(-1.05*tableRadius*Math.sin(i*angle), -1.05*tableRadius*Math.cos(i*angle), 1.5);
 				seat.rotation.set(0, 0, -angle*i);
 			}
 			else
@@ -269,13 +269,13 @@
 				// create new seat for player
 				seat = new THREE.Object3D();
 				seat.name = newTurnOrder[i].playerId;
-				seat.position.set(-1.6*Math.sin(i*angle), -1.6*Math.cos(i*angle), 1.5);
+				seat.position.set(-tableRadius*Math.sin(i*angle), -tableRadius*Math.cos(i*angle), 1.5);
 				seat.rotation.set(0, 0, -angle*i);
 
 				// add nameplate for the player
 				var nameplate = generateNameplate(newTurnOrder[i].displayName);
 				nameplate.name = 'nameplate';
-				nameplate.position.set(0, 0.3, -0.64);
+				nameplate.position.set(0, 0.15, -0.64);
 				nameplate.rotation.set(0, 0, Math.PI/2);
 				seat.add(nameplate);
 
