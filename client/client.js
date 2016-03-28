@@ -92,11 +92,11 @@ function init()
 	root.add(gameObjects.box);
 
 	// add a big black card
-	gameObjects.titleCard = Utils.generateTitleCard();
+	/*gameObjects.titleCard = Utils.generateTitleCard();
 	gameObjects.titleCard.position.setZ(2);
 	gameObjects.titleCard.scale.set(12,12,12);
 	gameObjects.titleCard.rotation.set(Math.PI/2, 0, 0);
-	root.add(gameObjects.titleCard);
+	root.add(gameObjects.titleCard);*/
 
 	gameObjects.dialog = Utils.generateDialog(
 		'Do you want to kick\nSteven?',

@@ -179,7 +179,7 @@
 		return model;
 	}
 
-	function generateDialog(text, acceptCb, declineCb)
+	function generateDialog(text, acceptCb, declineCb, finallyCb)
 	{
 		// card face texture resolution
 		var texWidth = 512;
@@ -200,9 +200,20 @@
 		g.fillStyle = 'green';
 		g.fillRect(texWidth/2, texWidth-170, texWidth/2, 170);
 
-		g.font = 'bold 25px '+fontStack;
+		// set up text
+		g.font = 'bold 35px '+fontStack;
 		g.textAlign = 'center';
 		g.fillStyle = 'black';
+
+		// draw question
+		var lines = text.split('\n');
+		for(var i=1; i<=lines.length; i++)
+			g.fillText(lines[i-1], texWidth/2, 50*i + 50);
+
+		// draw answers
+		g.font = 'bold 45px '+fontStack;
+		g.fillText('No', 0.25*texWidth, texWidth-70);
+		g.fillText('Yes', 0.75*texWidth, texWidth-70);
 
 		// assign texture
 		var dMaterial = new THREE.MeshBasicMaterial({
@@ -212,6 +223,15 @@
 			mesh.material = dMaterial;
 		});
 
+		// assign callbacks
+		model.getObjectByName('Accept').addEventListener('cursorup', function(){
+			acceptCb();
+			if(finallyCb) finallyCb();
+		});
+		model.getObjectByName('Decline').addEventListener('cursorup', function(){
+			declineCb();
+			if(finallyCb) finallyCb();
+		});
 
 		return model;
 	}
