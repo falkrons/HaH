@@ -97,6 +97,7 @@ function init()
 	gameObjects.titleCard.scale.set(12,12,12);
 	gameObjects.titleCard.rotation.set(Math.PI/2, 0, 0);
 	gameObjects.titleCard.visible = false;
+	gameObjects.titleCard.addBehavior( new Behaviors.RotateBehavior(0, 0.5, 0) );
 	root.add(gameObjects.titleCard);
 
 	// grab game id from URL

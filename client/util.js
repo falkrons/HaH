@@ -295,8 +295,12 @@
 			if(seat)
 			{
 				// player is already in the game, move them to position
-				seat.position.set(-1.05*tableRadius*Math.sin(i*angle), -1.05*tableRadius*Math.cos(i*angle), 1.5);
-				seat.rotation.set(0, 0, -angle*i);
+				seat.addBehavior( new Behaviors.AnimateBehavior(
+					new THREE.Vector3(-1.05*tableRadius*Math.sin(i*angle), -1.05*tableRadius*Math.cos(i*angle), 1.5),
+					new THREE.Euler(0, 0, -angle*i),
+					null,
+					600
+				));
 			}
 			else
 			{
