@@ -6,7 +6,13 @@ var express = require('express'),
 	socketio = require('socket.io'),
 	liburl = require('url');
 
-var players = require('./players.js');
+var players = require('./players.js'),
+	config = require('../config.json');
+
+// set defaults for config
+config.port = config.port || 7878;
+config.minPlayers = config.minPlayers || 4;
+config.maxPlayers = config.maxPlayers || 12;
 
 
 // initialize http router
@@ -24,9 +30,9 @@ app.use(function(req,res,next)
 	res.status(404).send('404 File Not Found');
 });
 
-// start server on port 7878
-var server = app.listen(7878, function(){
-	console.log('Listening on port 7878');
+// start server on configured port
+var server = app.listen(config.port, function(){
+	console.log('Listening on port', config.port);
 });
 
 // set up sockets
@@ -41,6 +47,7 @@ io.on('connection', function(socket)
 		socket.gameId = url.query.gameId;
 		socket.join(socket.gameId+'_clients');
 		registerGameListeners(socket);
+		socket.emit('init', players.turnOrder[socket.gameId]);
 
 		console.log('Client connected to', socket.gameId);
 	}
@@ -56,9 +63,16 @@ function registerGameListeners(socket)
 		console.error(err);
 	});
 
+	socket.on('disconnect', function(){
+		console.log('disconnecting', this.playerId);
+		//console.log(this);
+		players.leave.call(this, this.playerId);
+	});
+	
 	// register player events
 	socket.on('playerJoinRequest', players.joinRequest);
 	socket.on('playerJoinDenied', players.joinDenied);
 	socket.on('playerJoin', players.join);
 	socket.on('playerLeave', players.leave);
+	socket.on('playerKickRequest', players.kickRequest);
 }

@@ -1,0 +1,5 @@
+{
+	"port": 7878,
+	"minPlayers": 4,
+	"maxPlayers": 12
+}

@@ -89,7 +89,7 @@ Player Management
 1. Display vote dialog to client.
 
 
-### playerKickResponse(playerId, displayName, requesterName)
+### playerKickResponse(playerId, displayName, requesterName, approved)
 
 *Triggered by*: A player voting to kick a player.
 

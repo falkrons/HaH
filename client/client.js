@@ -17,6 +17,17 @@ var scene = new THREE.Scene();
 var root = new THREE.Object3D();
 scene.add(root);
 
+var gameObjects = {};
+var tableRadius = 1.5;
+
+var staticPage = [
+	'<p style="width:250px; height:350px; background-color:black; color:white;'+
+		'font:bold 45px sans-serif; padding:20px; border-radius:5px;">',
+		'Holograms<br/>',
+		'Against<br/>',
+		'Humanity',
+	'</p>'
+].join('\n');
 
 /**************************
 	Initialize scene
@@ -27,10 +38,21 @@ if( altspace.inClient )
 	// convert all this altspace craziness into a normal coordinate space
 	// i.e. units in meters, z-axis up, with origin on the floor
 	renderer = altspace.getThreeJSRenderer();
-	altspace.getEnclosure().then(function(enc){
+	altspace.getEnclosure().then(function(enc)
+	{
+		// reset coordinate space
 		root.scale.set(enc.pixelsPerMeter, enc.pixelsPerMeter, enc.pixelsPerMeter);
 		root.position.setY( -enc.innerHeight/2 );
 		root.rotation.set( -Math.PI/2, 0, 0 );
+		tableRadius = (enc.innerWidth < enc.innerDepth ? enc.innerWidth : enc.innerDepth)/2 / enc.pixelsPerMeter;
+		
+		// render 2d version if space is flat
+		if( enc.innerDepth < 10 ){
+			document.body.innerHTML = staticPage;
+		}
+		else {
+			Utils.preloadModels(init);
+		}
 	});
 }
 else
@@ -44,18 +66,19 @@ else
 	// add an orbiting camera
 	camera = new THREE.PerspectiveCamera(45, 1280/720, 1, 1000);
 	camera.up.set(0,0,1);
-	camera.position.set(0, 4, 1.5);
+	camera.position.set(0, 2*tableRadius, 1.5);
 	camera.lookAt( new THREE.Vector3(0, 0, 1.5) );
 	root.add(camera);
+	
+	Utils.preloadModels(init);
 }
 
-preloadModels(init);
 
 function init()
 {
 	// add table surface
 	var table = new THREE.Mesh(
-		new THREE.CylinderGeometry(1.5, 1.5, 0.05, 12, 1),
+		new THREE.CylinderGeometry(tableRadius, tableRadius, 0.05, 36, 1),
 		new THREE.MeshBasicMaterial({color: 0x226022})
 	);
 	table.position.setZ(0.8);
@@ -63,40 +86,29 @@ function init()
 	root.add(table);
 
 	// add game box
-	var box = boxModel;
-	box.position.set(0, 0, 0.8 + 0.025 + 0.07);
-	root.add(box);
+	gameObjects.box = Models.box;
+	gameObjects.box.position.set(0, 0, 0.8 + 0.025 + 0.07);
+	gameObjects.box.rotation.set(Math.PI, 0, 0);
+	root.add(gameObjects.box);
 
 	// add a big black card
-	var bigBlackCard = generateCard([
-		/*'The new',
-		'Chevy Tahoe.',
-		'With the power',
-		'and space to take',
-		'_______________',
-		'everywhere you go.'*/
-		'Dear Mom and Dad,',
-		'Camp is fun. I like',
-		'capture the flag.',
-		'Yesterday, one',
-		'of the older kids',
-		'taught me about',
-		'________________.',
-		'I love you,',
-		'Casey'],
-		'black'
+	/*gameObjects.titleCard = Utils.generateTitleCard();
+	gameObjects.titleCard.position.setZ(2);
+	gameObjects.titleCard.scale.set(12,12,12);
+	gameObjects.titleCard.rotation.set(Math.PI/2, 0, 0);
+	root.add(gameObjects.titleCard);*/
+
+	/*gameObjects.dialog = Utils.generateDialog(
+		'Do you want to kick\nSteven?',
+		function(){
+			console.log('dialog accepted');
+		},
+		function(){
+			console.log('dialog rejected');
+		}
 	);
-
-	bigBlackCard.position.setZ(2);
-	bigBlackCard.scale.set(12,12,12);
-	bigBlackCard.rotation.set(Math.PI/2, 0, 0);
-	root.add(bigBlackCard);
-
-	// add dummy player seats
-	var turnOrder = [];
-	for(var i=0; i<8; i++)
-		turnOrder.push({displayName: 'Player '+i});
-	rebalanceTable(turnOrder);
+	gameObjects.dialog.position.setZ(2.3);
+	root.add(gameObjects.dialog);*/
 
 	// grab game id from URL
 	var gameId = /[?&]gameId=(\w+)\b/.exec(window.location.search);
@@ -111,7 +123,7 @@ function init()
 	}
 	else
 	{
-		connectToGame(gameId);
+		Game.connectToGame(gameId);
 	
 	}
 }
@@ -125,10 +137,13 @@ function render(timestamp)
 {
 	// update camera if necessary
 	if(camera){
-		camera.position.x = 4 * Math.sin(timestamp * 2*Math.PI/20000);
-		camera.position.y = 4 * Math.cos(timestamp * 2*Math.PI/20000);
+		camera.position.x = 2*tableRadius * Math.sin(timestamp * 2*Math.PI/20000);
+		camera.position.y = 2*tableRadius * Math.cos(timestamp * 2*Math.PI/20000);
 		camera.lookAt( new THREE.Vector3(0, 0, 1.5) );
 	}
+
+	// animate
+	scene.updateAllBehaviors();
 
 	// finally, render
 	renderer.render(scene, camera);

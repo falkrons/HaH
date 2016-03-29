@@ -1,45 +1,136 @@
 'use strict';
 
-var socket;
-
-function connectToGame(gameId)
+// don't pollute the global namespace
+(function(exports)
 {
-	socket = io('http://localhost:7878/?gameId='+gameId);
-	socket.on('error', function(msg){
-		console.error(msg);
-	});
+	var socket;
+	var turnOrder = [];
+	var playerInfo = {};
 
-	socket.on('playerJoin', playerJoin);
-
-	socket.emit('playerJoinRequest', 'asdf', 'stevenp');
-}
-
-function playerJoin(id, displayName, turnOrder)
-{
-
-}
-
-
-var seatForPlayer = {};
-function rebalanceTable(turnOrder)
-{
-	var angle = 2*Math.PI/turnOrder.length;
-	var cardRadius = 0.5, row1Angle = Math.PI/5, row2Angle = row1Angle+0.35, row1Sep = Math.PI/10, row2Sep = 1.5*Math.PI/10;
-
-	for(var i=0; i<turnOrder.length; i++)
+	function connectToGame(gameId)
 	{
-		// create origin point for player's UI
-		var seat = new THREE.Object3D();
-		seat.name = 'seat'+i;
-		seat.position.set(-1.6*Math.sin(i*angle), -1.6*Math.cos(i*angle), 1.5);
-		seat.rotation.set(0, 0, -angle*i);
+		// save player info
+		if(altspace.inClient){
+			altspace.getUser().then(function(userInfo)
+			{
+				playerInfo.playerId = userInfo.userId;
+				playerInfo.displayName = userInfo.displayName;
+			});
+		}
 
-		// add nameplate for the player
-		var nameplate = generateNameplate(turnOrder[i].displayName);
-		nameplate.position.set(0, 0.3, -0.64);
-		nameplate.rotation.set(0, 0, Math.PI/2);
-		seat.add(nameplate);
+		// initialize the socket connection
+		Game.socket = socket = io('/?gameId='+gameId);
 
+		// debug listener
+		var onevent = socket.onevent;
+		socket.onevent = function(packet){
+			var args = packet.data || [];
+			onevent.call(this, packet);
+			packet.data = ['*'].concat(args);
+			onevent.call(this, packet);
+		};
+		socket.on('*', function(){
+			console.log(arguments);
+		});
+
+		socket.on('error', function(msg){
+			console.error(msg);
+		});
+
+		socket.on('init', function(newTurnOrder){
+			Utils.rebalanceTable(newTurnOrder, turnOrder);
+			turnOrder.splice(0); turnOrder.push.apply(turnOrder, newTurnOrder);
+			gameObjects.box.removeEventListener('cursorup');
+			gameObjects.box.addEventListener('cursorup', emitPlayerJoinRequest);
+		});
+
+		socket.on('playerJoinRequest', playerJoinRequest);
+		socket.on('playerJoin', playerJoin);
+		socket.on('playerLeave', playerLeave);
+		socket.on('playerKickRequest', playerKickRequest);
+	}
+
+	
+	function emitPlayerJoinRequest(evt){
+		socket.emit('playerJoinRequest', playerInfo.playerId, playerInfo.displayName);
+	}
+
+	function emitPlayerLeave(evt){
+		socket.emit('playerLeave', playerInfo.playerId, playerInfo.displayName,
+			playerInfo.displayName+' has left the game.'
+		);
+	}
+	
+	function playerJoinRequest(id, displayName)
+	{
+		Utils.generateDialog('Can this player join?\n'+displayName,
+			function(){
+				socket.emit('playerJoin', id, displayName);
+			},
+			function(){
+				socket.emit('playerJoinDenied', id, displayName);
+			}
+		);
+	}
+	
+	function playerJoin(id, displayName, newTurnOrder)
+	{
+		Utils.rebalanceTable(newTurnOrder, turnOrder);
+		turnOrder.splice(0); turnOrder.push.apply(turnOrder, newTurnOrder);
+
+		if(id === playerInfo.playerId){
+			gameObjects.box.removeEventListener('cursorup');
+			// add listener "deal"
+		}
+
+		console.log('New player joined:', displayName);
+	}
+
+	function playerLeave(id, displayName, newTurnOrder)
+	{
+		Utils.rebalanceTable(newTurnOrder, turnOrder);
+		turnOrder.splice(0); turnOrder.push.apply(turnOrder, newTurnOrder);
+
+		if(id === playerInfo.playerId)
+		{
+			gameObjects.box.removeEventListener('cursorup');
+			gameObjects.box.addEventListener(emitPlayerJoinRequest);
+			
+			root.traverse(function(model){
+				if(model.name === 'nameplate'){
+					model.removeEventListener('cursorup');
+				}
+			});
+		}
+
+		console.log('Player', displayName, 'has left the game.');
+	}
+	
+	function playerKickRequest(id, displayName)
+	{
+		if(id !== playerInfo.playerId){
+			Utils.generateDialog('Do you want to kick\n'+displayName+'?',
+				function(){
+					socket.emit('playerKickResponse', id, displayName, playerInfo.playerId, true);
+				},
+				function(){
+					socket.emit('playerKickResponse', id, displayName, playerInfo.playerId, false);
+				}
+			);
+		}
+	}
+
+	
+	// export objects from scope
+	exports.socket = socket;
+	exports.turnOrder = turnOrder;
+	exports.playerInfo = playerInfo;
+
+	exports.connectToGame = connectToGame;
+
+})(window.Game = window.Game || {});
+
+/*
 		var hand = [
 			['Being on fire.'],
 			['Racism'],
@@ -69,3 +160,4 @@ function rebalanceTable(turnOrder)
 		root.add(seat);
 	}
 }
+*/
