@@ -5,8 +5,8 @@
       <author>Blender User</author>
       <authoring_tool>Blender 2.76.0 commit date:2015-11-03, commit time:10:56, hash:f337fea</authoring_tool>
     </contributor>
-    <created>2016-03-28T17:36:33</created>
-    <modified>2016-03-28T17:36:33</modified>
+    <created>2016-03-28T20:40:30</created>
+    <modified>2016-03-28T20:40:30</modified>
     <unit name="meter" meter="1"/>
     <up_axis>Z_UP</up_axis>
   </asset>
@@ -134,7 +134,7 @@
     <geometry id="Plane-mesh" name="Plane">
       <mesh>
         <source id="Plane-mesh-positions">
-          <float_array id="Plane-mesh-positions-array" count="12">0.75 0 0.5 0.75 0 -0.5 -0.75 0 0.5 -0.75 0 -0.5</float_array>
+          <float_array id="Plane-mesh-positions-array" count="12">-0.75 0 0.5 -0.75 0 -0.5 0.75 0 0.5 0.75 0 -0.5</float_array>
           <technique_common>
             <accessor source="#Plane-mesh-positions-array" count="4" stride="3">
               <param name="X" type="float"/>
@@ -144,7 +144,7 @@
           </technique_common>
         </source>
         <source id="Plane-mesh-normals">
-          <float_array id="Plane-mesh-normals-array" count="3">0 1 0</float_array>
+          <float_array id="Plane-mesh-normals-array" count="3">0 -1 0</float_array>
           <technique_common>
             <accessor source="#Plane-mesh-normals-array" count="1" stride="3">
               <param name="X" type="float"/>
@@ -187,7 +187,7 @@
           </bind_material>
         </instance_geometry>
         <node id="Accept" name="Accept" type="NODE">
-          <matrix sid="transform">1 0 0 -0.33 0 1 0 0.01376846 0 0 1 -0.2733808 0 0 0 1</matrix>
+          <matrix sid="transform">-1 -1.50996e-7 0 0.33 1.50996e-7 -1 0 -0.01376851 0 0 1 -0.2733808 0 0 0 1</matrix>
           <instance_geometry url="#Plane_001-mesh" name="Accept">
             <bind_material>
               <technique_common>
@@ -197,7 +197,7 @@
           </instance_geometry>
         </node>
         <node id="Decline" name="Decline" type="NODE">
-          <matrix sid="transform">1 0 0 0.33 0 1 0 0.01376846 0 0 1 -0.2733808 0 0 0 1</matrix>
+          <matrix sid="transform">-1 -1.50996e-7 0 -0.33 1.50996e-7 -1 0 -0.01376841 0 0 1 -0.2733808 0 0 0 1</matrix>
           <instance_geometry url="#Plane_002-mesh" name="Decline">
             <bind_material>
               <technique_common>

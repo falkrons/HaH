@@ -28,13 +28,13 @@ function joinRequest(id, displayName)
 	}
 
 	// automatically accept players when the game is under minimum
-	if( !turnOrder[this.gameId] || turnOrder[this.gameId].length < 4 )
+	if( !turnOrder[this.gameId] || turnOrder[this.gameId].length < config.minPlayers )
 	{
 		join.call(this, id, displayName);
 	}
 
 	// deny new players when the game is at max
-	else if( turnOrder[this.gameId].length >= 12 )
+	else if( turnOrder[this.gameId].length >= config.maxPlayers )
 	{
 		this.emit('playerJoinDenied', 'Game is already full.');
 	}
@@ -54,14 +54,15 @@ function joinRequest(id, displayName)
 function joinDenied(id, displayName, message)
 {	
 	// check if player denying join is actually in the game
+	var playerGame = socketForPlayer[id].gameId;
 	var denierInGame = false;
-	for(var i=0; i<turnOrder[this.gameId].length; i++){
-		denierInGame = denierInGame || turnOrder[this.gameId][i].playerId === this.playerId;
+	for(var i=0; i<turnOrder[playerGame].length; i++){
+		if(turnOrder[playerGame][i].playerId === this.playerId){
+			denierInGame = true;
+			break;
+		}
 	}
-
-	// ignore join denial if denier isn't in the same game as player requested
-	// (shouldn't ever happen, but better safe than sorry)
-	if( socketForPlayer[id].gameId !== this.gameId || !denierInGame )
+	if(!denierInGame)
 		return;
 
 	// inform requester of denial
@@ -75,36 +76,36 @@ function joinDenied(id, displayName, message)
 function join(id, displayName)
 {
 	// check if player approving join is actually in the game
+	var playerGame = socketForPlayer[id].gameId;
 	var joinerInGame = false;
-	for(var i=0; i<turnOrder[this.gameId].length; i++){
-		joinerInGame = joinerInGame || turnOrder[this.gameId][i].playerId === this.playerId;
+	for(var i=0; i<turnOrder[playerGame].length; i++){
+		if(turnOrder[playerGame][i].playerId === this.playerId){
+			joinerInGame = true;
+			break;
+		}
 	}
-
-	// ignore join approval if approver isn't in the same game as player requested
-	// (shouldn't ever happen, but better safe than sorry)
-	if( socketForPlayer[id].gameId !== this.gameId
-		|| turnOrder[this.gameId].length >=4 && !joinerInGame
+	if( turnOrder[playerGame].length >= config.minPlayers && !joinerInGame
 	){
 		console.log('Client not authorized');
 		return;
 	}
 
 	// subscribe client to player-only events
-	socketForPlayer[id].join(this.gameId+'_players');
+	socketForPlayer[id].join(playerGame+'_players');
 
 	// add player to the end of the turn order
 	var newPlayer = {'playerId': id, 'displayName': displayName};
-	turnOrder[this.gameId].push(newPlayer);
+	turnOrder[playerGame].push(newPlayer);
 
 	// let other clients know about new player
-	this.server.to(this.gameId+'_clients').emit('playerJoin', id, displayName, turnOrder[this.gameId]);
+	this.server.to(playerGame+'_clients').emit('playerJoin', id, displayName, turnOrder[playerGame]);
 
 	// trigger leave if socket is disconnected
 	socketForPlayer[id].on('disconnect', function(){
 		leave.call(this, id, displayName, displayName+' has disconnected.');
 	});
 
-	console.log('Player', displayName, 'has joined game', this.gameId);
+	console.log('Player', displayName, 'has joined game', playerGame);
 }
 
 
@@ -113,36 +114,97 @@ function join(id, displayName)
  */
 function leave(id, displayName, message)
 {
+	if(!id)
+		return;
+	
 	// check if kicker is actually in the game
+	var playerGame = socketForPlayer[id].gameId;
 	var kickerInGame = false;
-	for(var i=0; i<turnOrder[this.gameId].length; i++){
-		kickerInGame = kickerInGame || turnOrder[this.gameId][i].playerId === this.playerId;
+	for(var i=0; i<turnOrder[playerGame].length; i++){
+		if(turnOrder[playerGame][i].playerId === this.playerId){
+			kickerInGame = true;
+			break;
+		}
 	}
-
-	// ignore kick if kicker isn't in the same game as player requested
-	// (shouldn't ever happen, but better safe than sorry)
-	if( socketForPlayer[id].gameId !== this.gameId || !kickerInGame )
+	if( !kickerInGame )
 		return;
 
 	// find player in turn order
-	for(var i=0; i<turnOrder[this.gameId].length; i++)
+	for(var i=0; i<turnOrder[playerGame].length; i++)
 	{
 		// remove specified player
-		if(turnOrder[this.gameId][i].playerId === id){
-			turnOrder[this.gameId].splice(i, 1);
+		if(turnOrder[playerGame][i].playerId === id){
+			turnOrder[playerGame].splice(i, 1);
 			break;
 		}
 	}
 
 	// disconnect given client from players-only channel
-	socketForPlayer[id].leave(this.gameId+'_players');
+	socketForPlayer[id].leave(playerGame+'_players');
 
 	// inform other clients of player's departure
-	this.server.to(this.gameId+'_clients').emit('playerLeave', id, displayName, turnOrder[this.gameId], message);
+	this.server.to(playerGame+'_clients').emit('playerLeave', id, displayName, turnOrder[playerGame], message);
 
 	console.log('Player', displayName, 'has left the game.');
 }
 
+var votesInProgress = {};
+
+function kickRequest(id, displayName)
+{
+	// check if kicker is actually in the game
+	var playerGame = socketForPlayer[id].gameId;
+	var kickerInGame = false;
+	for(var i=0; i<turnOrder[playerGame].length; i++){
+		if(turnOrder[playerGame][i].playerId === this.playerId){
+			kickerInGame = true;
+			break;
+		}
+	}
+	if( !kickerInGame )
+		return;
+
+	// vote to kick, and ask everyone else
+	votesInProgress[id] = {
+		'yes': 0, 'no': 0,
+		'majority': Math.ceil((turnOrder[playerGame].length-1)/2)
+	};
+	kickResponse.call(this, id, displayName, true);
+	if(turnOrder[playerGame].length > 2)
+		this.server.to(playerGame+'_players').emit('playerKickRequest', id, displayName);
+}
+
+function kickResponse(id, displayName, response)
+{
+	// check if kicker is actually in the game
+	var playerGame = socketForPlayer[id].gameId;
+	var kickerInGame = false;
+	for(var i=0; i<turnOrder[playerGame].length; i++){
+		if(turnOrder[playerGame][i].playerId === this.playerId){
+			kickerInGame = true;
+			break;
+		}
+	}
+	if( !kickerInGame )
+		return;
+
+	// log vote
+	var vote = votesInProgress[id];
+	vote[response ? 'yes' : 'no']++;
+	
+	// check results
+	if(vote.yes >= vote.majority)
+	{
+		// vote passes
+		leave.call(this, id, displayName, displayName+' was kicked from the game.');
+	}
+	else if(vote.no >= vote.majority)
+	{
+		// vote fails
+		this.server.to(playerGame+'_players').emit('kickVoteAborted', id, displayName);
+	}
+	// else keep waiting for responses
+}
 
 // export player info
 exports.turnOrder = turnOrder;
@@ -153,4 +215,4 @@ exports.joinRequest = joinRequest;
 exports.joinDenied = joinDenied;
 exports.join = join;
 exports.leave = leave;
-
+exports.kickRequest = kickRequest;

@@ -194,11 +194,11 @@
 
 		// draw background
 		g.fillStyle = 'whitesmoke';
-		g.fillRect(0, 0, texWidth, texWidth-170);
+		g.fillRect(0, 0, texWidth, texWidth-160);
 		g.fillStyle = 'red';
-		g.fillRect(0, texWidth-170, texWidth/2, 170);
+		g.fillRect(0, texWidth-166, texWidth/2, 160);
 		g.fillStyle = 'green';
-		g.fillRect(texWidth/2, texWidth-170, texWidth/2, 170);
+		g.fillRect(texWidth/2, texWidth-160, texWidth/2, 160);
 
 		// set up text
 		g.font = 'bold 35px '+fontStack;
@@ -225,14 +225,20 @@
 
 		// assign callbacks
 		model.getObjectByName('Accept').addEventListener('cursorup', function(){
-			acceptCb();
+			if(acceptCb) acceptCb();
 			if(finallyCb) finallyCb();
+			model.parent.remove(model);
 		});
 		model.getObjectByName('Decline').addEventListener('cursorup', function(){
-			declineCb();
+			if(declineCb) declineCb();
 			if(finallyCb) finallyCb();
+			model.parent.remove(model);
 		});
 
+		model.position.set(0, 0, 1.5);
+		model.lookAt(root.getObjectByName(Game.playerInfo.playerId));
+		root.add(model);
+		
 		return model;
 	}
 
@@ -263,15 +269,16 @@
 
 		var angle = 2*Math.PI/newTurnOrder.length;
 		var cardRadius = 0.5, row1Angle = Math.PI/5, row2Angle = Math.PI/3, row1Sep = Math.PI/10, row2Sep = 1.5*Math.PI/10;
-
+		var players = newTurnOrder.map(function(e){return e.playerId;});
+		
 		// flip box when first player joins/leaves
 		if(newTurnOrder.length > 0){
 			gameObjects.box.rotation.set(0, 0, 0);
-			gameObjects.titleCard.visible = false;
+			//gameObjects.titleCard.visible = false;
 		}
 		else {
 			gameObjects.box.rotation.set(Math.PI, 0, 0);
-			gameObjects.titleCard.visible = false;
+			//gameObjects.titleCard.visible = false;
 		}
 
 		// add new players, adjust old players
@@ -290,33 +297,42 @@
 				// create new seat for player
 				seat = new THREE.Object3D();
 				seat.name = newTurnOrder[i].playerId;
-				seat.position.set(-tableRadius*Math.sin(i*angle), -tableRadius*Math.cos(i*angle), 1.5);
+				seat.position.set(-1.05*tableRadius*Math.sin(i*angle), -1.05*tableRadius*Math.cos(i*angle), 1.5);
 				seat.rotation.set(0, 0, -angle*i);
 
 				// add nameplate for the player
 				var nameplate = generateNameplate(newTurnOrder[i].displayName);
 				nameplate.name = 'nameplate';
-				nameplate.position.set(0, 0.15, -0.64);
+				nameplate.position.set(0, 0.25, -0.64);
 				nameplate.rotation.set(0, 0, Math.PI/2);
 				seat.add(nameplate);
 
+				// handle "leave" on self click
 				if(newTurnOrder[i].playerId === Game.playerInfo.playerId)
 				{
 					// register "Leave" action
-					nameplate.addEventListener('cursorup', function(evt){
-						Game.socket.emit('playerLeave', Game.playerInfo.playerId, Game.playerInfo.displayName,
-							Game.playerInfo.displayName+' has left the game.'
-						);
+					nameplate.addEventListener('cursorup', function(evt)
+					{
+						generateDialog('Are you sure you want to\nleave the game?', function()
+						{
+							Game.socket.emit('playerLeave', Game.playerInfo.playerId, Game.playerInfo.displayName,
+								Game.playerInfo.displayName+' has left the game.'
+							);
+						});
 					});
 				}
-				else
+				
+				// handle "kick" if still a player
+				else if(players.indexOf(Game.playerInfo.playerId) > -1)
 				{
 					// register "Kick" action
 					(function(nameplate, opponentInfo){
-						console.log('Registering kick event');
-						nameplate.addEventListener('cursorup', function(evt){
-							console.log('kicking');
-							Game.socket.emit('playerKickRequest', opponentInfo.playerId, opponentInfo.displayName);
+						nameplate.addEventListener('cursorup', function(evt)
+						{
+							generateDialog('Do you want to kick\n'+opponentInfo.displayName+'?', function(){
+								console.log('kicking');
+								Game.socket.emit('playerKickRequest', opponentInfo.playerId, opponentInfo.displayName);
+							});
 						});
 					})(nameplate, newTurnOrder[i]);
 				}

@@ -31,8 +31,8 @@ app.use(function(req,res,next)
 });
 
 // start server on port 7373
-var server = app.listen(config.port || 7878, function(){
-	console.log('Listening on port', config.port || 7878);
+var server = app.listen(config.port, function(){
+	console.log('Listening on port', config.port);
 });
 
 // set up sockets
@@ -63,9 +63,16 @@ function registerGameListeners(socket)
 		console.error(err);
 	});
 
+	socket.on('disconnect', function(){
+		console.log('disconnecting', this.playerId);
+		//console.log(this);
+		players.leave.call(this, this.playerId);
+	});
+	
 	// register player events
 	socket.on('playerJoinRequest', players.joinRequest);
 	socket.on('playerJoinDenied', players.joinDenied);
 	socket.on('playerJoin', players.join);
 	socket.on('playerLeave', players.leave);
+	socket.on('playerKickRequest', players.kickRequest);
 }

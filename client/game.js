@@ -44,10 +44,13 @@
 			gameObjects.box.addEventListener('cursorup', emitPlayerJoinRequest);
 		});
 
+		socket.on('playerJoinRequest', playerJoinRequest);
 		socket.on('playerJoin', playerJoin);
 		socket.on('playerLeave', playerLeave);
+		socket.on('playerKickRequest', playerKickRequest);
 	}
 
+	
 	function emitPlayerJoinRequest(evt){
 		socket.emit('playerJoinRequest', playerInfo.playerId, playerInfo.displayName);
 	}
@@ -57,7 +60,19 @@
 			playerInfo.displayName+' has left the game.'
 		);
 	}
-
+	
+	function playerJoinRequest(id, displayName)
+	{
+		Utils.generateDialog('Can this player join?\n'+displayName,
+			function(){
+				socket.emit('playerJoin', id, displayName);
+			},
+			function(){
+				socket.emit('playerJoinDenied', id, displayName);
+			}
+		);
+	}
+	
 	function playerJoin(id, displayName, newTurnOrder)
 	{
 		Utils.rebalanceTable(newTurnOrder, turnOrder);
@@ -76,13 +91,33 @@
 		Utils.rebalanceTable(newTurnOrder, turnOrder);
 		turnOrder.splice(0); turnOrder.push.apply(turnOrder, newTurnOrder);
 
-		if(id === playerInfo.playerId){
+		if(id === playerInfo.playerId)
+		{
 			gameObjects.box.removeEventListener('cursorup');
 			gameObjects.box.addEventListener(emitPlayerJoinRequest);
+			
+			root.traverse(function(model){
+				if(model.name === 'nameplate'){
+					model.removeEventListener('cursorup');
+				}
+			});
 		}
 
 		console.log('Player', displayName, 'has left the game.');
+	}
 	
+	function playerKickRequest(id, displayName)
+	{
+		if(id !== playerInfo.playerId){
+			Utils.generateDialog('Do you want to kick\n'+displayName+'?',
+				function(){
+					socket.emit('playerKickResponse', id, displayName, playerInfo.playerId, true);
+				},
+				function(){
+					socket.emit('playerKickResponse', id, displayName, playerInfo.playerId, false);
+				}
+			);
+		}
 	}
 
 	

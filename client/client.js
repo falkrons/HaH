@@ -98,7 +98,7 @@ function init()
 	gameObjects.titleCard.rotation.set(Math.PI/2, 0, 0);
 	root.add(gameObjects.titleCard);*/
 
-	gameObjects.dialog = Utils.generateDialog(
+	/*gameObjects.dialog = Utils.generateDialog(
 		'Do you want to kick\nSteven?',
 		function(){
 			console.log('dialog accepted');
@@ -108,7 +108,7 @@ function init()
 		}
 	);
 	gameObjects.dialog.position.setZ(2.3);
-	root.add(gameObjects.dialog);
+	root.add(gameObjects.dialog);*/
 
 	// grab game id from URL
 	var gameId = /[?&]gameId=(\w+)\b/.exec(window.location.search);
