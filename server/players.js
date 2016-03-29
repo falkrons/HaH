@@ -17,12 +17,12 @@ function joinRequest(id, displayName)
 	if( !pendingJoinRequests[this.gameId] )
 		pendingJoinRequests[this.gameId] = [];
 
-	// don't allow a single client two usernames
 	if(!this.playerId){
 		// associate socket with player
 		this.playerId = id;	
 		socketForPlayer[id] = this;
 	}
+	// don't allow a single client two usernames
 	else if(this.playerId !== id){
 		return;
 	}
@@ -41,6 +41,7 @@ function joinRequest(id, displayName)
 	// automatically accept players when the game is under minimum
 	else if( turnOrder[this.gameId].length < config.minPlayers )
 	{
+		pendingJoinRequests[this.gameId].push(id);
 		join.call(this, id, displayName);
 	}
 
@@ -120,6 +121,10 @@ function join(id, displayName)
 		return;
 	}
 
+	// deny join if player never issued a request
+	if( pendingJoinRequests[playerGame].indexOf(id) === -1 )
+		return;
+
 	// subscribe client to player-only events
 	socketForPlayer[id].join(playerGame+'_players');
 
@@ -133,6 +138,7 @@ function join(id, displayName)
 	// trigger leave if socket is disconnected
 	socketForPlayer[id].on('disconnect', function(){
 		leave.call(this, id, displayName, displayName+' has disconnected.');
+		delete socketForPlayer[id];
 	});
 
 	// remove pending request
@@ -196,17 +202,23 @@ function kickRequest(id, displayName)
 			break;
 		}
 	}
-	if( !kickerInGame )
+
+	// abort for invalid player or vote in progress
+	if( !kickerInGame || votesInProgress[id] )
 		return;
+
+	console.log('Voting to kick', displayName);
 
 	// vote to kick, and ask everyone else
 	votesInProgress[id] = {
 		'yes': 0, 'no': 0,
-		'majority': Math.ceil((turnOrder[playerGame].length-1)/2)
+		'majority': Math.ceil((turnOrder[playerGame].length-1)/2),
+		'voters': []
 	};
 	kickResponse.call(this, id, displayName, true);
-	if(turnOrder[playerGame].length > 2)
+	if(turnOrder[playerGame].length > 3)
 		this.server.to(playerGame+'_players').emit('playerKickRequest', id, displayName);
+
 }
 
 function kickResponse(id, displayName, response)
@@ -220,23 +232,29 @@ function kickResponse(id, displayName, response)
 			break;
 		}
 	}
-	if( !kickerInGame )
+	// only non-accused players of the current game that haven't voted yet
+	if( !kickerInGame || id === this.playerId || votesInProgress[id].voters.indexOf(this.playerId) > -1)
 		return;
 
 	// log vote
 	var vote = votesInProgress[id];
 	vote[response ? 'yes' : 'no']++;
+	vote.voters.push(this.playerId);
 	
 	// check results
 	if(vote.yes >= vote.majority)
 	{
 		// vote passes
+		console.log('Vote to kick', displayName, 'passes');
 		leave.call(this, id, displayName, displayName+' was kicked from the game.');
+		delete votesInProgress[id];
 	}
 	else if(vote.no >= vote.majority)
 	{
 		// vote fails
+		console.log('Vote to kick', displayName, 'fails');
 		this.server.to(playerGame+'_players').emit('kickVoteAborted', id, displayName);
+		delete votesInProgress[id];
 	}
 	// else keep waiting for responses
 }
@@ -251,5 +269,6 @@ module.exports = {
 	joinDenied: joinDenied,
 	join: join,
 	leave: leave,
-	kickRequest: kickRequest
+	kickRequest: kickRequest,
+	kickResponse: kickResponse
 };

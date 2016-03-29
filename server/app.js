@@ -69,4 +69,5 @@ function registerGameListeners(socket)
 	socket.on('playerJoin', players.join);
 	socket.on('playerLeave', players.leave);
 	socket.on('playerKickRequest', players.kickRequest);
+	socket.on('playerKickResponse', players.kickResponse);
 }

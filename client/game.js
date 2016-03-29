@@ -90,9 +90,13 @@
 		}
 
 		// hide request dialog if present
-		var dialog;
-		if(dialog = root.getObjectByName('join_'+id)){
-			root.remove(dialog);
+		var seat = root.getObjectByName(playerInfo.playerId);
+		if(seat)
+		{
+			var dialog;
+			if(dialog = seat.getObjectByName('join_'+id)){
+				seat.remove(dialog);
+			}
 		}
 
 		console.log('New player joined:', displayName);
@@ -101,9 +105,10 @@
 	function playerJoinDenied(id, displayName)
 	{
 		// hide request dialog if present
+		var seat = root.getObjectByName(playerInfo.playerId);
 		var dialog;
-		if(dialog = root.getObjectByName('join_'+id)){
-			root.remove(dialog);
+		if(dialog = seat.getObjectByName('join_'+id)){
+			seat.remove(dialog);
 		}
 	}
 
@@ -124,20 +129,32 @@
 			});
 		}
 
+		// hide request dialog if present
+		var seat = root.getObjectByName(playerInfo.playerId);
+		if(seat)
+		{
+			var dialog;
+			if(dialog = seat.getObjectByName('kick_'+id)){
+				seat.remove(dialog);
+			}
+
+		}
+
 		console.log('Player', displayName, 'has left the game.');
 	}
 	
 	function playerKickRequest(id, displayName)
 	{
 		if(id !== playerInfo.playerId){
-			Utils.generateDialog('Do you want to kick\n'+displayName+'?',
+			var dialog = Utils.generateDialog('Do you want to kick\n'+displayName+'?',
 				function(){
-					socket.emit('playerKickResponse', id, displayName, playerInfo.playerId, true);
+					socket.emit('playerKickResponse', id, displayName, true);
 				},
 				function(){
-					socket.emit('playerKickResponse', id, displayName, playerInfo.playerId, false);
+					socket.emit('playerKickResponse', id, displayName, false);
 				}
 			);
+			dialog.name = 'kick_'+id;
 		}
 	}
 
