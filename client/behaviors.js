@@ -2,19 +2,24 @@
 
 (function(exports)
 {
-	function RotateBehavior(deltaX, deltaY, deltaZ)
+
+	/*
+	 * Rotate the target over time
+	 */
+
+	function Rotate(deltaX, deltaY, deltaZ)
 	{
 		this.deltaX = deltaX || 0;
 		this.deltaY = deltaY || 0;
 		this.deltaZ = deltaZ || 0;
 	}
 
-	RotateBehavior.prototype.awake = function(obj)
+	Rotate.prototype.awake = function(obj)
 	{
 		this.target = obj;
 	};
 
-	RotateBehavior.prototype.update = function(deltaT)
+	Rotate.prototype.update = function(deltaT)
 	{
 		var oldAngles = this.target.rotation;
 
@@ -26,15 +31,20 @@
 	};
 
 
-	function AnimateBehavior(finalPos, finalRot, finalScale, duration)
+	/*
+	 * Animate the target from transform to transform over time
+	 */
+
+	function Animate(finalPos, finalRot, finalScale, duration, callback)
 	{
 		this.finalPos = finalPos;
 		this.finalRot = finalRot;
 		this.finalScale = finalScale;
 		this.duration = duration || 600;
+		this.callback = callback;
 	}
 
-	AnimateBehavior.prototype.awake = function(obj)
+	Animate.prototype.awake = function(obj)
 	{
 		this.target = obj;
 
@@ -44,7 +54,7 @@
 		this.startTime = Date.now();
 	};
 
-	AnimateBehavior.prototype.update = function(deltaT)
+	Animate.prototype.update = function(deltaT)
 	{
 		function easeOutQuad(mix, startVal, endVal){
 			if(mix <= 0)
@@ -90,11 +100,56 @@
 		// terminate animation when done
 		if(mix >= 1){
 			this.target.removeBehavior(this);
+			this.callback.call(this.target);
 		}
 	};
 
-	exports.RotateBehavior = RotateBehavior;
-	exports.AnimateBehavior = AnimateBehavior;
+
+	/*
+	 * Grow object on hover
+	 */
+	function CursorFeedback(){}
+
+	CursorFeedback.prototype.awake = function(obj)
+	{
+		var activeAnimation = null;
+		var origScale = obj.scale.clone();
+
+		obj.addEventListener('cursorenter', function(evt)
+		{
+			if(activeAnimation){
+				obj.removeBehavior(activeAnimation);
+			}
+			
+			activeAnimation = new Behaviors.Animate(null, null, origScale.clone().multiplyScalar(1.2), 400);
+			activeAnimation.callback = function(){
+				activeAnimation = null;
+			};
+
+			obj.addBehavior(activeAnimation);
+		});
+
+		obj.addEventListener('cursorleave', function(evt)
+		{
+			if(activeAnimation){
+				obj.removeBehavior(activeAnimation);
+			}
+			
+			activeAnimation = new Behaviors.Animate(null, null, origScale, 600);
+			activeAnimation.callback = function(){
+				activeAnimation = null;
+			};
+
+			obj.addBehavior(activeAnimation);
+		});
+	};
+
+	CursorFeedback.prototype.update = function(deltaT){};
+
+
+	exports.Rotate = Rotate;
+	exports.Animate = Animate;
+	exports.CursorFeedback = CursorFeedback;
 
 })(window.Behaviors = window.Behaviors || {});
 

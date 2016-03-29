@@ -295,7 +295,7 @@
 			if(seat)
 			{
 				// player is already in the game, move them to position
-				seat.addBehavior( new Behaviors.AnimateBehavior(
+				seat.addBehavior( new Behaviors.Animate(
 					new THREE.Vector3(-1.05*tableRadius*Math.sin(i*angle), -1.05*tableRadius*Math.cos(i*angle), 1.5),
 					new THREE.Euler(0, 0, -angle*i),
 					null,
@@ -330,6 +330,7 @@
 							);
 						});
 					});
+					nameplate.addBehavior( new Behaviors.CursorFeedback() );
 				}
 				
 				// handle "kick" if still a player
@@ -344,6 +345,7 @@
 								Game.socket.emit('playerKickRequest', opponentInfo.playerId, opponentInfo.displayName);
 							});
 						});
+						nameplate.addBehavior( new Behaviors.CursorFeedback() );
 					})(nameplate, newTurnOrder[i]);
 				}
 

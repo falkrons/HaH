@@ -89,6 +89,7 @@ function init()
 	gameObjects.box = Models.box;
 	gameObjects.box.position.set(0, 0, 0.8 + 0.025 + 0.07);
 	gameObjects.box.rotation.set(Math.PI, 0, 0);
+	gameObjects.box.addBehavior(new Behaviors.CursorFeedback());
 	root.add(gameObjects.box);
 
 	// add a big black card
@@ -97,7 +98,7 @@ function init()
 	gameObjects.titleCard.scale.set(12,12,12);
 	gameObjects.titleCard.rotation.set(Math.PI/2, 0, 0);
 	gameObjects.titleCard.visible = false;
-	gameObjects.titleCard.addBehavior( new Behaviors.RotateBehavior(0, 0.5, 0) );
+	gameObjects.titleCard.addBehavior( new Behaviors.Rotate(0, 0.5, 0) );
 	root.add(gameObjects.titleCard);
 
 	// grab game id from URL
