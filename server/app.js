@@ -7,6 +7,7 @@ var express = require('express'),
 	liburl = require('url');
 
 var players = require('./players.js'),
+	game = require('./game.js'),
 	config = require('../config.json');
 
 // set defaults for config
@@ -70,4 +71,6 @@ function registerGameListeners(socket)
 	socket.on('playerLeave', players.leave);
 	socket.on('playerKickRequest', players.kickRequest);
 	socket.on('playerKickResponse', players.kickResponse);
+
+
 }
