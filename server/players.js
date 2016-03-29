@@ -7,28 +7,39 @@ var socketForPlayer = {};
 /*
  * Handle requests to join the game
  */
+var pendingJoinRequests = {};
 function joinRequest(id, displayName)
 {
 	// initialize game when first player requests to join
 	if( !turnOrder[this.gameId] )
 		turnOrder[this.gameId] = [];
 
-	// don't allow double-register; one player name per socket
-	for(var j=0, playerIn=false; j<turnOrder[this.gameId].length && !playerIn; j++){
-		playerIn = playerIn || turnOrder[this.gameId][j].playerId === id;
-	}
-	if(this.playerId && (this.playerId !== id || playerIn)){
-		console.log('Attempting to double-register client. Ignoring.');
-		return;
-	}
-	else {
+	if( !pendingJoinRequests[this.gameId] )
+		pendingJoinRequests[this.gameId] = [];
+
+	// don't allow a single client two usernames
+	if(!this.playerId){
 		// associate socket with player
 		this.playerId = id;	
 		socketForPlayer[id] = this;
 	}
+	else if(this.playerId !== id){
+		return;
+	}
+
+	// check if requesting player is already in the game
+	for(var i=0, playerIn = false; i<turnOrder[this.gameId].length && !playerIn; i++){
+		playerIn = playerIn || turnOrder[this.gameId][i].playerId === id;
+	}
+
+	// ignore join requests if there's already a request pending
+	// or the player is already in the game
+	if(playerIn || pendingJoinRequests[this.gameId].indexOf(id) > -1){
+		return;
+	}
 
 	// automatically accept players when the game is under minimum
-	if( !turnOrder[this.gameId] || turnOrder[this.gameId].length < config.minPlayers )
+	else if( turnOrder[this.gameId].length < config.minPlayers )
 	{
 		join.call(this, id, displayName);
 	}
@@ -42,6 +53,7 @@ function joinRequest(id, displayName)
 	// otherwise ask current players to join
 	else
 	{
+		pendingJoinRequests[this.gameId].push(id);
 		this.server.to(this.gameId+'_players').emit('playerJoinRequest', id, displayName);
 		console.log('Player', displayName, 'is trying to join', this.gameId);
 	}
@@ -65,8 +77,14 @@ function joinDenied(id, displayName, message)
 	if(!denierInGame)
 		return;
 
+	// remove pending request
+	var index = pendingJoinRequests[playerGame].indexOf(id);
+	if(index > -1)
+		pendingJoinRequests[playerGame].splice(index, 1);
+
 	// inform requester of denial
 	socketForPlayer[id].emit('playerJoinDenied', id, displayName, 'A player has denied your request to join.');
+	this.server.to(playerGame+'_players').emit('playerJoinDenied', id, displayName);
 }
 
 
@@ -75,6 +93,17 @@ function joinDenied(id, displayName, message)
  */
 function join(id, displayName)
 {
+	// check if player is already in the game
+	for(var i=0, playerIn = false; i<turnOrder[this.gameId].length && !playerIn; i++){
+		playerIn = playerIn || turnOrder[this.gameId][i].playerId === id;
+	}
+
+	// ignore joins from current players
+	if(playerIn){
+		console.log('Ignoring double-join for', displayName);
+		return;
+	}
+
 	// check if player approving join is actually in the game
 	var playerGame = socketForPlayer[id].gameId;
 	var joinerInGame = false;
@@ -84,8 +113,9 @@ function join(id, displayName)
 			break;
 		}
 	}
-	if( turnOrder[playerGame].length >= config.minPlayers && !joinerInGame
-	){
+
+	// deny join if authorization required, but not present
+	if( turnOrder[playerGame].length >= config.minPlayers && !joinerInGame ){
 		console.log('Client not authorized');
 		return;
 	}
@@ -104,6 +134,11 @@ function join(id, displayName)
 	socketForPlayer[id].on('disconnect', function(){
 		leave.call(this, id, displayName, displayName+' has disconnected.');
 	});
+
+	// remove pending request
+	var index = pendingJoinRequests[playerGame].indexOf(id);
+	if(index > -1)
+		pendingJoinRequests[playerGame].splice(index, 1);
 
 	console.log('Player', displayName, 'has joined game', playerGame);
 }

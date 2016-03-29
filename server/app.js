@@ -63,12 +63,6 @@ function registerGameListeners(socket)
 		console.error(err);
 	});
 
-	socket.on('disconnect', function(){
-		console.log('disconnecting', this.playerId);
-		//console.log(this);
-		players.leave.call(this, this.playerId);
-	});
-	
 	// register player events
 	socket.on('playerJoinRequest', players.joinRequest);
 	socket.on('playerJoinDenied', players.joinDenied);

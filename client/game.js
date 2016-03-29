@@ -17,6 +17,10 @@
 				playerInfo.displayName = userInfo.displayName;
 			});
 		}
+		else {
+			playerInfo.playerId = Math.round(Math.random()*0x8000);
+			playerInfo.displayName = 'anon'+playerInfo.playerId;
+		}
 
 		// initialize the socket connection
 		Game.socket = socket = io('/?gameId='+gameId);
@@ -46,6 +50,7 @@
 
 		socket.on('playerJoinRequest', playerJoinRequest);
 		socket.on('playerJoin', playerJoin);
+		socket.on('playerJoinDenied', playerJoinDenied);
 		socket.on('playerLeave', playerLeave);
 		socket.on('playerKickRequest', playerKickRequest);
 	}
@@ -63,7 +68,7 @@
 	
 	function playerJoinRequest(id, displayName)
 	{
-		Utils.generateDialog('Can this player join?\n'+displayName,
+		var dialog = Utils.generateDialog('Can this player join?\n'+displayName,
 			function(){
 				socket.emit('playerJoin', id, displayName);
 			},
@@ -71,6 +76,7 @@
 				socket.emit('playerJoinDenied', id, displayName);
 			}
 		);
+		dialog.name = 'join_'+id;
 	}
 	
 	function playerJoin(id, displayName, newTurnOrder)
@@ -83,7 +89,22 @@
 			// add listener "deal"
 		}
 
+		// hide request dialog if present
+		var dialog;
+		if(dialog = root.getObjectByName('join_'+id)){
+			root.remove(dialog);
+		}
+
 		console.log('New player joined:', displayName);
+	}
+
+	function playerJoinDenied(id, displayName)
+	{
+		// hide request dialog if present
+		var dialog;
+		if(dialog = root.getObjectByName('join_'+id)){
+			root.remove(dialog);
+		}
 	}
 
 	function playerLeave(id, displayName, newTurnOrder)

@@ -235,8 +235,17 @@
 			model.parent.remove(model);
 		});
 
-		model.position.set(0, 0, 1.5);
-		model.lookAt(root.getObjectByName(Game.playerInfo.playerId));
+		var position = new THREE.Vector3(0, 0, 1.5);
+
+		// point dialog at player
+		var seatPosition = root.getObjectByName(Game.playerInfo.playerId).position;
+		var basisY = new THREE.Vector3().subVectors(seatPosition, position).normalize();
+		var basisX = new THREE.Vector3().crossVectors(basisY, new THREE.Vector3(0,0,1));
+		var basisZ = new THREE.Vector3().crossVectors(basisX, basisY);
+
+		model.applyMatrix( (new THREE.Matrix4()).makeBasis(basisX, basisY, basisZ) );
+		model.position.set(position.x, position.y, position.z);
+
 		root.add(model);
 		
 		return model;
@@ -274,11 +283,11 @@
 		// flip box when first player joins/leaves
 		if(newTurnOrder.length > 0){
 			gameObjects.box.rotation.set(0, 0, 0);
-			//gameObjects.titleCard.visible = false;
+			gameObjects.titleCard.visible = false;
 		}
 		else {
 			gameObjects.box.rotation.set(Math.PI, 0, 0);
-			//gameObjects.titleCard.visible = false;
+			gameObjects.titleCard.visible = true;
 		}
 
 		// add new players, adjust old players

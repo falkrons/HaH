@@ -92,23 +92,12 @@ function init()
 	root.add(gameObjects.box);
 
 	// add a big black card
-	/*gameObjects.titleCard = Utils.generateTitleCard();
+	gameObjects.titleCard = Utils.generateTitleCard();
 	gameObjects.titleCard.position.setZ(2);
 	gameObjects.titleCard.scale.set(12,12,12);
 	gameObjects.titleCard.rotation.set(Math.PI/2, 0, 0);
-	root.add(gameObjects.titleCard);*/
-
-	/*gameObjects.dialog = Utils.generateDialog(
-		'Do you want to kick\nSteven?',
-		function(){
-			console.log('dialog accepted');
-		},
-		function(){
-			console.log('dialog rejected');
-		}
-	);
-	gameObjects.dialog.position.setZ(2.3);
-	root.add(gameObjects.dialog);*/
+	gameObjects.titleCard.visible = false;
+	root.add(gameObjects.titleCard);
 
 	// grab game id from URL
 	var gameId = /[?&]gameId=(\w+)\b/.exec(window.location.search);
