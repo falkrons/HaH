@@ -235,37 +235,34 @@
 			model.parent.remove(model);
 		});
 
-		var position = new THREE.Vector3(0, 0, 1.5);
 
 		// point dialog at player
-		var seatPosition = root.getObjectByName(Game.playerInfo.playerId).position;
-		var basisY = new THREE.Vector3().subVectors(seatPosition, position).normalize();
-		var basisX = new THREE.Vector3().crossVectors(basisY, new THREE.Vector3(0,0,1));
-		var basisZ = new THREE.Vector3().crossVectors(basisX, basisY);
-
-		model.applyMatrix( (new THREE.Matrix4()).makeBasis(basisX, basisY, basisZ) );
-		model.position.set(position.x, position.y, position.z);
-
-		root.add(model);
+		var seat = root.getObjectByName(Game.playerInfo.playerId);
+		model.applyMatrix( sphericalToMatrix(0, Math.PI/8, 1.05*tableRadius, 'yzx') );
+		seat.add(model);
 		
 		return model;
 	}
 
-	function sphericalToMatrix(theta, phi, radius)
+	function sphericalToMatrix(theta, phi, radius, basis)
 	{
+		if(!basis) basis = 'zyx';
+		else basis = basis.toLowerCase();
+
 		// determine position
 		var x = radius * Math.cos(phi) * Math.sin(theta);
 		var y = radius * Math.cos(phi) * Math.cos(theta);
 		var z = radius * Math.sin(phi);
 
 		// determine rotation
-		var basisZ = new THREE.Vector3(-x, -y, -z).normalize();
-		var basisX = new THREE.Vector3().crossVectors( basisZ, new THREE.Vector3(0,0,1) );
-		var basisY = new THREE.Vector3().crossVectors( basisX, basisZ );
+		var basisMap = {};
+		basisMap[basis[0]] = new THREE.Vector3(x, y, z).normalize();
+		basisMap[basis[2]] = new THREE.Vector3().crossVectors( basisMap[basis[0]], new THREE.Vector3(0,0,1) );
+		basisMap[basis[1]] = new THREE.Vector3().crossVectors( basisMap[basis[2]], basisMap[basis[0]] );
 
 		// combine into matrix
 		var mat = new THREE.Matrix4();
-		mat.makeBasis( basisX, basisY, basisZ );
+		mat.makeBasis( basisMap.x, basisMap.y, basisMap.z );
 		mat.setPosition( new THREE.Vector3(x, y, z) );
 
 		return mat;
