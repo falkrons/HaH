@@ -108,41 +108,55 @@
 	/*
 	 * Grow object on hover
 	 */
-	function CursorFeedback(){}
+	function CursorFeedback()
+	{
+		var self = this;
+		var activeAnimation = null;
+
+		this._onCursorEnter = function(evt)
+		{
+			if(activeAnimation){
+				self.target.removeBehavior(activeAnimation);
+			}
+			
+			activeAnimation = new Behaviors.Animate(null, null, self._origScale.clone().multiplyScalar(1.2), 400);
+			activeAnimation.callback = function(){
+				activeAnimation = null;
+			};
+
+			self.target.addBehavior(activeAnimation);
+		};
+
+		this._onCursorLeave = function(evt)
+		{
+			if(activeAnimation){
+				self.target.removeBehavior(activeAnimation);
+			}
+			
+			activeAnimation = new Behaviors.Animate(null, null, self._origScale, 600);
+			activeAnimation.callback = function(){
+				activeAnimation = null;
+			};
+
+			self.target.addBehavior(activeAnimation);
+		};
+
+	}
 
 	CursorFeedback.prototype.awake = function(obj)
 	{
-		var activeAnimation = null;
-		var origScale = obj.scale.clone();
+		this.target = obj;
+		this._origScale = obj.scale.clone();
 
-		obj.addEventListener('cursorenter', function(evt)
-		{
-			if(activeAnimation){
-				obj.removeBehavior(activeAnimation);
-			}
-			
-			activeAnimation = new Behaviors.Animate(null, null, origScale.clone().multiplyScalar(1.2), 400);
-			activeAnimation.callback = function(){
-				activeAnimation = null;
-			};
-
-			obj.addBehavior(activeAnimation);
-		});
-
-		obj.addEventListener('cursorleave', function(evt)
-		{
-			if(activeAnimation){
-				obj.removeBehavior(activeAnimation);
-			}
-			
-			activeAnimation = new Behaviors.Animate(null, null, origScale, 600);
-			activeAnimation.callback = function(){
-				activeAnimation = null;
-			};
-
-			obj.addBehavior(activeAnimation);
-		});
+		this.target.addEventListener('cursorenter', this._onCursorEnter);
+		this.target.addEventListener('cursorleave', this._onCursorLeave);
 	};
+
+	CursorFeedback.prototype.dispose = function(obj)
+	{
+		this.target.removeEventListener('cursorenter', this._onCursorEnter);
+		this.target.removeEventListener('cursorleave', this._onCursorLeave);
+	}
 
 	CursorFeedback.prototype.update = function(deltaT){};
 
