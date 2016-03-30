@@ -155,7 +155,7 @@ function join(id, displayName)
  */
 function leave(id, displayName, message)
 {
-	if(!id)
+	if(!id || !socketForPlayer[id])
 		return;
 	
 	// check if kicker is actually in the game
@@ -193,6 +193,9 @@ var votesInProgress = {};
 
 function kickRequest(id, displayName)
 {
+	if(!id || !socketForPlayer[id])
+		return;
+	
 	// check if kicker is actually in the game
 	var playerGame = socketForPlayer[id].gameId;
 	var kickerInGame = false;
@@ -223,6 +226,9 @@ function kickRequest(id, displayName)
 
 function kickResponse(id, displayName, response)
 {
+	if(!id || !socketForPlayer[id])
+		return;
+	
 	// check if kicker is actually in the game
 	var playerGame = socketForPlayer[id].gameId;
 	var kickerInGame = false;
@@ -236,8 +242,12 @@ function kickResponse(id, displayName, response)
 	if( !kickerInGame || id === this.playerId || votesInProgress[id].voters.indexOf(this.playerId) > -1)
 		return;
 
-	// log vote
 	var vote = votesInProgress[id];
+	
+	if(!vote)
+		return;
+	
+	// log vote
 	vote[response ? 'yes' : 'no']++;
 	vote.voters.push(this.playerId);
 	
