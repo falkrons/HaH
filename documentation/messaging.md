@@ -89,7 +89,7 @@ Player Management
 1. Display vote dialog to client.
 
 
-### playerKickResponse(playerId, displayName, requesterName)
+### playerKickResponse(playerId, displayName, requesterName, approved)
 
 *Triggered by*: A player voting to kick a player.
 
@@ -146,17 +146,20 @@ Game Play
 2. Enable card selection from hand.
 
 
-### cardSelection(cardsArray)
+### cardSelection(handIndex, [playerId])
 
 *Triggered by*: A player selecting a card (or group of cards) for play.
 
 *Actions (server)*: 
 
 1. Add play to list of round responses.
-2. If round responses is equal to number of players at the start of the round minus one,
+2. Mirror event to clients
+3. If round responses is equal to expected responses times (number of players at the start of the round minus one),
 	emit `cardSelectionComplete` with list of responses to all clients.
 
-*Actions (client)*: None
+*Actions (client)*:
+
+1. Animate card at selection position to in front of player.
 
 
 ### cardSelectionComplete(cardsArrays)
