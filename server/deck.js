@@ -3,19 +3,16 @@
 var fs = require('fs'),
 	libpath = require('path');
 
-var whiteCardList = [];
-var blackCardList = [];
 
 
-function getShuffledList(length, excludeList)
+function getShuffledList(length)
 {
 	excludeList = excludeList || [];
 	
 	// generate list of card indices
 	var list = [];
 	for(var i=0; i<length; i++){
-		if(excludeList.indexOf(i) === -1)
-			list.push(i);
+		list.push(i);
 	}
 
 	return shuffleList(list);
@@ -37,14 +34,18 @@ function shuffleList(list)
 
 function Deck()
 {
-	this.whiteOrder = getShuffledList(whiteCardList.length);
-	this.blackOrder = getShuffledList(blackCardList.length);
+	this.whiteDeck = getShuffledList(whiteCardList.length);
+	this.blackDeck = getShuffledList(blackCardList.length);
+	
+	this.whiteDiscard = [];
+	this.blackDiscard = [];
 }
+
 
 Deck.loadCards = function()
 {
-	whiteCardList = [];
-	blackCardList = [];
+	Deck.whiteCardList = [];
+	Deck.blackCardList = [];
 	
 	// get list of files in decks folder
 	fs.readdir( libpath.join(__dirname, '../decks'), function(err, names)
@@ -75,8 +76,8 @@ Deck.loadCards = function()
 					}
 					
 					if(data){
-						whiteCardList.push.apply(whiteCardList, data.white);
-						blackCardList.push.apply(blackCardList, data.black);
+						Deck.whiteCardList.push.apply(whiteCardList, data.white);
+						Deck.blackCardList.push.apply(blackCardList, data.black);
 						console.log('deck added:', name.slice(0,-5));
 					}
 				});
@@ -90,15 +91,35 @@ Deck.prototype.dealWhiteCards = function(count)
 	var hand = [];
 	for(var i=0; i<count; i++)
 	{
-		if(whiteCardList.length == 0)
-		{
-			
+		if(this.whiteDeck.length == 0){
+			this.whiteDeck = shuffleList( this.whiteDiscard );
+			this.whiteDiscard = [];
 		}
 		
-		hand.push( whiteCardList.pop() );
+		hand.push( this.whiteDeck.pop() );
 	}
 	
 	return hand;
+}
+
+Deck.prototype.dealBlackCard = function()
+{
+	if(this.blackDeck.length == 0){
+		this.blackDeck = shuffleList( this.blackDiscard );
+		this.blackDiscard = [];
+	}
+	
+	return this.blackDeck.pop();
+}
+
+Deck.prototype.discardWhiteCards = function(cards)
+{
+	this.whiteDiscard.push.apply(this.whiteDiscard, cards);
+}
+
+Deck.prototype.discardBlackCards = function(cards)
+{
+	this.blackDiscard.push.apply(this.blackDiscard, cards);
 }
 
 Deck.loadCards();
