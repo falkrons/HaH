@@ -122,7 +122,12 @@ Game Play
 
 *Triggered by:* A player clicking the card box after completion of the previous round.
 
-*Actions (server)*: None
+*Actions (server)*:
+
+1. Generate a new permutation of the deck if the old deck is out.
+2. Deal a black card, emit `dealCards` to player in line for czar.
+3. Deal cards up to 10 for each player, or up to 12 if it's a 3-card.
+4. Emit `dealCards` to each player with their new cards.
 
 *Actions (client)*:
 

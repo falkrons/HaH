@@ -15,7 +15,6 @@ config.port = config.port || 7878;
 config.minPlayers = config.minPlayers || 4;
 config.maxPlayers = config.maxPlayers || 12;
 
-
 // initialize http router
 var app = express();
 
