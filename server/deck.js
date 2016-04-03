@@ -46,6 +46,7 @@ Deck.loadCards = function()
 {
 	Deck.whiteCardList = [];
 	Deck.blackCardList = [];
+	var b = 0, w = 0;
 	
 	// get list of files in decks folder
 	fs.readdir( libpath.join(__dirname, '../decks'), function(err, names)
@@ -75,9 +76,17 @@ Deck.loadCards = function()
 						console.error(e);
 					}
 					
-					if(data){
-						Deck.whiteCardList.push.apply(whiteCardList, data.white);
-						Deck.blackCardList.push.apply(blackCardList, data.black);
+					if(data)
+					{
+						for(int j=0; j<data.white.length; j++){
+							data.white[j].index = w++;
+						}
+						for(int j=0; j<data.black.length; j++){
+							data.black[j].index = b++;
+						}
+						
+						Deck.whiteCardList.push.apply(Deck.whiteCardList, data.white);
+						Deck.blackCardList.push.apply(Deck.blackCardList, data.black);
 						console.log('deck added:', name.slice(0,-5));
 					}
 				});
