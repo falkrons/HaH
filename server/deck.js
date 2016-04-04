@@ -7,8 +7,6 @@ var fs = require('fs'),
 
 function getShuffledList(length)
 {
-	excludeList = excludeList || [];
-	
 	// generate list of card indices
 	var list = [];
 	for(var i=0; i<length; i++){
@@ -34,8 +32,8 @@ function shuffleList(list)
 
 function Deck()
 {
-	this.whiteDeck = getShuffledList(whiteCardList.length);
-	this.blackDeck = getShuffledList(blackCardList.length);
+	this.whiteDeck = getShuffledList(Deck.whiteCardList.length);
+	this.blackDeck = getShuffledList(Deck.blackCardList.length);
 	
 	this.whiteDiscard = [];
 	this.blackDiscard = [];
@@ -78,10 +76,10 @@ Deck.loadCards = function()
 					
 					if(data)
 					{
-						for(int j=0; j<data.white.length; j++){
+						for(var j=0; j<data.white.length; j++){
 							data.white[j].index = w++;
 						}
-						for(int j=0; j<data.black.length; j++){
+						for(var j=0; j<data.black.length; j++){
 							data.black[j].index = b++;
 						}
 						

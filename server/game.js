@@ -3,70 +3,84 @@
 var players = require('./players.js');
 var Deck = require('./deck.js');
 
-var decks = {};
-var hands = {};
-var gameState = {};
-var czar = {};
+function Game(id){
+	this.id = id;
+	this.deck = new Deck();
+	this.hands = {};
+	this.gameState = 'roundStarted';
+	this.czar = 0;
+	this.turnOrder = players.turnOrder[id];
+}
 
+var games = {};
 
 
 function dealCards()
 {
+	var game;
+	
 	// manage state
-	if( !gameState || gameState[this.gameId] === 'roundOver' )
-		gameState[this.gameId] = 'roundStarted';
-	
-	// initialize deck if none yet
-	if( !decks[this.gameId] ){
-		decks[this.gameId] = new Deck();
+	if( !games[this.gameId])
+		game = games[this.gameId] = new Game(this.gameId);
+	else
+		game = games[this.gameId];
+
+	if(!this.playerId){
+		this.emit('error', 'Anonymous clients can\'t deal');
+		return;
+	}
+		
+	// validate deal requester
+	var dealerInGame = false;
+	for(var i=0; i<game.turnOrder.length; i++){
+		if(game.turnOrder[i].playerId === this.playerId){
+			dealerInGame = true;
+			break;
+		}
 	}
 	
-	// initialize hand set if none yet
-	if( !hands[this.gameId] ){
-		hands[this.gameId] = {};
-	}
-	
-	if( !czar[this.gameId] ){
-		czar[this.gameId] = 0;
+	if(!dealerInGame){
+		this.emit('error', 'Can only deal your own game');
+		return;
 	}
 	
 	// deal the black card
-	var black = decks[this.gameId].dealBlackCard();
+	var black = game.deck.dealBlackCard();
 	
 	// for each player in the game
-	for(var i=0; i<players.turnOrder[this.gameId].length; i++)
+	for(var i=0; i<game.turnOrder.length; i++)
 	{
-		var player = players.turnOrder[this.gameId][i];
+		var player = game.turnOrder[i];
 		
 		// initialize hand as needed
-		if( !hands[this.gameId][player.playerId] )
-			hands[this.gameId][player.playerId] = [];
+		if( !game.hands[player.playerId] )
+			game.hands[player.playerId] = [];
 		
 		// draw necessary number of cards from deck
-		var additions = decks[this.gameId].dealWhiteCards(
-			10 + Deck.blackCardList[black].numDraws - hands[this.gameId][player.playerId].length
+		var additions = game.deck.dealWhiteCards(
+			10 + (Deck.blackCardList[black].numDraws || 0) - game.hands[player.playerId].length
 		);
 		
-		hands[this.gameId][player.playerId] = additions.concat(hands[this.gameId][player.playerId]);
+		// add cards to hand
+		game.hands[player.playerId] = additions.concat(game.hands[player.playerId]);
 		
+		// convert indexes to full card descriptions
 		var additionsFull = additions.map(function(cur){
-			return JSON.parse(JSON.stringify(Deck.whiteCardList[cur]));
-		});
-		var additionsFull = additions.map(function(cur){
-			return JSON.parse(JSON.stringify(Deck.whiteCardList[cur]));
+			return Deck.whiteCardList[cur];
 		});
 		
-		hands[this.gameId][player.playerId] = additions.concat(hands[this.gameId][player.playerId]);
-		
+		// emit new cards
 		var socket = players.socketForPlayer[player.playerId];
-		socket.emit('dealCards', additions, black, czar[this.gameId]);
+		socket.emit('dealCards', additionsFull, Deck.blackCardList[black],
+			game.turnOrder[game.czar].playerId);
 	}
 }
 
 
 
 module.exports = {
-	decks: decks,
+	games: games,
+	
 	dealCards: dealCards
 };
 

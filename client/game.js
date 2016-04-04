@@ -6,6 +6,11 @@
 	var socket;
 	var turnOrder = [];
 	var playerInfo = {};
+	var hand = [];
+	var blackCard = null;
+	
+	var cardNodes = [null,null,null,null,null,null,null,null,null,null,null,null];
+	var blackCardNode = null;
 
 	function connectToGame(gameId)
 	{
@@ -53,6 +58,8 @@
 		socket.on('playerJoinDenied', playerJoinDenied);
 		socket.on('playerLeave', playerLeave);
 		socket.on('playerKickRequest', playerKickRequest);
+		
+		socket.on('dealCards', dealCards);
 	}
 
 	
@@ -84,9 +91,12 @@
 		Utils.rebalanceTable(newTurnOrder, turnOrder);
 		turnOrder.splice(0); turnOrder.push.apply(turnOrder, newTurnOrder);
 
-		if(id === playerInfo.playerId){
+		if(id === playerInfo.playerId)
+		{
 			gameObjects.box.removeEventListener('cursorup');
-			// add listener "deal"
+			gameObjects.box.addEventListener('cursorup', function(){
+				socket.emit('dealCards');
+			});
 		}
 
 		// hide request dialog if present
@@ -159,6 +169,72 @@
 	}
 
 	
+	function dealCards(newCards, newBlackCard, czarId)
+	{
+		var seat = root.getObjectByName(playerInfo.playerId);
+		var cardRadius = 0.5, row1Angle = Math.PI/5, row2Angle = Math.PI/3,
+			row1Sep = Math.PI/10, row2Sep = 1.5*Math.PI/10;
+		
+		// add cards to hand
+		hand.push.apply(hand, newCards);
+		blackCard = newBlackCard;
+		
+		// generate and place new cards
+		for(var i=0; i<newCards.length; i++)
+		{
+			var card = Utils.generateCard(newCards[i].text.split('\n'));
+			for(var j=0; j<cardNodes.length; j++){
+				if(cardNodes[j] === null)
+					break;
+			}
+			card.name = 'card'+j;
+			cardNodes[j] = card;
+			
+			// place card
+			if(j<5){
+				var theta = (j-2)*row1Sep;
+				var phi = -row1Angle;
+			}
+			else if(j < 10){
+				theta = (j-7)*row2Sep;
+				phi = -row2Angle;
+			}
+			else if(j === 10){
+				var theta = -3*row1Sep;
+				var phi = -row1Angle;
+			}
+			else if(j === 11){
+				var theta = 3*row1Sep;
+				var phi = -row1Angle;
+			}
+
+			card.applyMatrix( Utils.sphericalToMatrix(theta, phi, cardRadius, 'zyx') );
+			card.scale.set(2,2,2);
+			seat.add(card);
+		}
+		
+		
+		if(playerInfo.playerId === czarId)
+		{
+			// hide hand
+			/*for(var i=0; i<hand.length; i++){
+				if( hand[i] ){
+					hand[i].visible = false;
+				}
+			}*/
+			
+			
+		}
+		else
+		{
+			for(var i=0; i<cardNodes.length; i++){
+				if( cardNodes[i] ){
+					cardNodes[i].visible = true;
+				}
+			}
+		}
+	}
+	
 	// export objects from scope
 	exports.socket = socket;
 	exports.turnOrder = turnOrder;
@@ -167,35 +243,3 @@
 	exports.connectToGame = connectToGame;
 
 })(window.Game = window.Game || {});
-
-/*
-		var hand = [
-			['Being on fire.'],
-			['Racism'],
-			['Old-people','smell.'],
-			['A micropenis.'],
-			['Women in yogurt','commercials.'],
-			['Classist','undertones.'],
-			['Not giving a shit','about the Third','World.'],
-			['Inserting a','mason jar into','my anus.'],
-			['Court-ordered','rehab.'],
-			['A windmill','full of corpses.']
-		];
-
-		for(var j=0; j<hand.length; j++)
-		{
-			if(i===0) var card = generateCard(hand[j]);
-			else card = blankCard.clone();
-
-			var theta = j<5 ? (j-2)*row1Sep : (j-7)*row2Sep;
-			var phi = j<5 ? -row1Angle : -row2Angle;
-
-			card.applyMatrix( sphericalToMatrix(theta, phi, cardRadius) );
-			card.scale.set(2,2,2);
-			seat.add(card);
-		}
-
-		root.add(seat);
-	}
-}
-*/

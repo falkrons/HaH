@@ -246,9 +246,8 @@
 
 	function sphericalToMatrix(theta, phi, radius, basis)
 	{
-		if(!basis) basis = 'zyx';
-		else basis = basis.toLowerCase();
-
+		if(!basis || !/^[xyz]{3}$/.test(basis)) basis = 'zyx';
+		
 		// determine position
 		var x = radius * Math.cos(phi) * Math.sin(theta);
 		var y = radius * Math.cos(phi) * Math.cos(theta);
@@ -256,7 +255,7 @@
 
 		// determine rotation
 		var basisMap = {};
-		basisMap[basis[0]] = new THREE.Vector3(x, y, z).normalize();
+		basisMap[basis[0]] = new THREE.Vector3(-x, -y, -z).normalize();
 		basisMap[basis[2]] = new THREE.Vector3().crossVectors( basisMap[basis[0]], new THREE.Vector3(0,0,1) );
 		basisMap[basis[1]] = new THREE.Vector3().crossVectors( basisMap[basis[2]], basisMap[basis[0]] );
 
@@ -274,7 +273,6 @@
 		oldTurnOrder = oldTurnOrder || [];
 
 		var angle = 2*Math.PI/newTurnOrder.length;
-		var cardRadius = 0.5, row1Angle = Math.PI/5, row2Angle = Math.PI/3, row1Sep = Math.PI/10, row2Sep = 1.5*Math.PI/10;
 		var players = newTurnOrder.map(function(e){return e.playerId;});
 		
 		// flip box when first player joins/leaves

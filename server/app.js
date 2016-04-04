@@ -71,5 +71,5 @@ function registerGameListeners(socket)
 	socket.on('playerKickRequest', players.kickRequest);
 	socket.on('playerKickResponse', players.kickResponse);
 
-
+	socket.on('dealCards', game.dealCards);
 }
