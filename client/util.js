@@ -19,6 +19,7 @@
 		{
 			models.card = result.scene.children[0].children[0];
 			models.card.scale.set(2,2,2);
+			models.card.updateMatrix();
 
 			models.blankCard = generateCard(['']);
 
@@ -32,6 +33,7 @@
 		{
 			models.nameplate = result.scene.children[0].children[0];
 			models.nameplate.scale.set(2,2,2);
+			models.nameplate.updateMatrix();
 
 			modelsToGo--;
 			if(modelsToGo === 0)
@@ -42,6 +44,7 @@
 		{
 			models.box = result.scene.children[0].children[0];
 			models.box.scale.set(2,2,2);
+			models.box.updateMatrix();
 
 			var texLoader = new THREE.TextureLoader();
 			texLoader.load('models/box.png', function(tex){
@@ -111,7 +114,6 @@
 		model.material = new THREE.MeshBasicMaterial({
 			map: new THREE.CanvasTexture(bmp)
 		});
-
 		return model;
 	}
 
@@ -246,6 +248,7 @@
 
 	function sphericalToMatrix(theta, phi, radius, basis)
 	{
+		// basis is ["forward" axis, "up" axis, "side" axis]
 		if(!basis || !/^[xyz]{3}$/.test(basis)) basis = 'zyx';
 		
 		// determine position
@@ -256,8 +259,9 @@
 		// determine rotation
 		var basisMap = {};
 		basisMap[basis[0]] = new THREE.Vector3(-x, -y, -z).normalize();
-		basisMap[basis[2]] = new THREE.Vector3().crossVectors( basisMap[basis[0]], new THREE.Vector3(0,0,1) );
-		basisMap[basis[1]] = new THREE.Vector3().crossVectors( basisMap[basis[2]], basisMap[basis[0]] );
+		var temp = new THREE.Vector3().crossVectors( basisMap[basis[0]], new THREE.Vector3(0,0,1) ).normalize();
+		basisMap[basis[1]] = new THREE.Vector3().crossVectors( temp, basisMap[basis[0]] );
+		basisMap[basis[2]] = basis[0] < basis[1] ? temp : temp.negate();
 
 		// combine into matrix
 		var mat = new THREE.Matrix4();
@@ -347,6 +351,36 @@
 					})(nameplate, newTurnOrder[i]);
 				}
 
+				var cardRadius = 0.5, row1Angle = Math.PI/5, row2Angle = Math.PI/3,
+					row1Sep = Math.PI/10, row2Sep = 1.5*Math.PI/10;
+
+				// set card positions
+				for(var j=0; j<12; j++)
+				{
+					if(j<5){
+						var theta = (j-2)*row1Sep;
+						var phi = -row1Angle;
+					}
+					else if(j < 10){
+						theta = (j-7)*row2Sep;
+						phi = -row2Angle;
+					}
+					else if(j === 10){
+						theta = -3*row1Sep;
+						phi = -row1Angle;
+					}
+					else if(j === 11){
+						theta = 3*row1Sep;
+						phi = -row1Angle;
+					}
+
+					// place card
+					var card = new THREE.Object3D();
+					card.name = 'card'+j;
+					card.applyMatrix( Utils.sphericalToMatrix(theta, phi, cardRadius, 'zyx') );
+					seat.add(card);
+				}
+				
 				// add seat to the table
 				root.add(seat);
 			}

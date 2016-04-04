@@ -8,8 +8,6 @@
 	var playerInfo = {};
 	var hand = [];
 	var blackCard = null;
-	
-	var cardNodes = [null,null,null,null,null,null,null,null,null,null,null,null];
 	var blackCardNode = null;
 
 	function connectToGame(gameId)
@@ -46,12 +44,7 @@
 			console.error(msg);
 		});
 
-		socket.on('init', function(newTurnOrder){
-			Utils.rebalanceTable(newTurnOrder, turnOrder);
-			turnOrder.splice(0); turnOrder.push.apply(turnOrder, newTurnOrder);
-			gameObjects.box.removeEventListener('cursorup');
-			gameObjects.box.addEventListener('cursorup', emitPlayerJoinRequest);
-		});
+		socket.on('init', init);
 
 		socket.on('playerJoinRequest', playerJoinRequest);
 		socket.on('playerJoin', playerJoin);
@@ -72,7 +65,28 @@
 			playerInfo.displayName+' has left the game.'
 		);
 	}
-	
+
+	function init(newTurnOrder)
+	{
+		// generate seats for current players
+		Utils.rebalanceTable(newTurnOrder, turnOrder);
+
+		// save turn order (without reassigning obj)
+		turnOrder.splice(0); turnOrder.push.apply(turnOrder, newTurnOrder);
+
+		// deal placeholder cards to all players
+		for(var i=0; i<turnOrder.length; i++)
+		{
+			
+		}
+
+		// hook up click-to-join handler
+		gameObjects.box.removeEventListener('cursorup');
+		gameObjects.box.addEventListener('cursorup', emitPlayerJoinRequest);
+
+		//emitPlayerJoinRequest();
+	}
+
 	function playerJoinRequest(id, displayName)
 	{
 		var dialog = Utils.generateDialog('Can this player join?\n'+displayName,
@@ -97,6 +111,7 @@
 			gameObjects.box.addEventListener('cursorup', function(){
 				socket.emit('dealCards');
 			});
+			//socket.emit('dealCards');
 		}
 
 		// hide request dialog if present
@@ -171,65 +186,64 @@
 	
 	function dealCards(newCards, newBlackCard, czarId)
 	{
-		var seat = root.getObjectByName(playerInfo.playerId);
-		var cardRadius = 0.5, row1Angle = Math.PI/5, row2Angle = Math.PI/3,
-			row1Sep = Math.PI/10, row2Sep = 1.5*Math.PI/10;
-		
 		// add cards to hand
 		hand.push.apply(hand, newCards);
 		blackCard = newBlackCard;
-		
-		// generate and place new cards
-		for(var i=0; i<newCards.length; i++)
-		{
-			var card = Utils.generateCard(newCards[i].text.split('\n'));
-			for(var j=0; j<cardNodes.length; j++){
-				if(cardNodes[j] === null)
-					break;
-			}
-			card.name = 'card'+j;
-			cardNodes[j] = card;
-			
-			// place card
-			if(j<5){
-				var theta = (j-2)*row1Sep;
-				var phi = -row1Angle;
-			}
-			else if(j < 10){
-				theta = (j-7)*row2Sep;
-				phi = -row2Angle;
-			}
-			else if(j === 10){
-				var theta = -3*row1Sep;
-				var phi = -row1Angle;
-			}
-			else if(j === 11){
-				var theta = 3*row1Sep;
-				var phi = -row1Angle;
-			}
 
-			card.applyMatrix( Utils.sphericalToMatrix(theta, phi, cardRadius, 'zyx') );
-			card.scale.set(2,2,2);
-			seat.add(card);
-		}
-		
-		
-		if(playerInfo.playerId === czarId)
+		// update scene
+		for(var playerIdx=0; playerIdx<turnOrder.length; playerIdx++)
 		{
-			// hide hand
-			/*for(var i=0; i<hand.length; i++){
-				if( hand[i] ){
-					hand[i].visible = false;
+			var player = turnOrder[playerIdx];
+			var seat = root.getObjectByName(player.playerId);
+		
+			var cardRoots = [];
+			for(var temp=0; temp<12; temp++)
+				cardRoots.push( seat.getObjectByName('card'+temp) );
+
+			// generate and place new cards
+			var handIdx = 0;
+			for(var i=0; i<cardRoots.length; i++)
+			{
+				if(cardRoots[i].children.length === 0)
+				{
+					if(player.playerId === playerInfo.playerId && handIdx < newCards.length){
+						var card = Utils.generateCard(newCards[handIdx].text.split('\n'));
+						card.userData = newCards[handIdx];
+						handIdx++;
+						cardRoots[i].add(card);
+					}
+					else if(player.playerId !== playerInfo.playerId && i < hand.length){
+						card = Models.blankCard.clone();
+						cardRoots[i].add(card);
+					}
+					else if(hand.length <= 10 && cardRoots[10].children.length > 0){
+						cardRoots[i].add(cardRoots[10].children[0]);
+					}
+					else if(hand.length <= 10 && cardRoots[11].children.length > 0){
+						cardRoots[i].add(cardRoots[11].children[0]);
+					}
 				}
-			}*/
-			
-			
-		}
-		else
-		{
-			for(var i=0; i<cardNodes.length; i++){
-				if( cardNodes[i] ){
-					cardNodes[i].visible = true;
+			}
+		
+		
+			if(player.playerId === czarId)
+			{
+				// hide hand
+				/*for(var i=0; i<cardRoots.length; i++){
+					cardRoots[i].visible = false;
+				}*/
+
+				// show black card
+				blackCard.model = Utils.generateCard(blackCard.text.split('\n'), 'black');
+				console.log(blackCard.model, blackCard.model.scale);
+				blackCard.model.applyMatrix( Utils.sphericalToMatrix(0, 0, 0.4, 'zyx') );
+				seat.add(blackCard.model);
+			}
+			else
+			{
+				// show hand
+				for(var i=0; i<cardRoots.length; i++){
+					cardRoots[i].visible = true;
 				}
 			}
 		}

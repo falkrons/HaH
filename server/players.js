@@ -129,7 +129,7 @@ function join(id, displayName)
 	socketForPlayer[id].join(playerGame+'_players');
 
 	// add player to the end of the turn order
-	var newPlayer = {'playerId': id, 'displayName': displayName};
+	var newPlayer = {'playerId': id, 'displayName': displayName, 'cardCount': 0};
 	turnOrder[playerGame].push(newPlayer);
 
 	// let other clients know about new player

@@ -63,6 +63,7 @@ function dealCards()
 		
 		// add cards to hand
 		game.hands[player.playerId] = additions.concat(game.hands[player.playerId]);
+		player.cardCount = game.hands[player.playerId].length;
 		
 		// convert indexes to full card descriptions
 		var additionsFull = additions.map(function(cur){
