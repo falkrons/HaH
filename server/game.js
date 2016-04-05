@@ -1,18 +1,6 @@
 'use strict';
 
 var players = require('./players.js');
-var Deck = require('./deck.js');
-
-function Game(id){
-	this.id = id;
-	this.deck = new Deck();
-	this.hands = {};
-	this.gameState = 'roundStarted';
-	this.czar = 0;
-	this.turnOrder = players.turnOrder[id];
-}
-
-var games = {};
 
 
 function dealCards()
@@ -80,8 +68,6 @@ function dealCards()
 
 
 module.exports = {
-	games: games,
-	
 	dealCards: dealCards
 };
 
