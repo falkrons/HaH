@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script src="https://code.jquery.com/jquery-2.2.2.min.js"></script>
+		<script src='/three.min.js'></script>
+		<script src='/ColladaLoader.js'></script>
+		<script src='/util.js'></script>
+	</head>
+	<body>
+		<script>
+		
+			var index = /index=(\d+)/.exec(window.location.search);
+			if(index) index = parseInt(index[1]);
+			else index = 0;
+			
+			var type = /type=([^&]+)/.exec(window.location.search);
+			if(type) type = type[1];
+			else type = 'black';
+			
+			var cardData = null;
+			
+			Utils.preloadModels(function()
+			{
+				$.getJSON('classic.json')
+				.then(function(data){
+					console.log(data);
+					cardData = data;
+					var card = Utils.generateCard(data[type][index].text.split('\n'), type);
+					var texture = card.material.map.image;
+					document.getElementById('canvasContainer').appendChild(texture);
+				});
+			});
+			
+			function prev()
+			{
+				if(index > 0)
+					window.location.assign('?type='+type+'&index='+(index-1));
+				else if(index === 0 && type === 'white')
+					window.location.assign('?type=black&index='+(cardData.black.length-1));
+				
+			}
+			
+			function next()
+			{
+				if(index < cardData[type].length-1)
+					window.location.assign('?type='+type+'&index='+(index+1));
+				else if(index === cardData[type].length-1 && type === 'black')
+					window.location.assign('?type=white&index=0');
+			}
+			
+		</script>
+		<div id='canvasContainer' style='overflow: hidden; width: 256px; height: 360px;'></div>
+		<a href='javascript:;' onclick='prev()'>Prev</a>
+		<a href='javascript:;' onclick='next()'>Next</a>
+	</body>
+</html>
