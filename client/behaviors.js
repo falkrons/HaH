@@ -100,7 +100,8 @@
 		// terminate animation when done
 		if(mix >= 1){
 			this.target.removeBehavior(this);
-			this.callback.call(this.target);
+			if(this.callback)
+				this.callback.call(this.target);
 		}
 	};
 

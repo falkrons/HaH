@@ -6,14 +6,18 @@ var express = require('express'),
 	socketio = require('socket.io'),
 	liburl = require('url');
 
-var players = require('./players.js'),
+var structures = require('./structures.js'),
+	players = require('./players.js'),
+	game = require('./game.js'),
 	config = require('../config.json');
+
+var activeGames = structures.activeGames;
+
 
 // set defaults for config
 config.port = config.port || 7878;
 config.minPlayers = config.minPlayers || 4;
 config.maxPlayers = config.maxPlayers || 12;
-
 
 // initialize http router
 var app = express();
@@ -37,18 +41,25 @@ var server = app.listen(config.port, function(){
 
 // set up sockets
 var io = socketio(server);
-
 io.on('connection', function(socket)
 {
 	// get gameId, put socket in correct room
 	var url = liburl.parse(socket.request.url, true);
-	if(url.query.gameId)
-	{
-		socket.gameId = url.query.gameId;
-		socket.join(socket.gameId+'_clients');
-		registerGameListeners(socket);
-		socket.emit('init', players.turnOrder[socket.gameId]);
+	var gameId = url.query.gameId;
 
+	if(gameId)
+	{
+		// initialize game
+		if(!activeGames[gameId])
+			activeGames[gameId] = new structures.Game(gameId);
+
+		// associate socket with game
+		socket.gameId = gameId;
+		socket.join(gameId+'_clients');
+		registerGameListeners(socket);
+
+		// initialize new client
+		socket.emit('init', activeGames[gameId].turnOrder);
 		console.log('Client connected to', socket.gameId);
 	}
 	else {
@@ -63,6 +74,15 @@ function registerGameListeners(socket)
 		console.error(err);
 	});
 
+	// trigger leave if socket is disconnected
+	socket.on('disconnect', function()
+	{
+		var player = activeGames[this.gameId].playerForSocket(this);
+		if(player)
+			players.leave.call(this, player.id, player.displayName, player.displayName+' has disconnected.');
+	});
+
+
 	// register player events
 	socket.on('playerJoinRequest', players.joinRequest);
 	socket.on('playerJoinDenied', players.joinDenied);
@@ -70,4 +90,8 @@ function registerGameListeners(socket)
 	socket.on('playerLeave', players.leave);
 	socket.on('playerKickRequest', players.kickRequest);
 	socket.on('playerKickResponse', players.kickResponse);
+
+	socket.on('dealCards', game.dealCards);
 }
+
+

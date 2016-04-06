@@ -19,6 +19,7 @@
 		{
 			models.card = result.scene.children[0].children[0];
 			models.card.scale.set(2,2,2);
+			models.card.updateMatrix();
 
 			models.blankCard = generateCard(['']);
 
@@ -32,6 +33,7 @@
 		{
 			models.nameplate = result.scene.children[0].children[0];
 			models.nameplate.scale.set(2,2,2);
+			models.nameplate.updateMatrix();
 
 			modelsToGo--;
 			if(modelsToGo === 0)
@@ -42,6 +44,7 @@
 		{
 			models.box = result.scene.children[0].children[0];
 			models.box.scale.set(2,2,2);
+			models.box.updateMatrix();
 
 			var texLoader = new THREE.TextureLoader();
 			texLoader.load('models/box.png', function(tex){
@@ -68,7 +71,7 @@
 		var cardWidth = 256;
 		var model = models.card.clone();
 		var fontStack = '"Helvetica Neue", Helvetica, Arial, Sans-Serif';
-		
+
 		// set up canvas
 		var bmp = document.createElement('canvas');
 		var g = bmp.getContext('2d');
@@ -76,7 +79,7 @@
 		bmp.height = 2*cardWidth;
 		g.fillStyle = color === 'black' ? 'black' : 'white';
 		g.fillRect(0, 0, 2*cardWidth, 2*cardWidth);
-		
+
 		// write text
 		g.textAlign = 'left';
 		g.font = 'bold '+(0.09*cardWidth)+'px '+fontStack;
@@ -84,7 +87,7 @@
 		for(var i=0; i<text.length; i++){
 			g.fillText(text[i], 0.08*cardWidth, (0.15+0.12*i)*cardWidth);
 		}
-		
+
 		// draw logo
 		var edgeLength = 15;
 		var x = 0.08*cardWidth, y = 1.33*cardWidth;
@@ -100,18 +103,17 @@
 		// draw footer
 		g.font = (0.05*cardWidth)+'px '+fontStack;
 		g.fillText("Holograms Against Humanity", x+1.5*edgeLength, y);
-		
+
 		// draw card back
 		g.font = 'bold '+(0.15*cardWidth)+'px '+fontStack;
 		g.fillText('Holograms', 1.1*cardWidth, 0.22*cardWidth);
 		g.fillText('Against', 1.1*cardWidth, 0.37*cardWidth);
 		g.fillText('Humanity', 1.1*cardWidth, 0.52*cardWidth);
-		
+
 		// assign texture
 		model.material = new THREE.MeshBasicMaterial({
 			map: new THREE.CanvasTexture(bmp)
 		});
-
 		return model;
 	}
 
@@ -129,7 +131,7 @@
 		bmp.height = 2*cardWidth;
 		g.fillStyle = 'black';
 		g.fillRect(0, 0, 2*cardWidth, 2*cardWidth);
-		
+
 		// draw card
 		g.font = 'bold '+(0.15*cardWidth)+'px '+fontStack;
 		g.fillStyle = 'white';
@@ -141,7 +143,7 @@
 		g.fillText('Holograms', 1.1*cardWidth, 0.22*cardWidth);
 		g.fillText('Against', 1.1*cardWidth, 0.37*cardWidth);
 		g.fillText('Humanity', 1.1*cardWidth, 0.52*cardWidth);
-	
+
 		// assign texture
 		model.material = new THREE.MeshBasicMaterial({
 			map: new THREE.CanvasTexture(bmp)
@@ -156,7 +158,7 @@
 		var texWidth = 256;
 		var model = models.nameplate.clone();
 		var fontStack = '"Helvetica Neue", Helvetica, Arial, Sans-Serif';
-		
+
 		// set up canvas
 		var bmp = document.createElement('canvas');
 		var g = bmp.getContext('2d');
@@ -185,7 +187,7 @@
 		var texWidth = 512;
 		var model = models.dialog.clone();
 		var fontStack = '"Helvetica Neue", Helvetica, Arial, Sans-Serif';
-		
+
 		// set up canvas
 		var bmp = document.createElement('canvas');
 		var g = bmp.getContext('2d');
@@ -240,14 +242,14 @@
 		var seat = root.getObjectByName(Game.playerInfo.playerId);
 		model.applyMatrix( sphericalToMatrix(0, Math.PI/8, 1.05*tableRadius, 'yzx') );
 		seat.add(model);
-		
+
 		return model;
 	}
 
 	function sphericalToMatrix(theta, phi, radius, basis)
 	{
-		if(!basis) basis = 'zyx';
-		else basis = basis.toLowerCase();
+		// basis is ["forward" axis, "up" axis, "side" axis]
+		if(!basis || !/^[xyz]{3}$/.test(basis)) basis = 'zyx';
 
 		// determine position
 		var x = radius * Math.cos(phi) * Math.sin(theta);
@@ -256,9 +258,10 @@
 
 		// determine rotation
 		var basisMap = {};
-		basisMap[basis[0]] = new THREE.Vector3(x, y, z).normalize();
-		basisMap[basis[2]] = new THREE.Vector3().crossVectors( basisMap[basis[0]], new THREE.Vector3(0,0,1) );
-		basisMap[basis[1]] = new THREE.Vector3().crossVectors( basisMap[basis[2]], basisMap[basis[0]] );
+		basisMap[basis[0]] = new THREE.Vector3(-x, -y, -z).normalize();
+		var temp = new THREE.Vector3().crossVectors( basisMap[basis[0]], new THREE.Vector3(0,0,1) ).normalize();
+		basisMap[basis[1]] = new THREE.Vector3().crossVectors( temp, basisMap[basis[0]] );
+		basisMap[basis[2]] = basis[0] < basis[1] ? temp : temp.negate();
 
 		// combine into matrix
 		var mat = new THREE.Matrix4();
@@ -274,9 +277,8 @@
 		oldTurnOrder = oldTurnOrder || [];
 
 		var angle = 2*Math.PI/newTurnOrder.length;
-		var cardRadius = 0.5, row1Angle = Math.PI/5, row2Angle = Math.PI/3, row1Sep = Math.PI/10, row2Sep = 1.5*Math.PI/10;
-		var players = newTurnOrder.map(function(e){return e.playerId;});
-		
+		var players = newTurnOrder.map(function(e){return e.id;});
+
 		// flip box when first player joins/leaves
 		if(newTurnOrder.length > 0){
 			gameObjects.box.rotation.set(0, 0, 0);
@@ -291,7 +293,7 @@
 		for(var i=0; i<newTurnOrder.length; i++)
 		{
 			// attempt to get seat at index
-			var seat = root.getObjectByName(newTurnOrder[i].playerId);
+			var seat = root.getObjectByName(newTurnOrder[i].id);
 			if(seat)
 			{
 				// player is already in the game, move them to position
@@ -306,7 +308,7 @@
 			{
 				// create new seat for player
 				seat = new THREE.Object3D();
-				seat.name = newTurnOrder[i].playerId;
+				seat.name = newTurnOrder[i].id;
 				seat.position.set(-1.05*tableRadius*Math.sin(i*angle), -1.05*tableRadius*Math.cos(i*angle), 1.5);
 				seat.rotation.set(0, 0, -angle*i);
 
@@ -318,23 +320,23 @@
 				seat.add(nameplate);
 
 				// handle "leave" on self click
-				if(newTurnOrder[i].playerId === Game.playerInfo.playerId)
+				if(newTurnOrder[i].id === Game.playerInfo.id)
 				{
 					// register "Leave" action
 					nameplate.addEventListener('cursorup', function(evt)
 					{
 						generateDialog('Are you sure you want to\nleave the game?', function()
 						{
-							Game.socket.emit('playerLeave', Game.playerInfo.playerId, Game.playerInfo.displayName,
+							Game.socket.emit('playerLeave', Game.playerInfo.id, Game.playerInfo.displayName,
 								Game.playerInfo.displayName+' has left the game.'
 							);
 						});
 					});
 					nameplate.addBehavior( new Behaviors.CursorFeedback() );
 				}
-				
+
 				// handle "kick" if still a player
-				else if(players.indexOf(Game.playerInfo.playerId) > -1)
+				else if(players.indexOf(Game.playerInfo.id) > -1)
 				{
 					// register "Kick" action
 					(function(nameplate, opponentInfo){
@@ -342,11 +344,41 @@
 						{
 							generateDialog('Do you want to kick\n'+opponentInfo.displayName+'?', function(){
 								console.log('kicking');
-								Game.socket.emit('playerKickRequest', opponentInfo.playerId, opponentInfo.displayName);
+								Game.socket.emit('playerKickRequest', opponentInfo.id, opponentInfo.displayName);
 							});
 						});
 						nameplate.addBehavior( new Behaviors.CursorFeedback() );
 					})(nameplate, newTurnOrder[i]);
+				}
+
+				var cardRadius = 0.5, row1Angle = Math.PI/5, row2Angle = Math.PI/3,
+					row1Sep = Math.PI/10, row2Sep = 1.5*Math.PI/10;
+
+				// set card positions
+				for(var j=0; j<12; j++)
+				{
+					if(j<5){
+						var theta = (j-2)*row1Sep;
+						var phi = -row1Angle;
+					}
+					else if(j < 10){
+						theta = (j-7)*row2Sep;
+						phi = -row2Angle;
+					}
+					else if(j === 10){
+						theta = -3*row1Sep;
+						phi = -row1Angle;
+					}
+					else if(j === 11){
+						theta = 3*row1Sep;
+						phi = -row1Angle;
+					}
+
+					// place card
+					var card = new THREE.Object3D();
+					card.name = 'card'+j;
+					card.applyMatrix( Utils.sphericalToMatrix(theta, phi, cardRadius, 'zyx') );
+					seat.add(card);
 				}
 
 				// add seat to the table
@@ -359,11 +391,11 @@
 		{
 			// determine if old player is in new turn order
 			for(var j=0, playerIn=false; j<newTurnOrder.length && !playerIn; j++){
-				playerIn = playerIn || newTurnOrder[j].playerId === oldTurnOrder[i].playerId;
+				playerIn = playerIn || newTurnOrder[j].id === oldTurnOrder[i].id;
 			}
 
 			if(!playerIn){
-				var seat = root.getObjectByName(oldTurnOrder[i].playerId);
+				var seat = root.getObjectByName(oldTurnOrder[i].id);
 				root.remove(seat);
 			}
 		}
