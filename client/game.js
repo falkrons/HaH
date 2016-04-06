@@ -51,11 +51,11 @@
 		socket.on('playerJoinDenied', playerJoinDenied);
 		socket.on('playerLeave', playerLeave);
 		socket.on('playerKickRequest', playerKickRequest);
-		
+
 		socket.on('dealCards', dealCards);
 	}
 
-	
+
 	function emitPlayerJoinRequest(evt){
 		socket.emit('playerJoinRequest', playerInfo.id, playerInfo.displayName);
 	}
@@ -77,7 +77,7 @@
 		// deal placeholder cards to all players
 		for(var i=0; i<turnOrder.length; i++)
 		{
-			
+
 		}
 
 		// hook up click-to-join handler
@@ -99,7 +99,7 @@
 		);
 		dialog.name = 'join_'+id;
 	}
-	
+
 	function playerJoin(id, displayName, newTurnOrder)
 	{
 		Utils.rebalanceTable(newTurnOrder, turnOrder);
@@ -146,7 +146,7 @@
 		{
 			gameObjects.box.removeEventListener('cursorup');
 			gameObjects.box.addEventListener(emitPlayerJoinRequest);
-			
+
 			root.traverse(function(model){
 				if(model.name === 'nameplate'){
 					model.removeEventListener('cursorup');
@@ -167,7 +167,7 @@
 
 		console.log('Player', displayName, 'has left the game.');
 	}
-	
+
 	function playerKickRequest(id, displayName)
 	{
 		if(id !== playerInfo.id){
@@ -183,7 +183,7 @@
 		}
 	}
 
-	
+
 	function dealCards(newHand, newBlackCard, czarId)
 	{
 		blackCard = newBlackCard;
@@ -193,10 +193,10 @@
 		{
 			// set hand
 			hand = newHand;
-			
+
 			console.log(playerInfo.id);
 			var seat = root.getObjectByName(playerInfo.id);
-			
+
 			// build a list of card positions and their contents
 			var cardRoots = [];
 			var curCards = {};
@@ -207,10 +207,10 @@
 					var child = cardRoot.children[0];
 					curCards[child.userData.index] = child;
 				}
-				
+
 				cardRoots.push(cardRoot);
 			}
-			
+
 			// move things around to line up with the new hand
 			for(var i=0; i<hand.length; i++){
 				if(curCards[hand[i].index]){
@@ -231,9 +231,9 @@
 				var player = turnOrder[playerIdx];
 				if(player.id === playerInfo.id)
 					continue;
-				
+
 				var seat = root.getObjectByName(player.id);
-			
+
 				var cardRoots = [];
 				for(var temp=0; temp<12; temp++){
 					cardRoots.push(seat.getObjectByName('card'+temp));
@@ -260,7 +260,7 @@
 				}
 			}
 		}
-		
+
 		/*var seat = root.getObjectByName(czarId);
 		if(player.id === czarId)
 		{
@@ -282,7 +282,7 @@
 			}
 		}*/
 	}
-	
+
 	// export objects from scope
 	exports.socket = socket;
 	exports.turnOrder = turnOrder;

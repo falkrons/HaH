@@ -71,7 +71,7 @@
 		var cardWidth = 256;
 		var model = models.card.clone();
 		var fontStack = '"Helvetica Neue", Helvetica, Arial, Sans-Serif';
-		
+
 		// set up canvas
 		var bmp = document.createElement('canvas');
 		var g = bmp.getContext('2d');
@@ -79,7 +79,7 @@
 		bmp.height = 2*cardWidth;
 		g.fillStyle = color === 'black' ? 'black' : 'white';
 		g.fillRect(0, 0, 2*cardWidth, 2*cardWidth);
-		
+
 		// write text
 		g.textAlign = 'left';
 		g.font = 'bold '+(0.09*cardWidth)+'px '+fontStack;
@@ -87,7 +87,7 @@
 		for(var i=0; i<text.length; i++){
 			g.fillText(text[i], 0.08*cardWidth, (0.15+0.12*i)*cardWidth);
 		}
-		
+
 		// draw logo
 		var edgeLength = 15;
 		var x = 0.08*cardWidth, y = 1.33*cardWidth;
@@ -103,13 +103,13 @@
 		// draw footer
 		g.font = (0.05*cardWidth)+'px '+fontStack;
 		g.fillText("Holograms Against Humanity", x+1.5*edgeLength, y);
-		
+
 		// draw card back
 		g.font = 'bold '+(0.15*cardWidth)+'px '+fontStack;
 		g.fillText('Holograms', 1.1*cardWidth, 0.22*cardWidth);
 		g.fillText('Against', 1.1*cardWidth, 0.37*cardWidth);
 		g.fillText('Humanity', 1.1*cardWidth, 0.52*cardWidth);
-		
+
 		// assign texture
 		model.material = new THREE.MeshBasicMaterial({
 			map: new THREE.CanvasTexture(bmp)
@@ -131,7 +131,7 @@
 		bmp.height = 2*cardWidth;
 		g.fillStyle = 'black';
 		g.fillRect(0, 0, 2*cardWidth, 2*cardWidth);
-		
+
 		// draw card
 		g.font = 'bold '+(0.15*cardWidth)+'px '+fontStack;
 		g.fillStyle = 'white';
@@ -143,7 +143,7 @@
 		g.fillText('Holograms', 1.1*cardWidth, 0.22*cardWidth);
 		g.fillText('Against', 1.1*cardWidth, 0.37*cardWidth);
 		g.fillText('Humanity', 1.1*cardWidth, 0.52*cardWidth);
-	
+
 		// assign texture
 		model.material = new THREE.MeshBasicMaterial({
 			map: new THREE.CanvasTexture(bmp)
@@ -158,7 +158,7 @@
 		var texWidth = 256;
 		var model = models.nameplate.clone();
 		var fontStack = '"Helvetica Neue", Helvetica, Arial, Sans-Serif';
-		
+
 		// set up canvas
 		var bmp = document.createElement('canvas');
 		var g = bmp.getContext('2d');
@@ -187,7 +187,7 @@
 		var texWidth = 512;
 		var model = models.dialog.clone();
 		var fontStack = '"Helvetica Neue", Helvetica, Arial, Sans-Serif';
-		
+
 		// set up canvas
 		var bmp = document.createElement('canvas');
 		var g = bmp.getContext('2d');
@@ -242,7 +242,7 @@
 		var seat = root.getObjectByName(Game.playerInfo.playerId);
 		model.applyMatrix( sphericalToMatrix(0, Math.PI/8, 1.05*tableRadius, 'yzx') );
 		seat.add(model);
-		
+
 		return model;
 	}
 
@@ -250,7 +250,7 @@
 	{
 		// basis is ["forward" axis, "up" axis, "side" axis]
 		if(!basis || !/^[xyz]{3}$/.test(basis)) basis = 'zyx';
-		
+
 		// determine position
 		var x = radius * Math.cos(phi) * Math.sin(theta);
 		var y = radius * Math.cos(phi) * Math.cos(theta);
@@ -278,7 +278,7 @@
 
 		var angle = 2*Math.PI/newTurnOrder.length;
 		var players = newTurnOrder.map(function(e){return e.id;});
-		
+
 		// flip box when first player joins/leaves
 		if(newTurnOrder.length > 0){
 			gameObjects.box.rotation.set(0, 0, 0);
@@ -334,7 +334,7 @@
 					});
 					nameplate.addBehavior( new Behaviors.CursorFeedback() );
 				}
-				
+
 				// handle "kick" if still a player
 				else if(players.indexOf(Game.playerInfo.id) > -1)
 				{
@@ -380,7 +380,7 @@
 					card.applyMatrix( Utils.sphericalToMatrix(theta, phi, cardRadius, 'zyx') );
 					seat.add(card);
 				}
-				
+
 				// add seat to the table
 				root.add(seat);
 			}

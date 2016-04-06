@@ -155,7 +155,7 @@ Game Play
 
 *Triggered by*: A player selecting a card (or group of cards) for play.
 
-*Actions (server)*: 
+*Actions (server)*:
 
 1. Add play to list of round responses.
 2. Mirror event to clients

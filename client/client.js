@@ -45,7 +45,7 @@ if( altspace.inClient )
 		root.position.setY( -enc.innerHeight/2 );
 		root.rotation.set( -Math.PI/2, 0, 0 );
 		tableRadius = (enc.innerWidth < enc.innerDepth ? enc.innerWidth : enc.innerDepth)/2 / enc.pixelsPerMeter;
-		
+
 		// render 2d version if space is flat
 		if( enc.innerDepth < 10 ){
 			document.body.innerHTML = staticPage;
@@ -69,7 +69,7 @@ else
 	camera.position.set(0, 2*tableRadius, 1.5);
 	camera.lookAt( new THREE.Vector3(0, 0, 1.5) );
 	root.add(camera);
-	
+
 	Utils.preloadModels(init);
 }
 
@@ -115,7 +115,7 @@ function init()
 	else
 	{
 		Game.connectToGame(gameId);
-	
+
 	}
 }
 

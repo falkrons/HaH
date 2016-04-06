@@ -15,7 +15,7 @@ function Deck()
 {
 	this.whiteDeck = Deck.getShuffledList(Deck.whiteCardList.length);
 	this.blackDeck = Deck.getShuffledList(Deck.blackCardList.length);
-	
+
 	this.whiteDiscard = [];
 	this.blackDiscard = [];
 }
@@ -26,7 +26,7 @@ Deck.loadCards = function()
 	Deck.whiteCardList = [];
 	Deck.blackCardList = [];
 	var b = 0, w = 0;
-	
+
 	// get list of files in decks folder
 	fs.readdir( libpath.join(__dirname, '../decks'), function(err, names)
 	{
@@ -54,7 +54,7 @@ Deck.loadCards = function()
 						console.error('Error parsing', name);
 						console.error(e);
 					}
-					
+
 					if(data)
 					{
 						for(var j=0; j<data.white.length; j++){
@@ -63,7 +63,7 @@ Deck.loadCards = function()
 						for(var j=0; j<data.black.length; j++){
 							data.black[j].index = b++;
 						}
-						
+
 						Deck.whiteCardList.push.apply(Deck.whiteCardList, data.white);
 						Deck.blackCardList.push.apply(Deck.blackCardList, data.black);
 						console.log('deck added:', name.slice(0,-5));
@@ -83,10 +83,10 @@ Deck.prototype.dealWhiteCards = function(count)
 			this.whiteDeck = shuffleList( this.whiteDiscard );
 			this.whiteDiscard = [];
 		}
-		
+
 		hand.push( this.whiteDeck.pop() );
 	}
-	
+
 	return hand;
 }
 
@@ -96,7 +96,7 @@ Deck.prototype.dealBlackCard = function()
 		this.blackDeck = shuffleList( this.blackDiscard );
 		this.blackDiscard = [];
 	}
-	
+
 	return this.blackDeck.pop();
 }
 
@@ -181,7 +181,7 @@ function Game(id)
 
 	// array of Players waiting for approval to join
 	this.pendingJoinRequests = [];
-	
+
 	// array of Players with active kick votes
 	this.pendingKickVotes = [];
 }

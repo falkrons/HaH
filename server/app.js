@@ -46,7 +46,7 @@ io.on('connection', function(socket)
 	// get gameId, put socket in correct room
 	var url = liburl.parse(socket.request.url, true);
 	var gameId = url.query.gameId;
-	
+
 	if(gameId)
 	{
 		// initialize game
