@@ -277,7 +277,7 @@
 		oldTurnOrder = oldTurnOrder || [];
 
 		var angle = 2*Math.PI/newTurnOrder.length;
-		var players = newTurnOrder.map(function(e){return e.playerId;});
+		var players = newTurnOrder.map(function(e){return e.id;});
 		
 		// flip box when first player joins/leaves
 		if(newTurnOrder.length > 0){
@@ -293,7 +293,7 @@
 		for(var i=0; i<newTurnOrder.length; i++)
 		{
 			// attempt to get seat at index
-			var seat = root.getObjectByName(newTurnOrder[i].playerId);
+			var seat = root.getObjectByName(newTurnOrder[i].id);
 			if(seat)
 			{
 				// player is already in the game, move them to position
@@ -308,7 +308,7 @@
 			{
 				// create new seat for player
 				seat = new THREE.Object3D();
-				seat.name = newTurnOrder[i].playerId;
+				seat.name = newTurnOrder[i].id;
 				seat.position.set(-1.05*tableRadius*Math.sin(i*angle), -1.05*tableRadius*Math.cos(i*angle), 1.5);
 				seat.rotation.set(0, 0, -angle*i);
 
@@ -320,14 +320,14 @@
 				seat.add(nameplate);
 
 				// handle "leave" on self click
-				if(newTurnOrder[i].playerId === Game.playerInfo.playerId)
+				if(newTurnOrder[i].id === Game.playerInfo.id)
 				{
 					// register "Leave" action
 					nameplate.addEventListener('cursorup', function(evt)
 					{
 						generateDialog('Are you sure you want to\nleave the game?', function()
 						{
-							Game.socket.emit('playerLeave', Game.playerInfo.playerId, Game.playerInfo.displayName,
+							Game.socket.emit('playerLeave', Game.playerInfo.id, Game.playerInfo.displayName,
 								Game.playerInfo.displayName+' has left the game.'
 							);
 						});
@@ -336,7 +336,7 @@
 				}
 				
 				// handle "kick" if still a player
-				else if(players.indexOf(Game.playerInfo.playerId) > -1)
+				else if(players.indexOf(Game.playerInfo.id) > -1)
 				{
 					// register "Kick" action
 					(function(nameplate, opponentInfo){
@@ -344,7 +344,7 @@
 						{
 							generateDialog('Do you want to kick\n'+opponentInfo.displayName+'?', function(){
 								console.log('kicking');
-								Game.socket.emit('playerKickRequest', opponentInfo.playerId, opponentInfo.displayName);
+								Game.socket.emit('playerKickRequest', opponentInfo.id, opponentInfo.displayName);
 							});
 						});
 						nameplate.addBehavior( new Behaviors.CursorFeedback() );
@@ -391,11 +391,11 @@
 		{
 			// determine if old player is in new turn order
 			for(var j=0, playerIn=false; j<newTurnOrder.length && !playerIn; j++){
-				playerIn = playerIn || newTurnOrder[j].playerId === oldTurnOrder[i].playerId;
+				playerIn = playerIn || newTurnOrder[j].id === oldTurnOrder[i].id;
 			}
 
 			if(!playerIn){
-				var seat = root.getObjectByName(oldTurnOrder[i].playerId);
+				var seat = root.getObjectByName(oldTurnOrder[i].id);
 				root.remove(seat);
 			}
 		}

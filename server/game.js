@@ -41,6 +41,13 @@ function dealCards()
 		player.socket.emit('dealCards', fullHand, structs.Deck.blackCardList[black],
 			game.turnOrder[game.czar].id);
 	}
+	
+	// prompt observers to show updated hands
+	this.server.to(game.id+'_clients').emit('dealCards',
+		10 + (structs.Deck.blackCardList[black].numDraws || 0),
+		structs.Deck.blackCardList[black],
+		game.turnOrder[game.czar].id
+	);
 }
 
 

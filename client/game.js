@@ -16,13 +16,13 @@
 		if(altspace.inClient){
 			altspace.getUser().then(function(userInfo)
 			{
-				playerInfo.playerId = userInfo.userId;
+				playerInfo.id = userInfo.userId;
 				playerInfo.displayName = userInfo.displayName;
 			});
 		}
 		else {
-			playerInfo.playerId = Math.round(Math.random()*0x8000);
-			playerInfo.displayName = 'anon'+playerInfo.playerId;
+			playerInfo.id = Math.round(Math.random()*0x8000);
+			playerInfo.displayName = 'anon'+playerInfo.id;
 		}
 
 		// initialize the socket connection
@@ -57,11 +57,11 @@
 
 	
 	function emitPlayerJoinRequest(evt){
-		socket.emit('playerJoinRequest', playerInfo.playerId, playerInfo.displayName);
+		socket.emit('playerJoinRequest', playerInfo.id, playerInfo.displayName);
 	}
 
 	function emitPlayerLeave(evt){
-		socket.emit('playerLeave', playerInfo.playerId, playerInfo.displayName,
+		socket.emit('playerLeave', playerInfo.id, playerInfo.displayName,
 			playerInfo.displayName+' has left the game.'
 		);
 	}
@@ -105,7 +105,7 @@
 		Utils.rebalanceTable(newTurnOrder, turnOrder);
 		turnOrder.splice(0); turnOrder.push.apply(turnOrder, newTurnOrder);
 
-		if(id === playerInfo.playerId)
+		if(id === playerInfo.id)
 		{
 			gameObjects.box.removeEventListener('cursorup');
 			gameObjects.box.addEventListener('cursorup', function(){
@@ -115,7 +115,7 @@
 		}
 
 		// hide request dialog if present
-		var seat = root.getObjectByName(playerInfo.playerId);
+		var seat = root.getObjectByName(playerInfo.id);
 		if(seat)
 		{
 			var dialog;
@@ -130,7 +130,7 @@
 	function playerJoinDenied(id, displayName)
 	{
 		// hide request dialog if present
-		var seat = root.getObjectByName(playerInfo.playerId);
+		var seat = root.getObjectByName(playerInfo.id);
 		var dialog;
 		if(dialog = seat.getObjectByName('join_'+id)){
 			seat.remove(dialog);
@@ -142,7 +142,7 @@
 		Utils.rebalanceTable(newTurnOrder, turnOrder);
 		turnOrder.splice(0); turnOrder.push.apply(turnOrder, newTurnOrder);
 
-		if(id === playerInfo.playerId)
+		if(id === playerInfo.id)
 		{
 			gameObjects.box.removeEventListener('cursorup');
 			gameObjects.box.addEventListener(emitPlayerJoinRequest);
@@ -155,7 +155,7 @@
 		}
 
 		// hide request dialog if present
-		var seat = root.getObjectByName(playerInfo.playerId);
+		var seat = root.getObjectByName(playerInfo.id);
 		if(seat)
 		{
 			var dialog;
@@ -170,7 +170,7 @@
 	
 	function playerKickRequest(id, displayName)
 	{
-		if(id !== playerInfo.playerId){
+		if(id !== playerInfo.id){
 			var dialog = Utils.generateDialog('Do you want to kick\n'+displayName+'?',
 				function(){
 					socket.emit('playerKickResponse', id, displayName, true);
@@ -184,69 +184,103 @@
 	}
 
 	
-	function dealCards(newCards, newBlackCard, czarId)
+	function dealCards(newHand, newBlackCard, czarId)
 	{
-		// add cards to hand
-		hand.push.apply(hand, newCards);
 		blackCard = newBlackCard;
 
-		// update scene
-		for(var playerIdx=0; playerIdx<turnOrder.length; playerIdx++)
+		// manage player hand
+		if(Array.isArray(newHand))
 		{
-			var player = turnOrder[playerIdx];
-			var seat = root.getObjectByName(player.playerId);
-		
+			// set hand
+			hand = newHand;
+			
+			console.log(playerInfo.id);
+			var seat = root.getObjectByName(playerInfo.id);
+			
+			// build a list of card positions and their contents
 			var cardRoots = [];
+			var curCards = {};
 			for(var temp=0; temp<12; temp++)
-				cardRoots.push( seat.getObjectByName('card'+temp) );
-
-			// generate and place new cards
-			var handIdx = 0;
-			for(var i=0; i<cardRoots.length; i++)
 			{
-				if(cardRoots[i].children.length === 0)
-				{
-					if(player.playerId === playerInfo.playerId && handIdx < newCards.length){
-						var card = Utils.generateCard(newCards[handIdx].text.split('\n'));
-						card.userData = newCards[handIdx];
-						handIdx++;
-						cardRoots[i].add(card);
-					}
-					else if(player.playerId !== playerInfo.playerId && i < hand.length){
-						card = Models.blankCard.clone();
-						cardRoots[i].add(card);
-					}
-					else if(hand.length <= 10 && cardRoots[10].children.length > 0){
-						cardRoots[i].add(cardRoots[10].children[0]);
-					}
-					else if(hand.length <= 10 && cardRoots[11].children.length > 0){
-						cardRoots[i].add(cardRoots[11].children[0]);
-					}
+				var cardRoot = seat.getObjectByName('card'+temp);
+				if(cardRoot.children.length > 0){
+					var child = cardRoot.children[0];
+					curCards[child.userData.index] = child;
 				}
+				
+				cardRoots.push(cardRoot);
 			}
-		
-		
-			if(player.playerId === czarId)
-			{
-				// hide hand
-				/*for(var i=0; i<cardRoots.length; i++){
-					cardRoots[i].visible = false;
-				}*/
-
-				// show black card
-				blackCard.model = Utils.generateCard(blackCard.text.split('\n'), 'black');
-				console.log(blackCard.model, blackCard.model.scale);
-				blackCard.model.applyMatrix( Utils.sphericalToMatrix(0, 0, 0.4, 'zyx') );
-				seat.add(blackCard.model);
-			}
-			else
-			{
-				// show hand
-				for(var i=0; i<cardRoots.length; i++){
-					cardRoots[i].visible = true;
+			
+			// move things around to line up with the new hand
+			for(var i=0; i<hand.length; i++){
+				if(curCards[hand[i].index]){
+					cardRoots[i].add(curCards[hand[i].index]);
+				}
+				else {
+					var card = Utils.generateCard(hand[i].text.split('\n'), 'white');
+					cardRoots[i].add(card);
 				}
 			}
 		}
+		else
+		{
+			// update scene for all other players
+			for(var playerIdx=0; playerIdx<turnOrder.length; playerIdx++)
+			{
+				// skip self, already done
+				var player = turnOrder[playerIdx];
+				if(player.id === playerInfo.id)
+					continue;
+				
+				var seat = root.getObjectByName(player.id);
+			
+				var cardRoots = [];
+				for(var temp=0; temp<12; temp++){
+					cardRoots.push(seat.getObjectByName('card'+temp));
+				}
+
+				// generate and place new cards
+				for(var i=0; i<cardRoots.length; i++)
+				{
+					if(cardRoots[i].children.length === 0)
+					{
+						// steal from position 11 first
+						if(newHand <= 10 && cardRoots[10].children.length > 0){
+							cardRoots[i].add(cardRoots[10].children[0]);
+						}
+						// steal from position 12 next
+						else if(newHand <= 10 && cardRoots[11].children.length > 0){
+							cardRoots[i].add(cardRoots[11].children[0]);
+						}
+						// if those are empty, generate new card
+						else if(i < newHand){
+							cardRoots[i].add(Models.blankCard.clone());
+						}
+					}
+				}
+			}
+		}
+		
+		/*var seat = root.getObjectByName(czarId);
+		if(player.id === czarId)
+		{
+			// hide hand
+			for(var i=0; i<cardRoots.length; i++){
+				cardRoots[i].visible = false;
+			}
+
+			// show black card
+			blackCard.model = Utils.generateCard(blackCard.text.split('\n'), 'black');
+			blackCard.model.applyMatrix( Utils.sphericalToMatrix(0, 0, 0.4, 'zyx') );
+			seat.add(blackCard.model);
+		}
+		else
+		{
+			// show hand
+			for(var i=0; i<cardRoots.length; i++){
+				cardRoots[i].visible = true;
+			}
+		}*/
 	}
 	
 	// export objects from scope
