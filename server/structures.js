@@ -151,7 +151,7 @@ function Player(playerId, displayName, socket)
 	this.displayName = displayName;
 	this.socket = socket;
 
-	this.cardCount = 0;
+	this.hand = [];
 }
 
 
@@ -169,9 +169,6 @@ function Game(id)
 	// this particular game's order of cards
 	this.deck = new Deck();
 
-	// playerId => [cards]
-	this.hands = {};
-
 	// one of 'roundStarted', 'playerSelectionPending',
 	//   'czarSelectionPending', 'roundFinished'
 	this.gameState = 'roundStarted';
@@ -184,6 +181,9 @@ function Game(id)
 
 	// array of Players waiting for approval to join
 	this.pendingJoinRequests = [];
+	
+	// array of Players with active kick votes
+	this.pendingKickVotes = [];
 }
 
 Game.prototype.playerForSocket = function(socket)
@@ -232,6 +232,25 @@ Game.prototype.joinRequestForId = function(id)
 
 	// otherwise id not found
 	return null;
+}
+
+Game.prototype.kickVoteForId = function(id)
+{
+	// check current players for id
+	for(var i=0; i<this.pendingKickVotes.length; i++){
+		if(this.pendingKickVotes[i].player.id === id)
+			return this.pendingKickVotes[i];
+	}
+
+	// otherwise id not found
+	return null;
+}
+
+Game.prototype.getCleanTurnOrder = function()
+{
+	return this.turnOrder.map(function(cur){
+		return {id: cur.id, displayName: cur.displayName, hand: cur.hand};
+	});
 }
 
 

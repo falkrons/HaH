@@ -45,19 +45,21 @@ io.on('connection', function(socket)
 {
 	// get gameId, put socket in correct room
 	var url = liburl.parse(socket.request.url, true);
-	if(url.query.gameId)
+	var gameId = url.query.gameId;
+	
+	if(gameId)
 	{
 		// initialize game
-		if(!activeGames[url.query.gameId])
-			activeGames[url.query.gameId] = new structures.Game(url.query.gameId);
+		if(!activeGames[gameId])
+			activeGames[gameId] = new structures.Game(gameId);
 
 		// associate socket with game
-		socket.gameId = url.query.gameId;
-		socket.join(socket.gameId+'_clients');
+		socket.gameId = gameId;
+		socket.join(gameId+'_clients');
 		registerGameListeners(socket);
 
 		// initialize new client
-		socket.emit('init', players.turnOrder[socket.gameId]);
+		socket.emit('init', activeGames[gameId].turnOrder);
 		console.log('Client connected to', socket.gameId);
 	}
 	else {

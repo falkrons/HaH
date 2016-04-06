@@ -85,7 +85,7 @@ function joinDenied(id, displayName, message)
 function join(id, displayName)
 {
 	var game = activeGames[this.gameId];
-
+	
 	// make sure person clearing join request is in game
 	var approver = game.playerForSocket(this);
 	if( game.turnOrder.length >= config.minPlayers && !approver ){
@@ -97,6 +97,11 @@ function join(id, displayName)
 	var player = game.joinRequestForId(id);
 	if(!player){
 		this.emit('error', 'No join request with that ID, ignoring.');
+		return;
+	}
+	
+	if(game.playerForId(id)){
+		this.emit('error', 'Player '+id+' is already in the game');
 		return;
 	}
 
@@ -111,9 +116,9 @@ function join(id, displayName)
 	game.turnOrder.push(player);
 
 	// let other clients know about new player
-	this.server.to(game.id+'_clients').emit('playerJoin', player.id, player.displayName, game.turnOrder);
+	this.server.to(game.id+'_clients').emit('playerJoin', player.id, player.displayName, game.getCleanTurnOrder());
 
-	console.log('Player', displayName, 'has joined game', playerGame);
+	console.log('Player', displayName, 'has joined game', game.id);
 }
 
 
@@ -141,82 +146,121 @@ function leave(id, displayName, message)
 	// remove player from turn order
 	var index = game.turnOrder.indexOf(player);
 	game.turnOrder.splice(index, 1);
+	
+	// discard player's hand
+	game.deck.discardWhiteCards(player.hand);
 
 	// disconnect given client from players-only channel
 	player.socket.leave(game.id+'_players');
 
+	// remove pending kick votes (if any)
+	var index = game.pendingKickVotes.indexOf(game.kickVoteForId(player.id));
+	if(index > -1){
+		game.pendingKickVotes.splice(index, 1);
+	}
+	
 	// inform other clients of player's departure
-	this.server.to(game.id+'_clients').emit('playerLeave', player.id, player.displayName, game.turnOrder, message);
+	this.server.to(game.id+'_clients').emit('playerLeave', 
+		player.id, player.displayName, game.getCleanTurnOrder(), message);
 
 	console.log('Player', player.displayName, 'has left the game.');
 }
 
-var votesInProgress = {};
-
-function kickRequest(id, displayName)
+function kickRequest(id)
 {
-	// check if kicker is actually in the game
-	var playerGame = socketForPlayer[id].gameId;
-	var kickerInGame = false;
-	for(var i=0; i<turnOrder[playerGame].length; i++){
-		if(turnOrder[playerGame][i].playerId === this.playerId){
-			kickerInGame = true;
-			break;
-		}
-	}
+	var game = activeGames[this.gameId];
 
-	// abort for invalid player or vote in progress
-	if( !kickerInGame || votesInProgress[id] )
+	// check if player is in game
+	var player = game.playerForId(id);
+	if(!player){
+		this.emit('error', 'No player with id '+id);
 		return;
+	}
+	
+	// check if kicker is in the game
+	var kicker = game.playerForSocket(this);
+	if(!kicker){
+		this.emit('error', 'Only players can vote to kick');
+		return;
+	}
+	
+	if(game.kickVoteForId(id)){
+		this.emit('error', 'Vote to kick player already in progress');
+		return;
+	}
+	
+	console.log('Voting to kick', player.id);
 
-	console.log('Voting to kick', displayName);
-
-	// vote to kick, and ask everyone else
-	votesInProgress[id] = {
+	// vote to kick
+	game.pendingKickVotes.push({
+		'player': player,
 		'yes': 0, 'no': 0,
 		'majority': Math.ceil((turnOrder[playerGame].length-1)/2),
 		'voters': []
-	};
-	kickResponse.call(this, id, displayName, true);
-	if(turnOrder[playerGame].length > 3)
-		this.server.to(playerGame+'_players').emit('playerKickRequest', id, displayName);
+	});
+	kickResponse.call(this, player.id, player.displayName, true);
+	
+	// ask everyone else (if one vote isn't enough)
+	if(game.turnOrder.length > 3)
+		this.server.to(game.id+'_players').emit('playerKickRequest', player.id, player.displayName);
 
 }
 
 function kickResponse(id, displayName, response)
 {
-	// check if kicker is actually in the game
-	var playerGame = socketForPlayer[id].gameId;
-	var kickerInGame = false;
-	for(var i=0; i<turnOrder[playerGame].length; i++){
-		if(turnOrder[playerGame][i].playerId === this.playerId){
-			kickerInGame = true;
-			break;
-		}
-	}
-	// only non-accused players of the current game that haven't voted yet
-	if( !kickerInGame || id === this.playerId || votesInProgress[id].voters.indexOf(this.playerId) > -1)
-		return;
+	var game = activeGames[this.gameId];
+	var vote = game.kickVoteForId(id);
+	var voter = game.playerForSocket(this);
+	
 
+	// check if vote in progress
+	if(!vote){
+		this.emit('error', 'No active vote to kick '+id);
+		return;
+	}
+	
+	// check if kicker is actually in the game
+	else if(!voter){
+		this.emit('error', 'Only players can vote to kick.');
+		return;
+	}
+	
+	// check for multiple votes
+	else if(vote.voters.indexOf(voter) > -1){
+		this.emit('error', 'Can only vote once');
+		return;
+	}
+	
+	else if(voter.id === vote.player.id){
+		this.emit('error', 'Cannot participate in vote to kick yourself.');
+		return;
+	}
+	
 	// log vote
-	var vote = votesInProgress[id];
 	vote[response ? 'yes' : 'no']++;
-	vote.voters.push(this.playerId);
+	vote.voters.push(voter);
 	
 	// check results
 	if(vote.yes >= vote.majority)
 	{
 		// vote passes
-		console.log('Vote to kick', displayName, 'passes');
-		leave.call(this, id, displayName, displayName+' was kicked from the game.');
-		delete votesInProgress[id];
+		console.log('Vote to kick', vote.player.displayName, 'passes');
+		leave.call(this, vote.player.id, vote.player.displayName,
+			vote.player.displayName+' was kicked from the game.');
+			
+		// clear pending vote
+		var index = game.pendingKickVotes.indexOf(vote);
+		game.pendingKickVotes.splice(index, 1);
 	}
 	else if(vote.no >= vote.majority)
 	{
 		// vote fails
-		console.log('Vote to kick', displayName, 'fails');
-		this.server.to(playerGame+'_players').emit('kickVoteAborted', id, displayName);
-		delete votesInProgress[id];
+		console.log('Vote to kick', vote.player.displayName, 'fails');
+		this.server.to(game.id+'_players').emit('kickVoteAborted', vote.player.id, vote.player.displayName);
+
+		// clear pending vote
+		var index = game.pendingKickVotes.indexOf(vote);
+		game.pendingKickVotes.splice(index, 1);
 	}
 	// else keep waiting for responses
 }
