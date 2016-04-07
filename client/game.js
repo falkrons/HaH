@@ -194,7 +194,7 @@
 	{
 		if(newBlackCard){
 			blackCard = newBlackCard;
-			blackCard.model = Utils.generateCard(blackCard.text.split('\n'), 'black');
+			blackCard.model = Utils.generateCard(blackCard, 'black');
 			blackCard.model.applyMatrix( Utils.sphericalToMatrix(0, 0, 0.4, 'zyx') );
 		}
 
@@ -254,7 +254,7 @@
 			else
 			{
 				if(hand[i])
-					var card = Utils.generateCard(hand[i].text.split('\n'), 'white');
+					var card = Utils.generateCard(hand[i], 'white');
 				else
 					card = Models.blankCard.clone();
 

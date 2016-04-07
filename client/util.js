@@ -21,7 +21,7 @@
 			models.card.scale.set(2,2,2);
 			models.card.updateMatrix();
 
-			models.blankCard = generateCard(['']);
+			models.blankCard = generateCard({text:''});
 
 			modelsToGo--;
 			if(modelsToGo === 0)
@@ -65,8 +65,17 @@
 		});
 	}
 
-	function generateCard(text, color)
+	function generateCard(card, color)
 	{
+		if(color === 'black'){
+			var fgColor = '#eee';
+			var bgColor = 'black';
+		}
+		else {
+			fgColor = 'black';
+			bgColor = '#eee';
+		}
+
 		// card face texture resolution
 		var cardWidth = 256;
 		var model = models.card.clone();
@@ -77,22 +86,62 @@
 		var g = bmp.getContext('2d');
 		bmp.width = 2*cardWidth;
 		bmp.height = 2*cardWidth;
-		g.fillStyle = color === 'black' ? 'black' : 'white';
+		g.fillStyle = bgColor;
 		g.fillRect(0, 0, 2*cardWidth, 2*cardWidth);
+		g.fillStyle = fgColor
 
 		// write text
 		g.textAlign = 'left';
 		g.font = 'bold '+(0.09*cardWidth)+'px '+fontStack;
-		g.fillStyle = color === 'black' ? 'white' : 'black';
+		var text = card.text.split('\n');
 		for(var i=0; i<text.length; i++){
 			g.fillText(text[i], 0.08*cardWidth, (0.15+0.12*i)*cardWidth);
 		}
+
+		// draw "PICK X" indicator
+		if(card.numResponses)
+		{
+			g.font = 'bold '+(0.07*cardWidth)+'px '+fontStack;
+			g.textAlign = 'right';
+			g.fillText('PICK', 0.85*cardWidth, 1.33*cardWidth);
+
+			g.beginPath();
+				g.arc(0.91*cardWidth, 1.303*cardWidth, 0.04*cardWidth, 0, 2*Math.PI);
+			g.closePath();
+			g.fill();
+			g.textAlign = 'center';
+			g.fillStyle = bgColor;
+			g.fillText(card.numResponses, 0.91*cardWidth, 1.33*cardWidth);
+
+			g.fillStyle = fgColor;
+			g.textAlign = 'left';
+		}
+
+		// draw "DRAW X" indicator
+		if(card.numDraws)
+		{
+			g.font = 'bold '+(0.07*cardWidth)+'px '+fontStack;
+			g.textAlign = 'right';
+			g.fillText('DRAW', 0.85*cardWidth, 1.22*cardWidth);
+
+			g.beginPath();
+				g.arc(0.91*cardWidth, 1.192*cardWidth, 0.04*cardWidth, 0, 2*Math.PI);
+			g.closePath();
+			g.fill();
+			g.textAlign = 'center';
+			g.fillStyle = bgColor;
+			g.fillText(card.numDraws, 0.91*cardWidth, 1.22*cardWidth);
+
+			g.fillStyle = fgColor;
+			g.textAlign = 'left';
+		}
+
 
 		// draw logo
 		var edgeLength = 15;
 		var x = 0.08*cardWidth, y = 1.33*cardWidth;
 		g.lineWidth = 2;
-		g.strokeStyle = color === 'black' ? 'white' : 'black';
+		g.strokeStyle = fgColor;
 		g.moveTo(x, y);
 		g.lineTo(x+edgeLength/2, y-edgeLength*Math.sin(Math.PI/3));
 		g.lineTo(x+edgeLength, y);
@@ -101,8 +150,14 @@
 		g.stroke();
 
 		// draw footer
+		g.textAlign = 'left';
 		g.font = (0.05*cardWidth)+'px '+fontStack;
-		g.fillText("Holograms Against Humanity", x+1.5*edgeLength, y);
+		if( card.numResponses || card.numDraws ){
+			g.fillText("HAH", x+1.5*edgeLength, y);
+		}
+		else {
+			g.fillText("Holograms Against Humanity", x+1.5*edgeLength, y);
+		}
 
 		// draw card back
 		g.font = 'bold '+(0.15*cardWidth)+'px '+fontStack;

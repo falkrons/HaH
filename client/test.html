@@ -25,7 +25,7 @@
 				.then(function(data){
 					console.log(data);
 					cardData = data;
-					var card = Utils.generateCard(data[type][index].text.split('\n'), type);
+					var card = Utils.generateCard(data[type][index], type);
 					var texture = card.material.map.image;
 					document.getElementById('canvasContainer').appendChild(texture);
 				});
