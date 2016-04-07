@@ -59,7 +59,12 @@ io.on('connection', function(socket)
 		registerGameListeners(socket);
 
 		// initialize new client
-		socket.emit('init', activeGames[gameId].getCleanTurnOrder());
+		var game = activeGames[gameId];
+		socket.emit('init', game.getCleanTurnOrder(),
+			structures.Deck.blackCardList[game.currentBlackCard],
+			game.turnOrder.length > 0 ? game.turnOrder[game.czar].id : null,
+			game.state
+		);
 		console.log('Client connected to', socket.gameId);
 	}
 	else {
@@ -92,6 +97,7 @@ function registerGameListeners(socket)
 	socket.on('playerKickResponse', players.kickResponse);
 
 	socket.on('dealCards', game.dealCards);
+	socket.on('roundStart', game.roundStart);
 }
 
 

@@ -96,15 +96,21 @@ function init()
 	gameObjects.box.addBehavior(new Behaviors.CursorFeedback());
 	root.add(gameObjects.box);
 
-	// add a big black card
+	// add a rotating presentation space
+	gameObjects.presentation = new THREE.Object3D();
+	gameObjects.presentation.name = 'presentation';
+	gameObjects.presentation.position.set(0, 0, 2);
+	gameObjects.presentation.scale.set(6,6,6);
+	gameObjects.presentation.updateMatrix();
+	gameObjects.presentation.addBehavior( new Behaviors.Rotate(0, 0, 0.5) );
+
+	// add title card
 	gameObjects.titleCard = Utils.generateTitleCard();
-	gameObjects.titleCard.position.setZ(2);
-	gameObjects.titleCard.scale.set(12,12,12);
 	gameObjects.titleCard.rotation.set(Math.PI/2, 0, 0);
 	gameObjects.titleCard.updateMatrix();
 	gameObjects.titleCard.visible = false;
-	gameObjects.titleCard.addBehavior( new Behaviors.Rotate(0, 0.5, 0) );
-	root.add(gameObjects.titleCard);
+	gameObjects.presentation.add(gameObjects.titleCard);
+	root.add(gameObjects.presentation);
 
 	// grab game id from URL
 	var gameId = /[?&]gameId=(\w+)\b/.exec(window.location.search);

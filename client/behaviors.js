@@ -21,6 +21,8 @@
 
 	Rotate.prototype.update = function(deltaT)
 	{
+		if(!this.target.visible) return;
+
 		var oldAngles = this.target.rotation;
 
 		this.target.rotation.set(

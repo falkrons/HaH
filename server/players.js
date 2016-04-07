@@ -169,6 +169,18 @@ function leave(id, displayName, message)
 	if(game.turnOrder.length === 0){
 		activeGames[this.gameId] = new structs.Game(this.gameId);
 	}
+
+	// game is interrupted, reset
+	if(game.turnOrder.length < 3)
+	{
+		game.state = 'roundFinished';
+		game.czar = 0;
+		if(game.currentBlackCard !== null){
+			game.deck.discardBlackCards([game.currentBlackCard]);
+			game.currentBlackCard = null;
+		}
+		this.server.to(game.id+'_clients').emit('roundReset');
+	}
 }
 
 function kickRequest(id)

@@ -53,6 +53,7 @@
 		socket.on('playerKickRequest', playerKickRequest);
 
 		socket.on('dealCards', dealCards);
+		socket.on('roundStart', roundStart);
 	}
 
 
@@ -66,7 +67,7 @@
 		);
 	}
 
-	function init(newTurnOrder)
+	function init(newTurnOrder, blackCard, czarId, gameState)
 	{
 		// generate seats for current players
 		Utils.rebalanceTable(newTurnOrder, turnOrder);
@@ -74,14 +75,19 @@
 		// save turn order (without reassigning obj)
 		turnOrder.splice(0); turnOrder.push.apply(turnOrder, newTurnOrder);
 
-		// deal placeholder cards to all players
-		updateAllHands(turnOrder[0] && turnOrder[0].hand.length || 0);
-
 		// hook up click-to-join handler
 		gameObjects.box.removeEventListener('cursorup');
 		gameObjects.box.addEventListener('cursorup', emitPlayerJoinRequest);
 
-		//emitPlayerJoinRequest();
+		// sync game state
+		var states = ['roundFinished', 'roundStarted', 'playerSelectionPending', 'czarSelectionPending'];
+		// deal placeholder cards to all players
+		if(states.indexOf(gameState) >= 1)
+			dealCards(turnOrder.length > 0 ? turnOrder[0].hand.length : 0, blackCard, czarId);
+		if(states.indexOf(gameState) >= 2)
+			roundStart();
+
+
 	}
 
 	function playerJoinRequest(id, displayName)
@@ -97,7 +103,7 @@
 		dialog.name = 'join_'+id;
 		
 		// auto-join
-		//socket.emit('playerJoin', id, displayName);
+		socket.emit('playerJoin', id, displayName);
 	}
 
 	function playerJoin(id, displayName, newTurnOrder)
@@ -186,9 +192,11 @@
 
 	function dealCards(newHand, newBlackCard, newCzarId)
 	{
-		blackCard = newBlackCard;
-		blackCard.model = Utils.generateCard(blackCard.text.split('\n'), 'black');
-		blackCard.model.applyMatrix( Utils.sphericalToMatrix(0, 0, 0.4, 'zyx') );
+		if(newBlackCard){
+			blackCard = newBlackCard;
+			blackCard.model = Utils.generateCard(blackCard.text.split('\n'), 'black');
+			blackCard.model.applyMatrix( Utils.sphericalToMatrix(0, 0, 0.4, 'zyx') );
+		}
 
 		// manage player hand
 		if(Array.isArray(newHand)){
@@ -200,6 +208,8 @@
 		{
 			updateAllHands(newHand, newCzarId);
 		}
+
+		czarId = newCzarId;
 	}
 
 	function updatePlayerHand(newHand, newCzarId)
@@ -243,7 +253,10 @@
 			// generate new cards for those dealt this round
 			else
 			{
-				var card = Utils.generateCard(hand[i].text.split('\n'), 'white');
+				if(hand[i])
+					var card = Utils.generateCard(hand[i].text.split('\n'), 'white');
+				else
+					card = Models.blankCard.clone();
 
 				// animate from card box
 				var boxPos = new THREE.Vector3().copy(gameObjects.box.position);
@@ -267,6 +280,10 @@
 
 			// show black card
 			seat.add(blackCard.model);
+			blackCard.model.addBehavior( new Behaviors.CursorFeedback() );
+			blackCard.model.addEventListener('cursorup', function(evt){
+				socket.emit('roundStart');
+			});
 		}
 		else
 		{
@@ -325,7 +342,7 @@
 				}
 			}
 
-			if(player.id === newCzarId)
+			if(blackCard && player.id === newCzarId)
 			{
 				// hide hand
 				for(var i=0; i<cardRoots.length; i++){
@@ -345,6 +362,23 @@
 
 		}
 	}
+
+
+	function roundStart()
+	{
+		var seat = root.getObjectByName(playerInfo.id);
+		if(seat)
+			var center = seat.getObjectByName('presentation');
+		else
+			center = root.getObjectByName('presentation');
+		console.log(center);
+		var card = blackCard.model.clone();
+		card.position.set(0,0,0);
+		card.rotation.set(-Math.PI/2,0,Math.PI);
+		card.updateMatrix();
+		center.add(card);
+	}
+
 
 	// export objects from scope
 	exports.socket = socket;

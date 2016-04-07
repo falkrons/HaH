@@ -67,9 +67,21 @@ function dealCards()
 	game.state = 'roundStarted';
 }
 
+function roundStart()
+{
+	var game = activeGames[this.gameId];
+	if(game.state === 'roundStarted'){
+		game.state = 'playerSelectionPending';
+		this.server.to(game.id+'_clients').emit('roundStart');
+	}
+	else {
+		this.emit('error', 'Unexpected signal: roundStart');
+	}
+}
 
 
 module.exports = {
-	dealCards: dealCards
+	dealCards: dealCards,
+	roundStart: roundStart
 };
 

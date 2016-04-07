@@ -319,6 +319,15 @@
 				nameplate.rotation.set(0, 0, Math.PI/2);
 				seat.add(nameplate);
 
+				// add presentation space
+				var center = new THREE.Object3D();
+				center.name = 'presentation';
+				center.position.set(0, 1.05*tableRadius, 0.5);
+				center.rotation.set(0, 0, Math.PI);
+				center.scale.set(6,6,6);
+				center.updateMatrix();
+				seat.add(center);
+
 				// handle "leave" on self click
 				if(newTurnOrder[i].id === Game.playerInfo.id)
 				{
