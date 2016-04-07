@@ -171,10 +171,12 @@ function Game(id)
 
 	// one of 'roundStarted', 'playerSelectionPending',
 	//   'czarSelectionPending', 'roundFinished'
-	this.gameState = 'roundStarted';
+	this.state = 'roundFinished';
 
 	// index of player in turnOrder that is czar this round
 	this.czar = 0;
+
+	this.currentBlackCard = null;
 
 	// in-order array of Player objects
 	this.turnOrder = [];

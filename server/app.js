@@ -59,7 +59,7 @@ io.on('connection', function(socket)
 		registerGameListeners(socket);
 
 		// initialize new client
-		socket.emit('init', activeGames[gameId].turnOrder);
+		socket.emit('init', activeGames[gameId].getCleanTurnOrder());
 		console.log('Client connected to', socket.gameId);
 	}
 	else {

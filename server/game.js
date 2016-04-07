@@ -16,8 +16,23 @@ function dealCards()
 		return;
 	}
 
+	// check that the time is right
+	if(game.state !== 'roundFinished'){
+		this.emit('error', 'Unexpected signal "dealCards"');
+		return;
+	}
+
+	// check for minimum player count
+	if(game.turnOrder.length < 3){
+		this.emit('error', 'Too few players to deal');
+		return;
+	}
+
 	// deal the black card
-	var black = game.deck.dealBlackCard();
+	if(game.currentBlackCard !== null){
+		game.deck.discardBlackCards([game.currentBlackCard]);
+	}
+	var black = game.currentBlackCard = game.deck.dealBlackCard();
 
 	// for each player in the game
 	for(var i=0; i<game.turnOrder.length; i++)
@@ -48,6 +63,8 @@ function dealCards()
 		structs.Deck.blackCardList[black],
 		game.turnOrder[game.czar].id
 	);
+
+	game.state = 'roundStarted';
 }
 
 

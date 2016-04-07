@@ -239,7 +239,7 @@
 
 
 		// point dialog at player
-		var seat = root.getObjectByName(Game.playerInfo.playerId);
+		var seat = root.getObjectByName(Game.playerInfo.id);
 		model.applyMatrix( sphericalToMatrix(0, Math.PI/8, 1.05*tableRadius, 'yzx') );
 		seat.add(model);
 
@@ -400,6 +400,7 @@
 			}
 		}
 	}
+
 
 	exports.preloadModels = preloadModels;
 	exports.generateCard = generateCard;

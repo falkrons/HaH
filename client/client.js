@@ -44,6 +44,7 @@ if( altspace.inClient )
 		root.scale.set(enc.pixelsPerMeter, enc.pixelsPerMeter, enc.pixelsPerMeter);
 		root.position.setY( -enc.innerHeight/2 );
 		root.rotation.set( -Math.PI/2, 0, 0 );
+		root.updateMatrix();
 		tableRadius = (enc.innerWidth < enc.innerDepth ? enc.innerWidth : enc.innerDepth)/2 / enc.pixelsPerMeter;
 
 		// render 2d version if space is flat
@@ -68,6 +69,7 @@ else
 	camera.up.set(0,0,1);
 	camera.position.set(0, 2*tableRadius, 1.5);
 	camera.lookAt( new THREE.Vector3(0, 0, 1.5) );
+	camera.updateMatrix();
 	root.add(camera);
 
 	Utils.preloadModels(init);
@@ -83,12 +85,14 @@ function init()
 	);
 	table.position.setZ(0.8);
 	table.rotation.set(Math.PI/2, 0, 0);
+	table.updateMatrix();
 	root.add(table);
 
 	// add game box
 	gameObjects.box = Models.box;
 	gameObjects.box.position.set(0, 0, 0.8 + 0.025 + 0.07);
 	gameObjects.box.rotation.set(Math.PI, 0, 0);
+	gameObjects.box.updateMatrix();
 	gameObjects.box.addBehavior(new Behaviors.CursorFeedback());
 	root.add(gameObjects.box);
 
@@ -97,6 +101,7 @@ function init()
 	gameObjects.titleCard.position.setZ(2);
 	gameObjects.titleCard.scale.set(12,12,12);
 	gameObjects.titleCard.rotation.set(Math.PI/2, 0, 0);
+	gameObjects.titleCard.updateMatrix();
 	gameObjects.titleCard.visible = false;
 	gameObjects.titleCard.addBehavior( new Behaviors.Rotate(0, 0.5, 0) );
 	root.add(gameObjects.titleCard);

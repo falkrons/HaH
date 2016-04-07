@@ -164,6 +164,11 @@ function leave(id, displayName, message)
 		player.id, player.displayName, game.getCleanTurnOrder(), message);
 
 	console.log('Player', player.displayName, 'has left the game.');
+
+	// reinitialize game if last player leaves
+	if(game.turnOrder.length === 0){
+		activeGames[this.gameId] = new structs.Game(this.gameId);
+	}
 }
 
 function kickRequest(id)
