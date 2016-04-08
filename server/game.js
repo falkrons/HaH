@@ -70,13 +70,20 @@ function dealCards()
 function roundStart()
 {
 	var game = activeGames[this.gameId];
-	if(game.state === 'roundStarted'){
-		game.state = 'playerSelectionPending';
-		this.server.to(game.id+'_clients').emit('roundStart');
-	}
-	else {
+
+	if(game.state !== 'roundStarted'){
 		this.emit('error', 'Unexpected signal: roundStart');
+		return;
 	}
+
+	var player = game.playerForSocket(this);
+	if(game.turnOrder.indexOf(player) !== game.czar){
+		this.emit('error', 'Only the czar can confirm the black card');
+		return;
+	}
+
+	game.state = 'playerSelectionPending';
+	this.server.to(game.id+'_clients').emit('roundStart');
 }
 
 

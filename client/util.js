@@ -334,16 +334,6 @@
 		var angle = 2*Math.PI/newTurnOrder.length;
 		var players = newTurnOrder.map(function(e){return e.id;});
 
-		// flip box when first player joins/leaves
-		if(newTurnOrder.length > 0){
-			gameObjects.box.rotation.set(0, 0, 0);
-			gameObjects.titleCard.visible = false;
-		}
-		else {
-			gameObjects.box.rotation.set(Math.PI, 0, 0);
-			gameObjects.titleCard.visible = true;
-		}
-
 		// add new players, adjust old players
 		for(var i=0; i<newTurnOrder.length; i++)
 		{

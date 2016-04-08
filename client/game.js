@@ -69,6 +69,20 @@
 
 	function init(newTurnOrder, blackCard, czarId, gameState)
 	{
+		if(newTurnOrder.length === 0){
+			gameObjects.box.rotation.set(Math.PI, 0, 0);
+			gameObjects.titleCard.visible = true;
+		}
+		else {
+			gameObjects.box.rotation.set(0, 0, 0);
+			gameObjects.titleCard.visible = false;
+		}
+
+		var card = gameObjects.presentation.getObjectByName('blackCard');
+		if(card){
+			gameObjects.presentation.remove(card);
+		}
+
 		// generate seats for current players
 		Utils.rebalanceTable(newTurnOrder, turnOrder);
 
@@ -110,6 +124,9 @@
 	{
 		Utils.rebalanceTable(newTurnOrder, turnOrder);
 		turnOrder.splice(0); turnOrder.push.apply(turnOrder, newTurnOrder);
+
+		gameObjects.box.rotation.set(0, 0, 0);
+		gameObjects.titleCard.visible = false;
 
 		if(id === playerInfo.id)
 		{
@@ -168,7 +185,11 @@
 			if(dialog = seat.getObjectByName('kick_'+id)){
 				seat.remove(dialog);
 			}
+		}
 
+		if(newTurnOrder.length === 0){
+			gameObjects.box.rotation.set(Math.PI, 0, 0);
+			gameObjects.titleCard.visible = true;
 		}
 
 		console.log('Player', displayName, 'has left the game.');
@@ -196,6 +217,7 @@
 			blackCard = newBlackCard;
 			blackCard.model = Utils.generateCard(blackCard, 'black');
 			blackCard.model.applyMatrix( Utils.sphericalToMatrix(0, 0, 0.4, 'zyx') );
+			blackCard.model.name = 'blackCard';
 		}
 
 		// manage player hand
@@ -371,12 +393,18 @@
 			var center = seat.getObjectByName('presentation');
 		else
 			center = root.getObjectByName('presentation');
-		console.log(center);
+
 		var card = blackCard.model.clone();
 		card.position.set(0,0,0);
 		card.rotation.set(-Math.PI/2,0,Math.PI);
 		card.updateMatrix();
 		center.add(card);
+
+		// enable clicking on cards
+		if(seat)
+		{
+			// TODO: loop over hand and add click handlers
+		}
 	}
 
 
