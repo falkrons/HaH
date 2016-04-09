@@ -169,6 +169,8 @@
 		model.material = new THREE.MeshBasicMaterial({
 			map: new THREE.CanvasTexture(bmp)
 		});
+
+		//model.userData = card;
 		return model;
 	}
 

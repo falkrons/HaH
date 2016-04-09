@@ -7,6 +7,8 @@
 	var turnOrder = [];
 	var playerInfo = {};
 	var hand = [];
+	var selection = [];
+
 	var blackCard = null;
 	var czarId = '';
 
@@ -388,13 +390,19 @@
 
 	function roundStart()
 	{
+		// identify pres area
 		var seat = root.getObjectByName(playerInfo.id);
 		if(seat)
 			var center = seat.getObjectByName('presentation');
 		else
 			center = root.getObjectByName('presentation');
 
+		// add black card to presentation area
+		var temp = blackCard.model.userData;
+		blackCard.model.userData = '';
 		var card = blackCard.model.clone();
+		blackCard.model.userData = temp;
+		card.userData = temp;
 		card.position.set(0,0,0);
 		card.rotation.set(-Math.PI/2,0,Math.PI);
 		card.updateMatrix();
@@ -403,18 +411,83 @@
 		// enable clicking on cards
 		if(seat)
 		{
-			// TODO: loop over hand and add click handlers
+			// loop over hand and add click handlers
 			[0,1,2,3,4,5,6,7,8,9,10,11].forEach(function(i)
 			{
 				var card = seat.getObjectByName('card'+i);
 				card.addBehavior( new Behaviors.CursorFeedback() );
-				card.addEventListener('cursorup', function(evt)
-				{
-					card.removeAllBehaviors();
-					socket.emit('cardSelection', i);
+				card.addEventListener('cursorup', function(evt){
+					handleCardSelection(i);
 				});
 			});
 
+		}
+	}
+
+	function handleCardSelection(handIndex)
+	{
+		var seat = root.getObjectByName(playerInfo.id);
+		var cardRoot = seat.getObjectByName('card'+handIndex);
+
+		// don't add any more cards after the necessary amount
+		if(selection.length < (blackCard.numResponses || 1))
+		{
+			var spacing = 0.3;
+			var card = cardRoot.children[0];
+			card.name = 'selection'+selection.length;
+
+			// set up animation to selection area
+			seat.add(card);
+			card.position.set(cardRoot.position.x, cardRoot.position.y, cardRoot.position.z);
+			card.rotation.set(cardRoot.rotation.x, cardRoot.rotation.y, cardRoot.rotation.z);
+			card.updateMatrix();
+
+			// animate
+			var mat = Utils.sphericalToMatrix(spacing*selection.length/2, 0, 0.5);
+			mat.multiply( new THREE.Matrix4().makeScale(2,2,2) );
+			card.addBehavior( new Behaviors.Animate(mat) );
+
+			// move other cards aside for new one
+			var oldCard = seat.getObjectByName('selection'+(selection.length-1));
+			if(oldCard){
+				mat = Utils.sphericalToMatrix(spacing*selection.length/2 - spacing, 0, 0.5);
+				mat.multiply( new THREE.Matrix4().makeScale(2,2,2) );
+				oldCard.addBehavior( new Behaviors.Animate(mat));
+			}
+			oldCard = seat.getObjectByName('selection'+(selection.length-2));
+			if(oldCard){
+				mat = Utils.sphericalToMatrix(spacing*selection.length/2 - 2*spacing, 0, 0.5);
+				mat.multiply( new THREE.Matrix4().makeScale(2,2,2) );
+				oldCard.addBehavior( new Behaviors.Animate(mat));
+			}
+
+			// add to selection
+			selection.push(handIndex);
+
+			if(selection.length === (blackCard.numResponses || 1))
+			{
+				// spawn confirmation boxes
+				var yes = new THREE.Mesh(
+					new THREE.BoxGeometry(0.01, 0.1, 0.1),
+					new THREE.MeshBasicMaterial({
+						map: new THREE.TextureLoader().load('check.png')
+					})
+				);
+
+				var no = new THREE.Mesh(
+					new THREE.BoxGeometry(0.01, 0.1, 0.1),
+					new THREE.MeshBasicMaterial({
+						map: new THREE.TextureLoader().load('cross.png')
+					})
+				);
+
+				yes.applyMatrix( Utils.sphericalToMatrix(0.6, 0, 0.5, 'xyz') );
+				seat.add(yes);
+				no.applyMatrix( Utils.sphericalToMatrix(-0.6, 0, 0.5, 'xyz') );
+				seat.add(no);
+
+				//socket.emit('cardSelection', selection);
+			}
 		}
 	}
 
@@ -425,5 +498,6 @@
 	exports.playerInfo = playerInfo;
 
 	exports.connectToGame = connectToGame;
+	exports.handleCardSelection = handleCardSelection;
 
 })(window.Game = window.Game || {});

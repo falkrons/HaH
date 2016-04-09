@@ -35,13 +35,30 @@
 
 	/*
 	 * Animate the target from transform to transform over time
+	 * Alternate prototype: Animate(finalMatrix, duration, callback)
 	 */
 
 	function Animate(finalPos, finalRot, finalScale, duration, callback)
 	{
-		this.finalPos = finalPos;
-		this.finalRot = finalRot;
-		this.finalScale = finalScale;
+		if(finalPos instanceof THREE.Matrix4)
+		{
+			// extract position/rotation/scale from matrix
+			this.finalPos = new THREE.Vector3();
+			var quat = new THREE.Quaternion();
+			this.finalScale = new THREE.Vector3();
+			finalPos.decompose(this.finalPos, quat, this.finalScale);
+			this.finalRot = new THREE.Euler().setFromQuaternion(quat);
+
+			// shift other arguments
+			duration = finalRot;
+			callback = finalScale;
+		}
+		else
+		{
+			this.finalPos = finalPos;
+			this.finalRot = finalRot;
+			this.finalScale = finalScale;
+		}
 		this.duration = duration || 600;
 		this.callback = callback;
 	}
@@ -121,7 +138,7 @@
 			if(activeAnimation){
 				self.target.removeBehavior(activeAnimation);
 			}
-			
+
 			activeAnimation = new Behaviors.Animate(null, null, self._origScale.clone().multiplyScalar(1.2), 400);
 			activeAnimation.callback = function(){
 				activeAnimation = null;
@@ -135,7 +152,7 @@
 			if(activeAnimation){
 				self.target.removeBehavior(activeAnimation);
 			}
-			
+
 			activeAnimation = new Behaviors.Animate(null, null, self._origScale, 600);
 			activeAnimation.callback = function(){
 				activeAnimation = null;

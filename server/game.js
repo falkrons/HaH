@@ -107,7 +107,14 @@ function cardSelection(handIndex)
 	}
 
 	// check submission validity
-	if(Array.isArray(handIndex)){
+	var numResponses = structs.Deck.blackCardList[game.currentBlackCard].numResponses || 1;
+	if(Array.isArray(handIndex))
+	{
+		if(handIndex.length !== numResponses )
+		{
+			this.emit('error', 'Invalid card selection');
+			return;
+		}
 		for(var i=0; i<handIndex.length; i++){
 			if(!player.hand[i]){
 				this.emit('error', 'Invalid card selection');
@@ -115,7 +122,7 @@ function cardSelection(handIndex)
 			}
 		}
 	}
-	else if(!player.hand[handIndex]){
+	else if(!player.hand[handIndex] || numResponses !== 1){
 		this.emit('error', 'Invalid card selection');
 		return;
 	}
