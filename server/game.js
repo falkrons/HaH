@@ -89,7 +89,7 @@ function roundStart()
 	this.server.to(game.id+'_clients').emit('roundStart');
 }
 
-function cardSelection(handIndex)
+function cardSelection(indexes)
 {
 	var game = activeGames[this.gameId];
 
@@ -108,28 +108,22 @@ function cardSelection(handIndex)
 
 	// check submission validity
 	var numResponses = structs.Deck.blackCardList[game.currentBlackCard].numResponses || 1;
-	if(Array.isArray(handIndex))
+	if(indexes.length !== numResponses )
 	{
-		if(handIndex.length !== numResponses )
-		{
-			this.emit('error', 'Invalid card selection');
+		this.emit('error', 'Invalid card selection, given '+indexes.length+' and needs '+numResponses);
+		return;
+	}
+	for(var i=0; i<indexes.length; i++){
+		// check for index-out-of-bounds and double-select
+		if(!player.hand[i] || indexes.indexOf(indexes[i]) !== i){
+			this.emit('error', 'Invalid card selection: out of bounds or duplicate');
 			return;
 		}
-		for(var i=0; i<handIndex.length; i++){
-			if(!player.hand[i]){
-				this.emit('error', 'Invalid card selection');
-				return;
-			}
-		}
-	}
-	else if(!player.hand[handIndex] || numResponses !== 1){
-		this.emit('error', 'Invalid card selection');
-		return;
 	}
 
 	// save hand
-	player.selection = handIndex;
-	this.server.to(game.id+'_clients').emit('cardSelection', handIndex, player.id);
+	player.selection = indexes;
+	this.server.to(game.id+'_clients').emit('cardSelection', indexes, player.id);
 
 	// check for last submission
 	var submissions = {};

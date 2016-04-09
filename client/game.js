@@ -56,6 +56,7 @@
 
 		socket.on('dealCards', dealCards);
 		socket.on('roundStart', roundStart);
+		socket.on('cardSelection', animateSelection);
 	}
 
 
@@ -119,7 +120,7 @@
 		dialog.name = 'join_'+id;
 
 		// auto-join
-		socket.emit('playerJoin', id, displayName);
+		//socket.emit('playerJoin', id, displayName);
 	}
 
 	function playerJoin(id, displayName, newTurnOrder)
@@ -481,16 +482,57 @@
 					})
 				);
 
+				// place confirmation boxes
+				yes.addBehavior( new Behaviors.CursorFeedback() );
 				yes.applyMatrix( Utils.sphericalToMatrix(0.6, 0, 0.5, 'xyz') );
 				seat.add(yes);
+				no.addBehavior( new Behaviors.CursorFeedback() );
 				no.applyMatrix( Utils.sphericalToMatrix(-0.6, 0, 0.5, 'xyz') );
 				seat.add(no);
 
-				//socket.emit('cardSelection', selection);
+				yes.addEventListener('cursorup', function(evt){
+					socket.emit('cardSelection', selection);
+					selection = [];
+					seat.remove(yes, no);
+				});
+
+				no.addEventListener('cursorup', function(evt)
+				{
+					// put all the cards back
+					for(var i=0; i<selection.length; i++)
+					{
+						var card = seat.getObjectByName('selection'+i);
+						var spot = seat.getObjectByName('card'+selection[i]);
+						card.position.set(0,0,0);
+						card.rotation.set(0,0,0);
+						card.updateMatrix();
+						spot.add(card);
+					}
+
+					// zero out selection
+					selection = [];
+
+					// kill boxes
+					seat.remove(yes, no);
+				});
 			}
 		}
 	}
 
+	function animateSelection(handIndexes, playerId)
+	{
+		// find where selected cards should go
+		/*var czarSeat = root.getObjectByName(czarId);
+		var finalPos = new THREE.Vector3(czarSeat.position.x/2, czarSeat.position.y/2, 0.9);
+		var finalRot = czarSeat.rotation.clone();
+
+		// animate to in front of czar
+		var tempCard = seat.getObjectByName('card0');
+		if(tempCard){
+			root.add(tempCard);
+			root.worldToLocal(seat.localToWorld(tempCard.position));
+		}*/
+	}
 
 	// export objects from scope
 	exports.socket = socket;
