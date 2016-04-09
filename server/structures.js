@@ -152,6 +152,7 @@ function Player(playerId, displayName, socket)
 	this.socket = socket;
 
 	this.hand = [];
+	this.selection = null;
 }
 
 

@@ -115,7 +115,7 @@
 			}
 		);
 		dialog.name = 'join_'+id;
-		
+
 		// auto-join
 		socket.emit('playerJoin', id, displayName);
 	}
@@ -404,6 +404,17 @@
 		if(seat)
 		{
 			// TODO: loop over hand and add click handlers
+			[0,1,2,3,4,5,6,7,8,9,10,11].forEach(function(i)
+			{
+				var card = seat.getObjectByName('card'+i);
+				card.addBehavior( new Behaviors.CursorFeedback() );
+				card.addEventListener('cursorup', function(evt)
+				{
+					card.removeAllBehaviors();
+					socket.emit('cardSelection', i);
+				});
+			});
+
 		}
 	}
 
