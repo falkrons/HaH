@@ -483,16 +483,19 @@
 				);
 
 				// place confirmation boxes
+				yes.name = 'yes';
 				yes.addBehavior( new Behaviors.CursorFeedback() );
 				yes.applyMatrix( Utils.sphericalToMatrix(0.6, 0, 0.5, 'xyz') );
 				seat.add(yes);
+
+				no.name = 'no';
 				no.addBehavior( new Behaviors.CursorFeedback() );
 				no.applyMatrix( Utils.sphericalToMatrix(-0.6, 0, 0.5, 'xyz') );
 				seat.add(no);
 
-				yes.addEventListener('cursorup', function(evt){
+				yes.addEventListener('cursorup', exports.confirmSelection = function(evt){
 					socket.emit('cardSelection', selection);
-					selection = [];
+					//selection = [];
 					seat.remove(yes, no);
 				});
 
@@ -521,17 +524,34 @@
 
 	function animateSelection(handIndexes, playerId)
 	{
+		var seat = root.getObjectByName(playerId);
+
+		// kill confirmation boxes if necessary
+		var yes = seat.getObjectByName('yes');
+		if(yes){
+			seat.remove(yes);
+		}
+		var no = seat.getObjectByName('no');
+		if(no){
+			seat.remove(no);
+		}
+
 		// find where selected cards should go
-		/*var czarSeat = root.getObjectByName(czarId);
-		var finalPos = new THREE.Vector3(czarSeat.position.x/2, czarSeat.position.y/2, 0.9);
-		var finalRot = czarSeat.rotation.clone();
+		var czarSeat = root.getObjectByName(czarId);
+		var finalPos = new THREE.Vector3(czarSeat.position.x/2, czarSeat.position.y/2, 0.825);
+		var finalRot = new THREE.Euler(Math.PI, 0, czarSeat.rotation.z);
 
 		// animate to in front of czar
-		var tempCard = seat.getObjectByName('card0');
-		if(tempCard){
-			root.add(tempCard);
-			root.worldToLocal(seat.localToWorld(tempCard.position));
-		}*/
+		for(var i=0; i<handIndexes.length; i++)
+		{
+			var tempCard = seat.getObjectByName('selection'+i) 
+				|| seat.getObjectByName('card'+handIndexes[i]).children[0];
+			if(tempCard){
+				root.add(tempCard);
+				root.worldToLocal(seat.localToWorld(tempCard.position));
+				tempCard.addBehavior( new Behaviors.Animate(finalPos, finalRot) );
+			}
+		}
 	}
 
 	// export objects from scope
