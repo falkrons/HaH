@@ -256,6 +256,21 @@ Game.prototype.getCleanTurnOrder = function()
 	});
 }
 
+Game.prototype.resetRound = function(sockets)
+{
+	this.state = 'roundFinished';
+	if(this.currentBlackCard !== null){
+		this.deck.discardBlackCards([this.currentBlackCard]);
+		this.currentBlackCard = null;
+	}
+
+	for(var i=0; i<this.turnOrder.length; i++){
+		this.turnOrder[i].selection = null;
+	}
+
+	sockets.to(this.id+'_clients').emit('roundReset');
+}
+
 
 /**********************************************
 	Export classes

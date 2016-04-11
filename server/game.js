@@ -108,7 +108,7 @@ function cardSelection(indexes)
 
 	// check submission validity
 	var numResponses = structs.Deck.blackCardList[game.currentBlackCard].numResponses || 1;
-	if(indexes.length !== numResponses )
+	if(indexes.length !== numResponses)
 	{
 		this.emit('error', 'Invalid card selection, given '+indexes.length+' and needs '+numResponses);
 		return;
@@ -126,6 +126,12 @@ function cardSelection(indexes)
 	this.server.to(game.id+'_clients').emit('cardSelection', indexes, player.id);
 
 	// check for last submission
+	checkForLastSelection.call(this, game);
+}
+
+function checkForLastSelection(game)
+{
+	// check for last submission
 	var submissions = {};
 	for(var i=0; i<game.turnOrder.length; i++)
 	{
@@ -136,12 +142,10 @@ function cardSelection(indexes)
 			return;
 		else if(i === game.czar)
 			continue;
-		else if(Array.isArray(p.selection))
+		else
 			submissions[p.id] = p.selection.map(function(c){
 				return structs.Deck.whiteCardList[ p.hand[c] ];
 			});
-		else
-			submissions[p.id] = structs.Deck.whiteCardList[ p.hand[p.selection] ];
 	}
 
 	// move on to the next stage if everyone has submitted
@@ -151,6 +155,7 @@ function cardSelection(indexes)
 module.exports = {
 	dealCards: dealCards,
 	roundStart: roundStart,
-	cardSelection: cardSelection
+	cardSelection: cardSelection,
+	checkForLastSelection: checkForLastSelection
 };
 

@@ -47,6 +47,7 @@
 		});
 
 		socket.on('init', init);
+		socket.on('roundReset', roundReset);
 
 		socket.on('playerJoinRequest', playerJoinRequest);
 		socket.on('playerJoin', playerJoin);
@@ -105,6 +106,28 @@
 			roundStart();
 
 
+	}
+
+	// something screwed up the turn order, so restart round
+	function roundReset()
+	{
+		// zero out black card
+		if(blackCard)
+		{
+			// remove black cards
+			root.traverse(function(node){
+				if(node.name === 'blackCard')
+					node.parent.remove(node);
+			});
+			blackCard = null;
+		}
+		
+		// zero out czar
+		czarId = '';
+
+		// return any selected cards to their hands
+
+		// reset any click handlers
 	}
 
 	function playerJoinRequest(id, displayName)

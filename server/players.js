@@ -1,6 +1,7 @@
 'use strict';
 var config = require('../config.json'),
-	structs = require('./structures.js');
+	structs = require('./structures.js'),
+	libgame = require('./game.js');
 
 var activeGames = structs.activeGames;
 
@@ -171,15 +172,19 @@ function leave(id, displayName, message)
 	}
 
 	// game is interrupted, reset
-	if(game.turnOrder.length < 3)
-	{
-		game.state = 'roundFinished';
-		game.czar = 0;
-		if(game.currentBlackCard !== null){
-			game.deck.discardBlackCards([game.currentBlackCard]);
-			game.currentBlackCard = null;
-		}
-		this.server.to(game.id+'_clients').emit('roundReset');
+	else if(game.turnOrder.length < 3 || index === game.czar){
+		game.resetRound(this.server);
+		game.czar = game.czar % game.turnOrder.length;
+	}
+
+	// keep czar index up to date
+	else if(index < game.czar){
+		game.czar--;
+	}
+
+	// see if left player was holding up game
+	if(game.state === 'playerSelectionPending'){
+		libgame.checkForLastSelection.call(this, game);
 	}
 }
 
