@@ -38,26 +38,26 @@
 	 * Alternate prototype: Animate(finalMatrix, duration, callback)
 	 */
 
-	function Animate(finalPos, finalRot, finalScale, finalParent, duration, callback)
+	function Animate(finalParent, finalPos, finalQuat, finalScale, duration, callback)
 	{
+		this.parent = finalParent || null;
+
 		if(finalPos instanceof THREE.Matrix4)
 		{
 			// extract position/rotation/scale from matrix
 			this.finalPos = new THREE.Vector3();
-			var quat = new THREE.Quaternion();
+			this.finalQuat = new THREE.Quaternion();
 			this.finalScale = new THREE.Vector3();
-			finalPos.decompose(this.finalPos, quat, this.finalScale);
-			this.finalRot = new THREE.Euler().setFromQuaternion(quat);
+			finalPos.decompose(this.finalPos, this.finalQuat, this.finalScale);
 
 			// shift other arguments
-			finalParent = finalRot;
-			duration = finalScale;
-			callback = finalParent;
+			duration = finalQuat;
+			callback = finalScale;
 		}
 		else
 		{
 			this.finalPos = finalPos;
-			this.finalRot = finalRot;
+			this.finalQuat = finalQuat;
 			this.finalScale = finalScale;
 		}
 		this.parent = finalParent || null;
@@ -69,53 +69,39 @@
 	{
 		this.target = obj;
 
-		this.initialPos = obj.position;
-		this.initialRot = obj.rotation;
-		this.initialScale = obj.scale;
+		// shuffle hierarchy, but keep world transform the same
+		if(this.parent && this.parent !== obj.parent)
+		{
+			obj.matrix.copy( new THREE.Matrix4().getInverse(this.parent.matrixWorld).multiply(obj.matrixWorld) );
+			this.parent.add(obj);
+		}
+
+		// read initial positions
+		this.initialPos = obj.position.clone();
+		this.initialQuat = obj.quaternion.clone();
+		this.initialScale = obj.scale.clone();
 		this.startTime = Date.now();
 	};
 
 	Animate.prototype.update = function(deltaT)
 	{
-		function easeOutQuad(mix, startVal, endVal){
-			if(mix <= 0)
-				return startVal;
-			else if(mix >= 1)
-				return endVal;
-			else
-				return -(endVal-startVal) * mix * (mix-2) + startVal;
-		}
-
+		// compute ease-out based on duration
 		var mix = (Date.now()-this.startTime) / this.duration;
+		mix = mix < 1 ? -mix * (mix-2) : 1;
 
 		// animate position if requested
-		if( this.finalPos )
-		{
-			this.target.position.set(
-				easeOutQuad(mix, this.initialPos.x, this.finalPos.x),
-				easeOutQuad(mix, this.initialPos.y, this.finalPos.y),
-				easeOutQuad(mix, this.initialPos.z, this.finalPos.z)
-			);
+		if( this.finalPos ){
+			this.target.position.lerpVectors(this.initialPos, this.finalPos, mix);
 		}
 
 		// animate rotation if requested
-		if( this.finalRot )
-		{
-			this.target.rotation.set(
-				easeOutQuad(mix, this.initialRot.x, this.finalRot.x),
-				easeOutQuad(mix, this.initialRot.y, this.finalRot.y),
-				easeOutQuad(mix, this.initialRot.z, this.finalRot.z)
-			);
+		if( this.finalQuat ){
+			THREE.Quaternion.slerp(this.initialQuat, this.finalQuat, this.target.quaternion, mix)
 		}
 
 		// animate scale if requested
-		if( this.finalScale )
-		{
-			this.target.scale.set(
-				easeOutQuad(mix, this.initialScale.x, this.finalScale.x),
-				easeOutQuad(mix, this.initialScale.y, this.finalScale.y),
-				easeOutQuad(mix, this.initialScale.z, this.finalScale.z)
-			);
+		if( this.finalScale ){
+			this.target.scale.lerpVectors(this.initialScale, this.finalScale, mix);
 		}
 
 		// terminate animation when done
@@ -141,7 +127,7 @@
 				self.target.removeBehavior(activeAnimation);
 			}
 
-			activeAnimation = new Behaviors.Animate(null, null, self._origScale.clone().multiplyScalar(1.2), 400);
+			activeAnimation = new Behaviors.Animate(null, null, null, self._origScale.clone().multiplyScalar(1.2), 400);
 			activeAnimation.callback = function(){
 				activeAnimation = null;
 			};
@@ -155,7 +141,7 @@
 				self.target.removeBehavior(activeAnimation);
 			}
 
-			activeAnimation = new Behaviors.Animate(null, null, self._origScale, 600);
+			activeAnimation = new Behaviors.Animate(null, null, null, self._origScale, 600);
 			activeAnimation.callback = function(){
 				activeAnimation = null;
 			};

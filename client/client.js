@@ -44,7 +44,6 @@ if( altspace.inClient )
 		root.scale.set(enc.pixelsPerMeter, enc.pixelsPerMeter, enc.pixelsPerMeter);
 		root.position.setY( -enc.innerHeight/2 );
 		root.rotation.set( -Math.PI/2, 0, 0 );
-		root.updateMatrix();
 		tableRadius = (enc.innerWidth < enc.innerDepth ? enc.innerWidth : enc.innerDepth)/2 / enc.pixelsPerMeter;
 
 		// render 2d version if space is flat
@@ -69,7 +68,6 @@ else
 	camera.up.set(0,0,1);
 	camera.position.set(0, 2*tableRadius, 1.5);
 	camera.lookAt( new THREE.Vector3(0, 0, 1.5) );
-	camera.updateMatrix();
 	root.add(camera);
 
 	altspace.utilities.shims.cursor.init(scene, camera, {renderer: renderer});
@@ -87,14 +85,12 @@ function init()
 	);
 	table.position.setZ(0.8);
 	table.rotation.set(Math.PI/2, 0, 0);
-	table.updateMatrix();
 	root.add(table);
 
 	// add game box
 	gameObjects.box = Models.box;
 	gameObjects.box.position.set(0, 0, 0.8 + 0.025 + 0.07);
 	gameObjects.box.rotation.set(Math.PI, 0, 0);
-	gameObjects.box.updateMatrix();
 	gameObjects.box.addBehavior(new Behaviors.CursorFeedback());
 	root.add(gameObjects.box);
 
@@ -103,13 +99,11 @@ function init()
 	gameObjects.presentation.name = 'presentation';
 	gameObjects.presentation.position.set(0, 0, 2);
 	gameObjects.presentation.scale.set(6,6,6);
-	gameObjects.presentation.updateMatrix();
 	gameObjects.presentation.addBehavior( new Behaviors.Rotate(0, 0, 0.5) );
 
 	// add title card
 	gameObjects.titleCard = Utils.generateTitleCard();
 	gameObjects.titleCard.rotation.set(Math.PI/2, 0, 0);
-	gameObjects.titleCard.updateMatrix();
 	gameObjects.titleCard.visible = false;
 	gameObjects.presentation.add(gameObjects.titleCard);
 	root.add(gameObjects.presentation);
@@ -150,7 +144,6 @@ function render(timestamp)
 			camera.updateProjectionMatrix();
 			camera.position.set(0,0,0);
 			camera.rotation.set(Math.PI/4 + 0.1, 0, 0);
-			camera.updateMatrix();
 			seat.add(camera);
 		}
 		else if(!seat)

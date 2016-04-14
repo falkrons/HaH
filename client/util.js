@@ -19,7 +19,6 @@
 		{
 			models.card = result.scene.children[0].children[0];
 			models.card.scale.set(2,2,2);
-			models.card.updateMatrix();
 
 			models.blankCard = generateCard({text:''});
 
@@ -33,7 +32,6 @@
 		{
 			models.nameplate = result.scene.children[0].children[0];
 			models.nameplate.scale.set(2,2,2);
-			models.nameplate.updateMatrix();
 
 			modelsToGo--;
 			if(modelsToGo === 0)
@@ -44,7 +42,6 @@
 		{
 			models.box = result.scene.children[0].children[0];
 			models.box.scale.set(2,2,2);
-			models.box.updateMatrix();
 
 			var texLoader = new THREE.TextureLoader();
 			texLoader.load('models/box.png', function(tex){
@@ -345,11 +342,9 @@
 			{
 				// player is already in the game, move them to position
 				seat.addBehavior( new Behaviors.Animate(
+					null,
 					new THREE.Vector3(-1.05*tableRadius*Math.sin(i*angle), -1.05*tableRadius*Math.cos(i*angle), 1.5),
-					new THREE.Euler(0, 0, -angle*i),
-					null,
-					null,
-					600
+					new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1), -angle*i)
 				));
 			}
 			else
@@ -373,7 +368,6 @@
 				center.position.set(0, 1.05*tableRadius, 0.5);
 				center.rotation.set(0, 0, Math.PI);
 				center.scale.set(6,6,6);
-				center.updateMatrix();
 				seat.add(center);
 
 				// handle "leave" on self click

@@ -294,15 +294,9 @@
 			if(curCards[hand[i].index])
 			{
 				// animate from old position to new position
-				var oldPos = new THREE.Vector3().copy(curCards[hand[i].index].position);
-				curCards[hand[i].index].localToWorld(oldPos);
-				cardRoots[i].add(curCards[hand[i].index]);
-				curCards[hand[i].index].worldToLocal(oldPos);
-				curCards[hand[i].index].position.set(oldPos.x, oldPos.y, oldPos.z);
-				curCards[hand[i].index].updateMatrix();
-
 				carCards[hand[i].index].addBehavior(
-					new Behaviors.Animate(new THREE.Vector3(0,0,0)) );
+					new Behaviors.Animate(cardRoots[i], new THREE.Vector3(0,0,0))
+				);
 			}
 			// generate new cards for those dealt this round
 			else
@@ -313,14 +307,8 @@
 					card = Models.blankCard.clone();
 
 				// animate from card box
-				var boxPos = new THREE.Vector3().copy(gameObjects.box.position);
-				root.localToWorld(boxPos);
-				cardRoots[i].worldToLocal(boxPos);
-				card.position.set(boxPos.x, boxPos.y, boxPos.z);
-				card.updateMatrix();
-
-				cardRoots[i].add(card);
-				card.addBehavior( new Behaviors.Animate(new THREE.Vector3(0,0,0)) );
+				gameObjects.box.add(card);
+				card.addBehavior( new Behaviors.Animate(cardRoots[i], new THREE.Vector3(0,0,0)) );
 			}
 		}
 
@@ -384,14 +372,8 @@
 						var card = Models.blankCard.clone();
 
 						// animate from card box
-						var boxPos = new THREE.Vector3().copy(gameObjects.box.position);
-						root.localToWorld(boxPos);
-						cardRoots[i].worldToLocal(boxPos);
-						card.position.set(boxPos.x, boxPos.y, boxPos.z);
-						card.updateMatrix();
-
-						cardRoots[i].add(card);
-						card.addBehavior( new Behaviors.Animate(new THREE.Vector3(0,0,0)) );
+						gameObjects.box.add(card);
+						card.addBehavior( new Behaviors.Animate(cardRoots[i], new THREE.Vector3(0,0,0)) );
 					}
 				}
 			}
@@ -431,7 +413,6 @@
 		blackCard.removeAllBehaviors();
 		blackCard.position.set(0,0,0);
 		blackCard.rotation.set(-Math.PI/2,0,Math.PI);
-		blackCard.updateMatrix();
 		center.add(blackCard);
 
 		// enable clicking on cards
@@ -462,29 +443,23 @@
 			var card = cardRoot.children[0];
 			card.name = 'selection'+selection.length;
 
-			// set up animation to selection area
-			seat.add(card);
-			card.position.set(cardRoot.position.x, cardRoot.position.y, cardRoot.position.z);
-			card.rotation.set(cardRoot.rotation.x, cardRoot.rotation.y, cardRoot.rotation.z);
-			card.updateMatrix();
-
 			// animate
 			var mat = Utils.sphericalToMatrix(spacing*selection.length/2, 0, 0.5);
 			mat.multiply( new THREE.Matrix4().makeScale(2,2,2) );
-			card.addBehavior( new Behaviors.Animate(mat) );
+			card.addBehavior( new Behaviors.Animate(seat, mat) );
 
 			// move other cards aside for new one
 			var oldCard = seat.getObjectByName('selection'+(selection.length-1));
 			if(oldCard){
 				mat = Utils.sphericalToMatrix(spacing*selection.length/2 - spacing, 0, 0.5);
 				mat.multiply( new THREE.Matrix4().makeScale(2,2,2) );
-				oldCard.addBehavior( new Behaviors.Animate(mat));
+				oldCard.addBehavior( new Behaviors.Animate(null, mat));
 			}
 			oldCard = seat.getObjectByName('selection'+(selection.length-2));
 			if(oldCard){
 				mat = Utils.sphericalToMatrix(spacing*selection.length/2 - 2*spacing, 0, 0.5);
 				mat.multiply( new THREE.Matrix4().makeScale(2,2,2) );
-				oldCard.addBehavior( new Behaviors.Animate(mat));
+				oldCard.addBehavior( new Behaviors.Animate(null, mat));
 			}
 
 			// add to selection
@@ -533,7 +508,6 @@
 						var spot = seat.getObjectByName('card'+selection[i]);
 						card.position.set(0,0,0);
 						card.rotation.set(0,0,0);
-						card.updateMatrix();
 						spot.add(card);
 					}
 
@@ -564,7 +538,7 @@
 		// find where selected cards should go
 		var czarSeat = root.getObjectByName(czarId);
 		var finalPos = new THREE.Vector3(czarSeat.position.x/2, czarSeat.position.y/2, 0.825);
-		var finalRot = new THREE.Euler(Math.PI, 0, czarSeat.rotation.z);
+		var finalRot = new THREE.Quaternion.setFromEuler(new THREE.Euler(Math.PI, 0, czarSeat.rotation.z));
 
 		// animate to in front of czar
 		for(var i=0; i<handIndexes.length; i++)
@@ -572,9 +546,7 @@
 			var tempCard = seat.getObjectByName('selection'+i) 
 				|| seat.getObjectByName('card'+handIndexes[i]).children[0];
 			if(tempCard){
-				root.add(tempCard);
-				root.worldToLocal(seat.localToWorld(tempCard.position));
-				tempCard.addBehavior( new Behaviors.Animate(finalPos, finalRot) );
+				tempCard.addBehavior( new Behaviors.Animate(root, finalPos, finalRot) );
 			}
 		}
 	}
