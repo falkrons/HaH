@@ -148,9 +148,10 @@ function render(timestamp)
 		{
 			camera.fov = 90;
 			camera.updateProjectionMatrix();
-			camera.position.set(seat.position.x, seat.position.y, seat.position.z);
+			camera.position.set(0,0,0);
+			camera.rotation.set(Math.PI/4 + 0.1, 0, 0);
 			camera.updateMatrix();
-			camera.lookAt( new THREE.Vector3(0, 0, 1) );
+			seat.add(camera);
 		}
 		else if(!seat)
 		{

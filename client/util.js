@@ -170,7 +170,7 @@
 			map: new THREE.CanvasTexture(bmp)
 		});
 
-		//model.userData = card;
+		model.userData = card;
 		return model;
 	}
 
@@ -347,6 +347,7 @@
 				seat.addBehavior( new Behaviors.Animate(
 					new THREE.Vector3(-1.05*tableRadius*Math.sin(i*angle), -1.05*tableRadius*Math.cos(i*angle), 1.5),
 					new THREE.Euler(0, 0, -angle*i),
+					null,
 					null,
 					600
 				));

@@ -239,11 +239,17 @@
 
 	function dealCards(newHand, newBlackCard, newCzarId)
 	{
-		if(newBlackCard){
-			blackCard = newBlackCard;
-			blackCard.model = Utils.generateCard(blackCard, 'black');
-			blackCard.model.applyMatrix( Utils.sphericalToMatrix(0, 0, 0.4, 'zyx') );
-			blackCard.model.name = 'blackCard';
+		if( newBlackCard && (!blackCard || newBlackCard.index !== blackCard.userData.index) )
+		{
+			// kill old black card
+			if(blackCard && blackCard.parent){
+				blackCard.parent.remove(blackCard);
+			}
+
+			// generate new card
+			blackCard = Utils.generateCard(newBlackCard, 'black');
+			blackCard.applyMatrix( Utils.sphericalToMatrix(0, -Math.PI/4, 0.4, 'zyx') );
+			blackCard.name = 'blackCard';
 		}
 
 		// manage player hand
@@ -327,9 +333,9 @@
 			}
 
 			// show black card
-			seat.add(blackCard.model);
-			blackCard.model.addBehavior( new Behaviors.CursorFeedback() );
-			blackCard.model.addEventListener('cursorup', function(evt){
+			seat.add(blackCard);
+			blackCard.addBehavior( new Behaviors.CursorFeedback() );
+			blackCard.addEventListener('cursorup', function(evt){
 				socket.emit('roundStart');
 			});
 		}
@@ -398,7 +404,7 @@
 				}
 
 				// show black card
-				seat.add(blackCard.model);
+				seat.add(blackCard);
 			}
 			else
 			{
@@ -422,15 +428,11 @@
 			center = root.getObjectByName('presentation');
 
 		// add black card to presentation area
-		var temp = blackCard.model.userData;
-		blackCard.model.userData = '';
-		var card = blackCard.model.clone();
-		blackCard.model.userData = temp;
-		card.userData = temp;
-		card.position.set(0,0,0);
-		card.rotation.set(-Math.PI/2,0,Math.PI);
-		card.updateMatrix();
-		center.add(card);
+		blackCard.removeAllBehaviors();
+		blackCard.position.set(0,0,0);
+		blackCard.rotation.set(-Math.PI/2,0,Math.PI);
+		blackCard.updateMatrix();
+		center.add(blackCard);
 
 		// enable clicking on cards
 		if(seat)
@@ -454,7 +456,7 @@
 		var cardRoot = seat.getObjectByName('card'+handIndex);
 
 		// don't add any more cards after the necessary amount
-		if(selection.length < (blackCard.numResponses || 1))
+		if(selection.length < (blackCard.userData.numResponses || 1))
 		{
 			var spacing = 0.3;
 			var card = cardRoot.children[0];
@@ -488,7 +490,7 @@
 			// add to selection
 			selection.push(handIndex);
 
-			if(selection.length === (blackCard.numResponses || 1))
+			if(selection.length === (blackCard.userData.numResponses || 1))
 			{
 				// spawn confirmation boxes
 				var yes = new THREE.Mesh(

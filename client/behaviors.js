@@ -38,7 +38,7 @@
 	 * Alternate prototype: Animate(finalMatrix, duration, callback)
 	 */
 
-	function Animate(finalPos, finalRot, finalScale, duration, callback)
+	function Animate(finalPos, finalRot, finalScale, finalParent, duration, callback)
 	{
 		if(finalPos instanceof THREE.Matrix4)
 		{
@@ -50,8 +50,9 @@
 			this.finalRot = new THREE.Euler().setFromQuaternion(quat);
 
 			// shift other arguments
-			duration = finalRot;
-			callback = finalScale;
+			finalParent = finalRot;
+			duration = finalScale;
+			callback = finalParent;
 		}
 		else
 		{
@@ -59,6 +60,7 @@
 			this.finalRot = finalRot;
 			this.finalScale = finalScale;
 		}
+		this.parent = finalParent || null;
 		this.duration = duration || 600;
 		this.callback = callback;
 	}
