@@ -583,6 +583,5 @@
 	exports.playerInfo = playerInfo;
 
 	exports.connectToGame = connectToGame;
-	exports.handleCardSelection = handleCardSelection;
 
 })(window.Game = window.Game || {});

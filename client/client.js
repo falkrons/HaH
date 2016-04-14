@@ -65,12 +65,14 @@ else
 	document.body.appendChild(renderer.domElement);
 
 	// add an orbiting camera
-	camera = new THREE.PerspectiveCamera(45, 1280/720, 1, 1000);
+	camera = new THREE.PerspectiveCamera(45, 1280/720, 0.01, 1000);
 	camera.up.set(0,0,1);
 	camera.position.set(0, 2*tableRadius, 1.5);
 	camera.lookAt( new THREE.Vector3(0, 0, 1.5) );
 	camera.updateMatrix();
 	root.add(camera);
+
+	altspace.utilities.shims.cursor.init(scene, camera, {renderer: renderer});
 
 	Utils.preloadModels(init);
 }
@@ -137,11 +139,32 @@ function init()
 
 function render(timestamp)
 {
-	// update camera if necessary
-	if(camera){
-		camera.position.x = 2*tableRadius * Math.sin(timestamp * 2*Math.PI/20000);
-		camera.position.y = 2*tableRadius * Math.cos(timestamp * 2*Math.PI/20000);
-		camera.lookAt( new THREE.Vector3(0, 0, 1.5) );
+	// update camera if necessary	
+	if(camera)
+	{
+		// get client table position
+		var seat = root.getObjectByName(Game.playerInfo.id);
+		if(seat && camera.fov !== 90)
+		{
+			camera.fov = 90;
+			camera.updateProjectionMatrix();
+			camera.position.set(seat.position.x, seat.position.y, seat.position.z);
+			camera.updateMatrix();
+			camera.lookAt( new THREE.Vector3(0, 0, 1) );
+		}
+		else if(!seat)
+		{
+			if(camera.fov !== 45){
+				camera.fov = 45;
+				camera.updateProjectionMatrix();
+			}
+
+			var angle = timestamp/20000 * 2*Math.PI;
+			camera.position.x = 2*tableRadius * Math.sin(angle);
+			camera.position.y = 2*tableRadius * Math.cos(angle);
+			camera.position.z = 1.5;
+			camera.lookAt( new THREE.Vector3(0, 0, 1.5) );
+		}
 	}
 
 	// animate
