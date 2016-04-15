@@ -18,8 +18,16 @@
 		if(altspace.inClient){
 			altspace.getUser().then(function(userInfo)
 			{
-				playerInfo.id = userInfo.userId;
-				playerInfo.displayName = userInfo.displayName;
+				if(userInfo && userInfo.userId && userInfo.displayName){
+					playerInfo.id = userInfo.userId;
+					playerInfo.displayName = userInfo.displayName;
+				}
+				else
+				{
+					var message = document.createElement('h1');
+					message.innerHTML = 'You\'ve been logged out of Coherent. Log in to join.';
+					document.body.insertBefore(message, document.body.children[0]);
+				}
 			});
 		}
 		else {
@@ -62,7 +70,8 @@
 
 
 	function emitPlayerJoinRequest(evt){
-		socket.emit('playerJoinRequest', playerInfo.id, playerInfo.displayName);
+		if(playerInfo.id)
+			socket.emit('playerJoinRequest', playerInfo.id, playerInfo.displayName);
 	}
 
 	function emitPlayerLeave(evt){
@@ -317,7 +326,7 @@
 		{
 			// hide hand
 			for(var i=0; i<cardRoots.length; i++){
-				cardRoots[i].visible = false;
+				cardRoots[i].traverse(function(o){ o.visible = false; });
 			}
 
 			// show black card
@@ -331,7 +340,7 @@
 		{
 			// show hand
 			for(var i=0; i<cardRoots.length; i++){
-				cardRoots[i].visible = true;
+				cardRoots[i].traverse(function(o){ o.visible = true; });
 			}
 		}
 	}
@@ -382,7 +391,7 @@
 			{
 				// hide hand
 				for(var i=0; i<cardRoots.length; i++){
-					cardRoots[i].visible = false;
+					cardRoots[i].traverse(function(o){ o.visible = false; });
 				}
 
 				// show black card
@@ -392,7 +401,7 @@
 			{
 				// show hand
 				for(var i=0; i<cardRoots.length; i++){
-					cardRoots[i].visible = true;
+					cardRoots[i].traverse(function(o){ o.visible = true; });
 				}
 			}
 

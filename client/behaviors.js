@@ -123,30 +123,36 @@
 
 		this._onCursorEnter = function(evt)
 		{
-			if(activeAnimation){
-				self.target.removeBehavior(activeAnimation);
+			if(this.target._listeners.cursorup && this.target._listeners.cursorup.length > 0)
+			{
+				if(activeAnimation){
+					self.target.removeBehavior(activeAnimation);
+				}
+
+				activeAnimation = new Behaviors.Animate(null, null, null, self._origScale.clone().multiplyScalar(1.2), 400);
+				activeAnimation.callback = function(){
+					activeAnimation = null;
+				};
+
+				self.target.addBehavior(activeAnimation);
 			}
-
-			activeAnimation = new Behaviors.Animate(null, null, null, self._origScale.clone().multiplyScalar(1.2), 400);
-			activeAnimation.callback = function(){
-				activeAnimation = null;
-			};
-
-			self.target.addBehavior(activeAnimation);
 		};
 
 		this._onCursorLeave = function(evt)
 		{
-			if(activeAnimation){
-				self.target.removeBehavior(activeAnimation);
+			if(this.target._listeners.cursorup && this.target._listeners.cursorup.length > 0)
+			{
+				if(activeAnimation){
+					self.target.removeBehavior(activeAnimation);
+				}
+
+				activeAnimation = new Behaviors.Animate(null, null, null, self._origScale, 600);
+				activeAnimation.callback = function(){
+					activeAnimation = null;
+				};
+
+				self.target.addBehavior(activeAnimation);
 			}
-
-			activeAnimation = new Behaviors.Animate(null, null, null, self._origScale, 600);
-			activeAnimation.callback = function(){
-				activeAnimation = null;
-			};
-
-			self.target.addBehavior(activeAnimation);
 		};
 
 	}

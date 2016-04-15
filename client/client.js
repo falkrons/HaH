@@ -143,7 +143,7 @@ function render(timestamp)
 			camera.fov = 90;
 			camera.updateProjectionMatrix();
 			camera.position.set(0,0,0);
-			camera.rotation.set(Math.PI/4 + 0.1, 0, 0);
+			camera.rotation.set(1.3, 0, 0);
 			seat.add(camera);
 		}
 		else if(!seat)
