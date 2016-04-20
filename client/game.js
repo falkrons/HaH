@@ -66,6 +66,8 @@
 		socket.on('dealCards', dealCards);
 		socket.on('roundStart', roundStart);
 		socket.on('cardSelection', animateSelection);
+
+		socket.on('cardSelectionComplete', cardSelectionComplete);
 	}
 
 
@@ -431,7 +433,6 @@
 			[0,1,2,3,4,5,6,7,8,9,10,11].forEach(function(i)
 			{
 				var card = seat.getObjectByName('card'+i);
-				card.addBehavior( new Behaviors.CursorFeedback() );
 				card.addEventListener('cursorup', function(evt){
 					handleCardSelection(i);
 				});
@@ -446,87 +447,102 @@
 		var cardRoot = seat.getObjectByName('card'+handIndex);
 
 		// don't add any more cards after the necessary amount
-		if(selection.length < (blackCard.userData.numResponses || 1))
-		{
-			var spacing = 0.3;
-			var card = cardRoot.children[0];
-			card.name = 'selection'+selection.length;
+		if(selection.length >= (blackCard.userData.numResponses || 1)){
+			return;
+		}
 
-			// animate
-			var mat = Utils.sphericalToMatrix(spacing*selection.length/2, 0, 0.5);
+		var spacing = 0.3;
+		var card = cardRoot.children[0];
+		card.name = 'selection'+selection.length;
+
+		// animate
+		var mat = Utils.sphericalToMatrix(spacing*selection.length/2, 0, 0.5);
+		mat.multiply( new THREE.Matrix4().makeScale(2,2,2) );
+		card.addBehavior( new Behaviors.Animate(seat, mat) );
+
+		// move other cards aside for new one
+		var oldCard = seat.getObjectByName('selection'+(selection.length-1));
+		if(oldCard){
+			mat = Utils.sphericalToMatrix(spacing*selection.length/2 - spacing, 0, 0.5);
 			mat.multiply( new THREE.Matrix4().makeScale(2,2,2) );
-			card.addBehavior( new Behaviors.Animate(seat, mat) );
+			oldCard.addBehavior( new Behaviors.Animate(null, mat));
+		}
+		oldCard = seat.getObjectByName('selection'+(selection.length-2));
+		if(oldCard){
+			mat = Utils.sphericalToMatrix(spacing*selection.length/2 - 2*spacing, 0, 0.5);
+			mat.multiply( new THREE.Matrix4().makeScale(2,2,2) );
+			oldCard.addBehavior( new Behaviors.Animate(null, mat));
+		}
 
-			// move other cards aside for new one
-			var oldCard = seat.getObjectByName('selection'+(selection.length-1));
-			if(oldCard){
-				mat = Utils.sphericalToMatrix(spacing*selection.length/2 - spacing, 0, 0.5);
-				mat.multiply( new THREE.Matrix4().makeScale(2,2,2) );
-				oldCard.addBehavior( new Behaviors.Animate(null, mat));
-			}
-			oldCard = seat.getObjectByName('selection'+(selection.length-2));
-			if(oldCard){
-				mat = Utils.sphericalToMatrix(spacing*selection.length/2 - 2*spacing, 0, 0.5);
-				mat.multiply( new THREE.Matrix4().makeScale(2,2,2) );
-				oldCard.addBehavior( new Behaviors.Animate(null, mat));
-			}
+		// add to selection
+		selection.push(handIndex);
 
-			// add to selection
-			selection.push(handIndex);
-
-			if(selection.length === (blackCard.userData.numResponses || 1))
+		if(selection.length === (blackCard.userData.numResponses || 1))
+		{
+			// clear click handlers from cards
+			[0,1,2,3,4,5,6,7,8,9,10,11].forEach(function(i)
 			{
-				// spawn confirmation boxes
-				var yes = new THREE.Mesh(
-					new THREE.BoxGeometry(0.01, 0.1, 0.1),
-					new THREE.MeshBasicMaterial({
-						map: new THREE.TextureLoader().load('check.png')
-					})
-				);
+				var card = seat.getObjectByName('card'+i);
+				card.removeEventListener('cursorup');
 
-				var no = new THREE.Mesh(
-					new THREE.BoxGeometry(0.01, 0.1, 0.1),
-					new THREE.MeshBasicMaterial({
-						map: new THREE.TextureLoader().load('cross.png')
-					})
-				);
+				console.log(card._listeners);
+			});
 
-				// place confirmation boxes
-				yes.name = 'yes';
-				yes.addBehavior( new Behaviors.CursorFeedback() );
-				yes.applyMatrix( Utils.sphericalToMatrix(0.6, 0, 0.5, 'xyz') );
-				seat.add(yes);
 
-				no.name = 'no';
-				no.addBehavior( new Behaviors.CursorFeedback() );
-				no.applyMatrix( Utils.sphericalToMatrix(-0.6, 0, 0.5, 'xyz') );
-				seat.add(no);
+			// spawn confirmation boxes
+			var yes = new THREE.Mesh(
+				new THREE.BoxGeometry(0.01, 0.1, 0.1),
+				new THREE.MeshBasicMaterial({
+					map: new THREE.TextureLoader().load('check.png')
+				})
+			);
 
-				yes.addEventListener('cursorup', exports.confirmSelection = function(evt){
-					socket.emit('cardSelection', selection);
-					//selection = [];
-					seat.remove(yes, no);
-				});
+			var no = new THREE.Mesh(
+				new THREE.BoxGeometry(0.01, 0.1, 0.1),
+				new THREE.MeshBasicMaterial({
+					map: new THREE.TextureLoader().load('cross.png')
+				})
+			);
 
-				no.addEventListener('cursorup', function(evt)
+			// place confirmation boxes
+			yes.name = 'yes';
+			yes.addBehavior( new Behaviors.CursorFeedback() );
+			yes.applyMatrix( Utils.sphericalToMatrix(0.6, 0, 0.5, 'xyz') );
+			seat.add(yes);
+
+			no.name = 'no';
+			no.addBehavior( new Behaviors.CursorFeedback() );
+			no.applyMatrix( Utils.sphericalToMatrix(-0.6, 0, 0.5, 'xyz') );
+			seat.add(no);
+
+			yes.addEventListener('cursorup', exports.confirmSelection = function(evt){
+				socket.emit('cardSelection', selection);
+				seat.remove(yes, no);
+			});
+
+			no.addEventListener('cursorup', function(evt)
+			{
+				// put all the cards back
+				selection.forEach(function(handIndex, selectionIndex)
 				{
-					// put all the cards back
-					for(var i=0; i<selection.length; i++)
-					{
-						var card = seat.getObjectByName('selection'+i);
-						var spot = seat.getObjectByName('card'+selection[i]);
-						card.position.set(0,0,0);
-						card.rotation.set(0,0,0);
-						spot.add(card);
-					}
+					var card = seat.getObjectByName('selection'+selectionIndex);
+					var spot = seat.getObjectByName('card'+handIndex);
+					card.position.set(0,0,0);
+					card.rotation.set(0,0,0);
 
-					// zero out selection
-					selection = [];
-
-					// kill boxes
-					seat.remove(yes, no);
+					// add back click handlers
+					card.addEventListener('cursorup', function(evt){
+						handleCardSelection(handIndex);
+					});
+					spot.add(card);
 				});
-			}
+
+				// zero out selection
+				selection = [];
+
+				// kill boxes
+				seat.remove(yes, no);
+			});
 		}
 	}
 
@@ -559,6 +575,12 @@
 			}
 		}
 	}
+
+	function cardSelectionComplete(selections)
+	{
+		
+	}
+
 
 	// export objects from scope
 	exports.socket = socket;

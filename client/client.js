@@ -1,15 +1,39 @@
 'use strict';
 
-/**************************
-	Global variables
-**************************/
-
+// force define String.trim
 if(typeof(String.prototype.trim) === "undefined")
 {
 	String.prototype.trim = function(){
 		return String(this).replace(/^\s+|\s+$/g, '');
 	}
 }
+
+// modify behavior of THREE.Object3D.removeEventListener
+THREE.Object3D.prototype.removeEventListener = function(type, listener)
+{
+	if(this._listeners === undefined) return;
+
+	var listenersArray = this._listeners[type];
+	if(listenersArray !== undefined)
+	{
+		var index = listenersArray.indexOf(listener);
+
+		// NEW! remove all listeners if second argument is absent
+		if(listener === undefined){
+			listenersArray.splice(0);
+		}
+
+		else if(index !== -1){
+			listenersArray.splice(index, 1);
+		}
+	}
+
+};
+
+
+/**************************
+	Global variables
+**************************/
 
 var renderer;
 var camera;

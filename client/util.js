@@ -430,6 +430,10 @@
 					card.name = 'card'+j;
 					card.applyMatrix( Utils.sphericalToMatrix(theta, phi, cardRadius, 'zyx') );
 					seat.add(card);
+
+					// add hover feedback to your own cards
+					if(newTurnOrder[i].id === Game.playerInfo.id)
+						card.addBehavior( new Behaviors.CursorFeedback() );
 				}
 
 				// add seat to the table

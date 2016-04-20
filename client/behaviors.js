@@ -123,7 +123,8 @@
 
 		this._onCursorEnter = function(evt)
 		{
-			if(this.target._listeners.cursorup && this.target._listeners.cursorup.length > 0)
+			//console.log(self.target._listeners);
+			if(self.target._listeners.cursorup && self.target._listeners.cursorup.length > 0)
 			{
 				if(activeAnimation){
 					self.target.removeBehavior(activeAnimation);
@@ -140,7 +141,7 @@
 
 		this._onCursorLeave = function(evt)
 		{
-			if(this.target._listeners.cursorup && this.target._listeners.cursorup.length > 0)
+			if(self.target._listeners.cursorup && self.target._listeners.cursorup.length > 0)
 			{
 				if(activeAnimation){
 					self.target.removeBehavior(activeAnimation);
