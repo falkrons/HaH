@@ -8,7 +8,9 @@
 	var playerInfo = {};
 	var hand = [];
 	var selection = []; // just from my hand
-	var selectionsList = null; // from everyone's hand
+
+	var submissionMap = {};
+	var submissionList = []; // from everyone's hand
 
 	var blackCard = null;
 	var czarId = '';
@@ -258,6 +260,7 @@
 			// generate new card
 			blackCard = Utils.generateCard(newBlackCard, 'black');
 			blackCard.applyMatrix( Utils.sphericalToMatrix(0, -Math.PI/4, 0.4, 'zyx') );
+			blackCard.applyMatrix( new THREE.Matrix4().makeScale(2,2,2) );
 			blackCard.name = 'blackCard';
 		}
 
@@ -303,8 +306,8 @@
 			if(curCards[hand[i].index])
 			{
 				// animate from old position to new position
-				curCards[hand[i].index].addBehavior(
-					new Behaviors.Animate(cardRoots[i], new THREE.Vector3(0,0,0))
+				curCards[hand[i].index].addBehavior(new Behaviors.Animate(cardRoots[i],
+					new THREE.Vector3(0,0,0), new THREE.Quaternion(), new THREE.Vector3(2,2,2))
 				);
 			}
 			// generate new cards for those dealt this round
@@ -317,7 +320,9 @@
 
 				// animate from card box
 				gameObjects.box.add(card);
-				card.addBehavior( new Behaviors.Animate(cardRoots[i], new THREE.Vector3(0,0,0)) );
+				card.addBehavior(new Behaviors.Animate(cardRoots[i],
+					new THREE.Vector3(0,0,0), new THREE.Quaternion(), new THREE.Vector3(2,2,2)
+				));
 			}
 
 			if(newCzarId === playerInfo.id)
@@ -480,11 +485,11 @@
 		if(selection.length === (blackCard.userData.numResponses || 1))
 		{
 			// clear click handlers from cards
-			[0,1,2,3,4,5,6,7,8,9,10,11].forEach(function(i)
+			/*[0,1,2,3,4,5,6,7,8,9,10,11].forEach(function(i)
 			{
 				var card = seat.getObjectByName('card'+i);
 				card.removeEventListener('cursorup');
-			});
+			});*/
 
 
 			// spawn confirmation boxes
@@ -604,7 +609,8 @@
 			displayList.splice(index, 0, selections[user]);
 		}
 	
-		selectionsList = displayList;
+		submissionMap = selections;
+		submissionList = displayList;
 
 		// replace placeholder stack with real cards
 		var temp = root.getObjectByName('czarStack');
@@ -619,14 +625,14 @@
 			var submissionSpot = czarSeat.getObjectByName('card'+index);
 			for(var j=0; j<item.length; j++)
 			{
-				// put in pile
+				// put card in pile
 				item[j].position.copy(finalPos);
 				item[j].quaternion.copy(finalRot);
 				root.add(item[j]);
 
-				// animate to czar's hand
-				item[j].addBehavior( new Behaviors.Animate(
-					submissionSpot, new THREE.Vector3(0,0,j*0.01), new THREE.Quaternion()
+				// animate card to czar's hand
+				item[j].addBehavior(new Behaviors.Animate(submissionSpot,
+					new THREE.Vector3(0,0.01*j,-0.01*j), new THREE.Quaternion(), new THREE.Vector3(2,2,2)
 				));
 			}
 
@@ -636,12 +642,98 @@
 				submissionSpot.addEventListener('cursorup', function()
 				{
 					console.log('Selecting submission at', index);
+					handleCzarSelection(index);
 				});
 			}
 		});
 
 	}
 
+	var czarSelectionIndex = -1;
+	function handleCzarSelection(submissionIndex)
+	{
+		var seat = root.getObjectByName(czarId);
+		var submission = submissionList[submissionIndex];
+
+		// present the submission
+		socket.emit('presentSubmission', submission.playerId);
+
+		// put previous selection back
+		if(czarSelectionIndex >= 0 && czarSelectionIndex !== submissionIndex)
+		{
+			for(var i=0; i<submissionList[czarSelectionIndex].length; i++)
+			{
+				var card = submissionList[czarSelectionIndex][i];
+				var spot = seat.getObjectByName('card'+czarSelectionIndex);
+
+				card.addBehavior(new Behaviors.Animate(spot,
+					new THREE.Vector3(0,0.01*i,-0.01*i), new THREE.Quaternion(), new THREE.Vector3(2,2,2)
+				));
+			}
+		}
+
+		czarSelectionIndex = submissionIndex;
+
+		// animate
+		var spacing = 0.3;
+		for(var i=0; i<submission.length; i++)
+		{
+			var mat = Utils.sphericalToMatrix(spacing*(-(submission.length-1)/2 + i), 0, 0.5);
+			mat.multiply( new THREE.Matrix4().makeScale(2,2,2) );
+			submission[i].addBehavior( new Behaviors.Animate(seat, mat) );
+		}
+
+		// spawn confirmation boxes
+		var yes = new THREE.Mesh(
+			new THREE.BoxGeometry(0.01, 0.1, 0.1),
+			new THREE.MeshBasicMaterial({
+				map: new THREE.TextureLoader().load('check.png')
+			})
+		);
+
+		var no = new THREE.Mesh(
+			new THREE.BoxGeometry(0.01, 0.1, 0.1),
+			new THREE.MeshBasicMaterial({
+				map: new THREE.TextureLoader().load('trash.png')
+			})
+		);
+
+		// place confirmation boxes
+		yes.name = 'yes';
+		yes.addBehavior( new Behaviors.CursorFeedback() );
+		yes.applyMatrix( Utils.sphericalToMatrix(0.6, 0, 0.5, 'xyz') );
+		seat.add(yes);
+
+		no.name = 'no';
+		no.addBehavior( new Behaviors.CursorFeedback() );
+		no.applyMatrix( Utils.sphericalToMatrix(-0.6, 0, 0.5, 'xyz') );
+		seat.add(no);
+	}
+
+	var czarSelectionPlayer = '';
+	function presentSubmission(playerId)
+	{
+		var seat = root.getObjectByName(playerInfo.id);
+		if(seat)
+			var center = seat.getObjectByName('presentation');
+		else
+			center = root.getObjectByName('presentation');
+
+		var submission = submissionMap[playerId];
+
+		// clear old cards
+		if(czarSelectionPlayer && czarSelectionPlayer !== playerId)
+		{
+			var oldSubmission = submissionMap[czarSelectionPlayer];
+			for(var i=0; i<oldSubmission.length; i++){
+				center.remove(oldSubmission[i]);
+			}
+		}
+
+		czarSelectionPlayer = playerId;
+
+		// reposition black card
+	}
 
 	// export objects from scope
 	exports.socket = socket;

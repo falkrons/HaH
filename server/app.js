@@ -100,6 +100,7 @@ function registerGameListeners(socket)
 	socket.on('dealCards', game.dealCards);
 	socket.on('roundStart', game.roundStart);
 	socket.on('cardSelection', game.cardSelection);
+	socket.on('presentSubmission', game.presentSubmission);
 }
 
 

@@ -154,10 +154,28 @@ function checkForLastSelection(game)
 	this.server.to(game.id+'_clients').emit('cardSelectionComplete', submissions);
 }
 
+function presentSubmission(playerId)
+{
+	var game = activeGames[this.gameId];
+	var player = game.playerForSocket(this);
+	if(!player || player !== game.turnOrder[game.czar]){
+		this.emit('error', 'You are not the czar');
+		return;
+	}
+
+	if(!game.submissions || !game.submissions[playerId]){
+		this.emit('error', 'The specified player does not have a submission');
+		return;
+	}
+
+	this.server.to(game.id+'_clients').emit('presentSubmission', playerId);
+}
+
+
 module.exports = {
 	dealCards: dealCards,
 	roundStart: roundStart,
 	cardSelection: cardSelection,
-	checkForLastSelection: checkForLastSelection
+	presentSubmission: presentSubmission
 };
 

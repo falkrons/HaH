@@ -72,7 +72,10 @@
 		// shuffle hierarchy, but keep world transform the same
 		if(this.parent && this.parent !== obj.parent)
 		{
-			obj.matrix.copy( new THREE.Matrix4().getInverse(this.parent.matrixWorld).multiply(obj.matrixWorld) );
+			obj.applyMatrix(obj.parent.matrixWorld);
+			var mat = new THREE.Matrix4().getInverse(this.parent.matrixWorld);
+			obj.applyMatrix(mat);
+
 			this.parent.add(obj);
 		}
 
