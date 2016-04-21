@@ -61,10 +61,10 @@ io.on('connection', function(socket)
 
 		// initialize new client
 		var game = activeGames[gameId];
-		socket.emit('init', game.getCleanTurnOrder(),
+		socket.emit('init', game.getCleanTurnOrder(), game.state,
 			structures.Deck.blackCardList[game.currentBlackCard],
 			game.turnOrder.length > 0 ? game.turnOrder[game.czar].id : null,
-			game.state
+			game.submissions || null
 		);
 		console.log('Client connected to', socket.gameId);
 	}

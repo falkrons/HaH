@@ -7,7 +7,8 @@
 	var turnOrder = [];
 	var playerInfo = {};
 	var hand = [];
-	var selection = [];
+	var selection = []; // just from my hand
+	var selectionsList = null; // from everyone's hand
 
 	var blackCard = null;
 	var czarId = '';
@@ -82,7 +83,7 @@
 		);
 	}
 
-	function init(newTurnOrder, blackCard, czarId, gameState)
+	function init(newTurnOrder, gameState, blackCard, czarId, submissions)
 	{
 		if(newTurnOrder.length === 0){
 			gameObjects.box.rotation.set(Math.PI, 0, 0);
@@ -115,6 +116,8 @@
 			dealCards(turnOrder.length > 0 ? turnOrder[0].hand.length : 0, blackCard, czarId);
 		if(states.indexOf(gameState) >= 2)
 			roundStart();
+		if(states.indexOf(gameState) >= 3)
+			cardSelectionComplete(submissions);
 
 
 	}
@@ -125,20 +128,16 @@
 		// zero out black card
 		if(blackCard)
 		{
-			// remove black cards
-			root.traverse(function(node){
-				if(node.name === 'blackCard')
-					node.parent.remove(node);
-			});
+			blackCard.parent.remove(blackCard);
 			blackCard = null;
 		}
 		
 		// zero out czar
 		czarId = '';
 
-		// return any selected cards to their hands
+		// TODO: return any selected cards to their hands
 
-		// reset any click handlers
+		// TODO: reset any click handlers
 	}
 
 	function playerJoinRequest(id, displayName)
@@ -171,7 +170,6 @@
 			gameObjects.box.addEventListener('cursorup', function(){
 				socket.emit('dealCards');
 			});
-			//socket.emit('dealCards');
 		}
 
 		// hide request dialog if present
@@ -305,7 +303,7 @@
 			if(curCards[hand[i].index])
 			{
 				// animate from old position to new position
-				carCards[hand[i].index].addBehavior(
+				curCards[hand[i].index].addBehavior(
 					new Behaviors.Animate(cardRoots[i], new THREE.Vector3(0,0,0))
 				);
 			}
@@ -321,16 +319,14 @@
 				gameObjects.box.add(card);
 				card.addBehavior( new Behaviors.Animate(cardRoots[i], new THREE.Vector3(0,0,0)) );
 			}
+
+			if(newCzarId === playerInfo.id)
+				card.visible = false;
 		}
 
 		// now hide hand if you're actually the czar this round
 		if(playerInfo.id === newCzarId)
 		{
-			// hide hand
-			for(var i=0; i<cardRoots.length; i++){
-				cardRoots[i].traverse(function(o){ o.visible = false; });
-			}
-
 			// show black card
 			seat.add(blackCard);
 			blackCard.addBehavior( new Behaviors.CursorFeedback() );
@@ -341,9 +337,10 @@
 		else
 		{
 			// show hand
-			for(var i=0; i<cardRoots.length; i++){
-				cardRoots[i].traverse(function(o){ o.visible = true; });
-			}
+			seat.traverse(function(o){
+				if( /^card/.test(o.parent.name) )
+					o.visible = true;
+			});
 		}
 	}
 
@@ -382,29 +379,32 @@
 					{
 						var card = Models.blankCard.clone();
 
+						if(player.id === newCzarId)
+							card.visible = false;
+
 						// animate from card box
 						gameObjects.box.add(card);
 						card.addBehavior( new Behaviors.Animate(cardRoots[i], new THREE.Vector3(0,0,0)) );
 					}
 				}
+
+				if(player.id === newCzarId && cardRoots[i].children[0]){
+					cardRoots[i].children[0].visible = false;
+				}
 			}
 
 			if(blackCard && player.id === newCzarId)
 			{
-				// hide hand
-				for(var i=0; i<cardRoots.length; i++){
-					cardRoots[i].traverse(function(o){ o.visible = false; });
-				}
-
 				// show black card
 				seat.add(blackCard);
 			}
 			else
 			{
 				// show hand
-				for(var i=0; i<cardRoots.length; i++){
-					cardRoots[i].traverse(function(o){ o.visible = true; });
-				}
+				seat.traverse(function(o){
+					if( /^card/.test(o.parent.name) )
+						o.visible = true;
+				});
 			}
 
 		}
@@ -427,7 +427,7 @@
 		center.add(blackCard);
 
 		// enable clicking on cards
-		if(seat)
+		if(seat && playerInfo.id !== czarId)
 		{
 			// loop over hand and add click handlers
 			[0,1,2,3,4,5,6,7,8,9,10,11].forEach(function(i)
@@ -484,8 +484,6 @@
 			{
 				var card = seat.getObjectByName('card'+i);
 				card.removeEventListener('cursorup');
-
-				console.log(card._listeners);
 			});
 
 
@@ -563,22 +561,85 @@
 		// find where selected cards should go
 		var czarSeat = root.getObjectByName(czarId);
 		var finalPos = new THREE.Vector3(czarSeat.position.x/2, czarSeat.position.y/2, 0.825);
-		var finalRot = new THREE.Quaternion.setFromEuler(new THREE.Euler(Math.PI, 0, czarSeat.rotation.z));
+		var finalRot = new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI, 0, czarSeat.rotation.z));
 
 		// animate to in front of czar
 		for(var i=0; i<handIndexes.length; i++)
 		{
 			var tempCard = seat.getObjectByName('selection'+i) 
 				|| seat.getObjectByName('card'+handIndexes[i]).children[0];
-			if(tempCard){
-				tempCard.addBehavior( new Behaviors.Animate(root, finalPos, finalRot) );
+			if(tempCard)
+			{
+				// animate, and remove all but one on completion
+				tempCard.addBehavior( new Behaviors.Animate(root, finalPos, finalRot, null, 600,
+					function(){
+						if(!root.getObjectByName('czarStack')){
+							console.log('naming something czarStack');
+							this.name = 'czarStack';
+						}
+						else {
+							this.parent.remove(this);
+						}
+					}
+				) );
 			}
 		}
 	}
 
 	function cardSelectionComplete(selections)
 	{
-		
+		// put responses in some random order
+		var displayList = [];
+		for(var user in selections)
+		{
+			// generate card models from descriptions
+			for(var i=0; i<selections[user].length; i++){
+				selections[user][i] = Utils.generateCard(selections[user][i], 'white');
+			}
+
+			selections[user].playerId = user;
+
+			// insert submission into random spot in the presentation order
+			var index = Math.floor(Math.random() * displayList.length);
+			displayList.splice(index, 0, selections[user]);
+		}
+	
+		selectionsList = displayList;
+
+		// replace placeholder stack with real cards
+		var temp = root.getObjectByName('czarStack');
+		if(temp) temp.parent.remove(temp);
+
+		var czarSeat = root.getObjectByName(czarId);
+		var finalPos = new THREE.Vector3(czarSeat.position.x/2, czarSeat.position.y/2, 0.825);
+		var finalRot = new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI, 0, czarSeat.rotation.z));
+
+		displayList.forEach(function(item, index)
+		{
+			var submissionSpot = czarSeat.getObjectByName('card'+index);
+			for(var j=0; j<item.length; j++)
+			{
+				// put in pile
+				item[j].position.copy(finalPos);
+				item[j].quaternion.copy(finalRot);
+				root.add(item[j]);
+
+				// animate to czar's hand
+				item[j].addBehavior( new Behaviors.Animate(
+					submissionSpot, new THREE.Vector3(0,0,j*0.01), new THREE.Quaternion()
+				));
+			}
+
+			// add selection handlers to submissions
+			if(czarId === playerInfo.id)
+			{
+				submissionSpot.addEventListener('cursorup', function()
+				{
+					console.log('Selecting submission at', index);
+				});
+			}
+		});
+
 	}
 
 

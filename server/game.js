@@ -149,6 +149,8 @@ function checkForLastSelection(game)
 	}
 
 	// move on to the next stage if everyone has submitted
+	game.state = 'czarSelectionPending';
+	game.submissions = submissions;
 	this.server.to(game.id+'_clients').emit('cardSelectionComplete', submissions);
 }
 
