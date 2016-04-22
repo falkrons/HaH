@@ -176,6 +176,7 @@ module.exports = {
 	dealCards: dealCards,
 	roundStart: roundStart,
 	cardSelection: cardSelection,
+	checkForLastSelection: checkForLastSelection,
 	presentSubmission: presentSubmission
 };
 
