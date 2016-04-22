@@ -121,7 +121,7 @@ function init()
 	// add a rotating presentation space
 	gameObjects.presentation = new THREE.Object3D();
 	gameObjects.presentation.name = 'presentation';
-	gameObjects.presentation.position.set(0, 0, 2);
+	gameObjects.presentation.position.set(0, 0, 2.5);
 	gameObjects.presentation.scale.set(6,6,6);
 	gameObjects.presentation.addBehavior( new Behaviors.Rotate(0, 0, 0.5) );
 
@@ -167,7 +167,7 @@ function render(timestamp)
 			camera.fov = 90;
 			camera.updateProjectionMatrix();
 			camera.position.set(0,0,0);
-			camera.rotation.set(1.3, 0, 0);
+			camera.rotation.set(1.5, 0, 0);
 			seat.add(camera);
 		}
 		else if(!seat)

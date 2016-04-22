@@ -218,7 +218,11 @@
 		var g = bmp.getContext('2d');
 		bmp.width = texWidth;
 		bmp.height = texWidth;
-		g.fillStyle = '#38281C';
+
+		if(name === Game.playerInfo.displayName)
+			g.fillStyle = '#541E1E'; // brick red
+		else
+			g.fillStyle = '#38281C'; // neutral brown
 		g.fillRect(0, 0, texWidth, texWidth);
 
 		g.font = 'bold 25px '+fontStack;
@@ -365,7 +369,7 @@
 				// add presentation space
 				var center = new THREE.Object3D();
 				center.name = 'presentation';
-				center.position.set(0, 1.05*tableRadius, 0.5);
+				center.position.set(0, 1.05*tableRadius, 1);
 				center.rotation.set(0, 0, Math.PI);
 				center.scale.set(6,6,6);
 				seat.add(center);
