@@ -27,6 +27,7 @@
 				}
 				else
 				{
+					console.log("you have been logged out of Coherent.");
 					var message = document.createElement('h1');
 					message.innerHTML = 'You\'ve been logged out of Coherent. Log in to join.';
 					document.body.insertBefore(message, document.body.children[0]);
@@ -186,6 +187,9 @@
 		}
 
 		console.log('New player joined:', displayName);
+		Utils.idleCheck();
+
+
 	}
 
 	function playerJoinDenied(id, displayName)
@@ -206,7 +210,7 @@
 		if(id === playerInfo.id)
 		{
 			gameObjects.box.removeEventListener('cursorup');
-			gameObjects.box.addEventListener(emitPlayerJoinRequest);
+			gameObjects.box.addEventListener('cursorup', emitPlayerJoinRequest);
 
 			root.traverse(function(model){
 				if(model.name === 'nameplate'){
@@ -783,7 +787,7 @@
 	exports.socket = socket;
 	exports.turnOrder = turnOrder;
 	exports.playerInfo = playerInfo;
-
+	exports.emitPlayerLeave = emitPlayerLeave;
 	exports.connectToGame = connectToGame;
 
 })(window.Game = window.Game || {});
