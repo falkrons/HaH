@@ -458,7 +458,24 @@
 				root.remove(seat);
 			}
 		}
+
+
 	}
+	//add Idle "are you still there "timeout
+	var idleTimeout = {};
+	var kickTimeout = {};
+	function idleCheck (){
+		idleTimeout = setTimeout(function(){
+        	clearTimeout(idleTimeout);
+        	console.log("you are about to be logged out of the game.");
+        	// setup the yes/no button for staying in the game(it clears the kickTimeout and calls the idleCheck function again).
+        	kickTimeout = setTimeout(function(){
+        		clearTimeout(kickTimeout);
+        		Game.emitPlayerLeave();
+        		console.log("you have been kicked from the game due to inactivity.");
+    		}, 60000);
+    	}, 300000);
+    }
 
 
 	exports.preloadModels = preloadModels;
@@ -468,6 +485,7 @@
 	exports.generateDialog = generateDialog;
 	exports.sphericalToMatrix = sphericalToMatrix;
 	exports.rebalanceTable = rebalanceTable;
+	exports.idleCheck = idleCheck;
 
 })(window.Utils = window.Utils || {}, window.Models = window.Models || {});
 
