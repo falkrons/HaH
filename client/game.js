@@ -658,7 +658,6 @@
 
 	}
 
-	//var czarSelectionIndex = -1;
 	function handleCzarSelection(submissionIndex)
 	{
 		var seat = root.getObjectByName(czarId);
@@ -666,31 +665,6 @@
 
 		// present the submission
 		socket.emit('presentSubmission', submission.playerId);
-
-		// put previous selection back
-		/*if(czarSelectionIndex >= 0 && czarSelectionIndex !== submissionIndex)
-		{
-			for(var i=0; i<submissionList[czarSelectionIndex].length; i++)
-			{
-				var card = submissionList[czarSelectionIndex][i];
-				var spot = seat.getObjectByName('card'+czarSelectionIndex);
-
-				card.addBehavior(new Behaviors.Animate(spot,
-					new THREE.Vector3(0,0.01*i,-0.01*i), new THREE.Quaternion(), new THREE.Vector3(2,2,2)
-				));
-			}
-		}*/
-
-		//czarSelectionIndex = submissionIndex;
-
-		// animate
-		/*var spacing = 0.3;
-		for(var i=0; i<submission.length; i++)
-		{
-			var mat = Utils.sphericalToMatrix(spacing*(-(submission.length-1)/2 + i), 0, 0.5);
-			mat.multiply( new THREE.Matrix4().makeScale(2,2,2) );
-			submission[i].addBehavior( new Behaviors.Animate(seat, mat) );
-		}*/
 
 		// spawn confirmation boxes
 		var yes = new THREE.Mesh(
@@ -746,15 +720,6 @@
 				));
 			}
 		}
-
-		// clear old cards
-		/*if(czarSelectionPlayer && czarSelectionPlayer !== playerId)
-		{
-			center.traverse(function(o){
-				if(o !== center && o.name !== 'blackCard')
-					o.parent.remove(o);
-			});
-		}*/
 
 		czarSelectionPlayer = playerId;
 
