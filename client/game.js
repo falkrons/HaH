@@ -266,7 +266,6 @@
 			blackCard = Utils.generateCard(newBlackCard, 'black');
 			blackCard.applyMatrix( Utils.sphericalToMatrix(0, -Math.PI/4, 0.4, 'zyx') );
 			blackCard.scale.set(2,2,2);
-			console.log('blackCard scale', blackCard.scale);
 			blackCard.name = 'blackCard';
 		}
 
@@ -737,12 +736,11 @@
 		if( czarSelectionPlayer && czarSelectionPlayer !== playerId)
 		{
 			var czarSeat = root.getObjectByName(czarId);
-			var czarSelectionIndex = submissionList.indexOf(submission);
+			var czarSelectionIndex = submissionList.indexOf(submissionMap[czarSelectionPlayer]);
+			var spot = czarSeat.getObjectByName('card'+czarSelectionIndex);
 			for(var i=0; i<submissionList[czarSelectionIndex].length; i++)
 			{
 				var card = submissionList[czarSelectionIndex][i];
-				var spot = czarSeat.getObjectByName('card'+czarSelectionIndex);
-
 				card.addBehavior(new Behaviors.Animate(spot,
 					new THREE.Vector3(0,0.01*i,-0.01*i), new THREE.Quaternion(), new THREE.Vector3(2,2,2)
 				));
@@ -769,9 +767,11 @@
 		for(var i=0; i<submission.length; i++)
 		{
 			var card = submission[i];
-			card.position.set(-separation*(i+1) + submission.length*separation/2, 0, 0);
-			card.quaternion.setFromEuler(new THREE.Euler(-Math.PI/2,0,Math.PI));
-			center.add(card);
+			card.addBehavior( new Behaviors.Animate(center,
+				new THREE.Vector3(-separation*(i+1) + submission.length*separation/2, 0, 0),
+				new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI/2,0,Math.PI)),
+				new THREE.Vector3(2,2,2)
+			));
 		}
 
 		if(submission.length === 3){
