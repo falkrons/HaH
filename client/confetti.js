@@ -59,6 +59,10 @@
 		this.sphere.visible = false;
 		this.add.apply(this, this.particleArray);
 		this.addBehavior(new ConfettiUpdater());
+
+		setTimeout(function(){
+			this.parent.remove(this);
+		}.bind(this), 3000);
 	}
 
 	Confetti.prototype.updateParticles = function(deltaT)

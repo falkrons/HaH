@@ -163,7 +163,7 @@ function presentSubmission(playerId)
 		return;
 	}
 
-	if(!game.submissions || !game.submissions[playerId]){
+	if(!game.submissions || playerId !== '' && !game.submissions[playerId]){
 		this.emit('error', 'The specified player does not have a submission');
 		return;
 	}
@@ -171,12 +171,45 @@ function presentSubmission(playerId)
 	this.server.to(game.id+'_clients').emit('presentSubmission', playerId);
 }
 
+function winnerSelection(playerId)
+{
+	var game = activeGames[this.gameId];
+	var player = game.playerForSocket(this);
+	if(!player || player !== game.turnOrder[game.czar]){
+		this.emit('error', 'You are not the czar');
+		return;
+	}
+
+	if(!game.submissions || !game.submissions[playerId]){
+		this.emit('error', 'The specified player does not have a submission');
+		return;
+	}
+
+	// remove previous round selections from hands
+	game.submissions = {};
+	for(var i=0; i<game.turnOrder.length; i++)
+	{
+		if(i === game.czar) continue;
+
+		var player = game.turnOrder[i];
+		for(var j=0; j<player.selection.length; j++)
+		{
+			game.deck.discardWhiteCards([player.hand[player.selection[j]]]);
+			player.hand.splice(player.selection[j]-j, 1);
+		}
+	}
+
+	this.server.to(game.id+'_clients').emit('winnerSelection', playerId);
+	game.state = 'roundFinished';
+	game.czar = (game.czar+1) % game.turnOrder.length;
+}
 
 module.exports = {
 	dealCards: dealCards,
 	roundStart: roundStart,
 	cardSelection: cardSelection,
 	checkForLastSelection: checkForLastSelection,
-	presentSubmission: presentSubmission
+	presentSubmission: presentSubmission,
+	winnerSelection: winnerSelection
 };
 
