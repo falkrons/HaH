@@ -308,11 +308,13 @@
 		// move things around to line up with the new hand
 		for(var i=0; i<hand.length; i++)
 		{
+			var card = curCards[hand[i].index];
+
 			// move cards that didn't change to new position
-			if(curCards[hand[i].index])
+			if(card)
 			{
 				// animate from old position to new position
-				curCards[hand[i].index].addBehavior(new Behaviors.Animate(cardRoots[i],
+				card.addBehavior(new Behaviors.Animate(cardRoots[i],
 					new THREE.Vector3(0,0,0), new THREE.Quaternion(), new THREE.Vector3(2,2,2))
 				);
 			}
@@ -320,7 +322,7 @@
 			else
 			{
 				if(hand[i])
-					var card = Utils.generateCard(hand[i], 'white');
+					card = Utils.generateCard(hand[i], 'white');
 				else
 					card = Models.blankCard.clone();
 
@@ -329,10 +331,10 @@
 				card.addBehavior(new Behaviors.Animate(cardRoots[i],
 					new THREE.Vector3(0,0,0), new THREE.Quaternion(), new THREE.Vector3(2,2,2)
 				));
-
-				if(newCzarId === playerInfo.id)
-					card.visible = false;
 			}
+
+			if(newCzarId === playerInfo.id)
+				card.visible = false;
 		}
 
 		// now hide hand if you're actually the czar this round
@@ -773,7 +775,7 @@
 		var winnerSeat = root.getObjectByName(parseInt(playerId));
 		var confetti = new Utils.Confetti({delay: 1000});
 		confetti.position.copy(winnerSeat.position);
-		confetti.position.setZ( confetti.position.z + 0.5 );
+		confetti.position.setZ( confetti.position.z + 0.75 );
 		root.add(confetti);
 
 		// award black card
