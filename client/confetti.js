@@ -7,11 +7,14 @@
 
 (function(exports){
 
-	function Confetti(particleCount, explosionForce)
+	function Confetti(opts)
 	{
 		THREE.Object3D.call(this);
-		this.particleCount = particleCount;
-		this.explosionForce = explosionForce;
+
+		opts = opts || {};
+		var particleCount = opts.particleCount || 40;
+		var explosiveForce = opts.explosiveForce || 10;
+		var delay = opts.delay || 500;
 
 		this.particleArray = [];
 
@@ -22,13 +25,13 @@
 		for(var i=0; i<particleCount; i++)
 		{
 			var p = new THREE.Mesh(
-				new THREE.PlaneGeometry(.01, .06),
-				new THREE.MeshBasicMaterial({side: THREE.DoubleSide, color: colors[Math.floor(Math.random()*6)]})
+				new THREE.BoxGeometry(0.06, 0.06, 0.06),
+				new THREE.MeshBasicMaterial({color: colors[Math.floor(Math.random()*6)]})
 			);
 
 			// init velocity in random direction at random speed up to explosionForce
-			p._velocity = new THREE.Vector3(Math.random()-0.5, Math.random()-0.5, Math.random()-0.5)
-			p._velocity.setLength(explosionForce*Math.random());
+			p.velocity = new THREE.Vector3(Math.random()-0.5, Math.random()-0.5, Math.random()-0.5)
+			p.velocity.setLength(explosiveForce*Math.random());
 
 			this.particleArray.push(p);
 		}
@@ -40,6 +43,12 @@
 		);
 		this.add(this.sphere);
 
+		// deploy fun after delay
+		var self = this;
+		setTimeout(function(){
+			self.play();
+		}, delay);
+
 	}
 
 	// Confetti inherits from Object3D
@@ -49,11 +58,38 @@
 	{
 		this.sphere.visible = false;
 		this.add.apply(this, this.particleArray);
+		this.addBehavior(new ConfettiUpdater());
 	}
 
 	Confetti.prototype.updateParticles = function(deltaT)
 	{
-		
+		var g = new THREE.Vector3(0,0,-9.8);
+
+		for(var i=0; i<this.particleArray.length; i++)
+		{
+			var p = this.particleArray[i];
+			var sumAccel = new THREE.Vector3(0,0,0);
+
+			var drag = new THREE.Vector3();
+			drag.copy(p.velocity).negate().setLength( 0.9 * p.velocity.lengthSq() );
+			sumAccel.add(drag);
+
+			sumAccel.add(g);
+			sumAccel.multiplyScalar(deltaT/1000);
+
+			p.velocity.add(sumAccel);
+			p.position.add( p.velocity.clone().multiplyScalar(deltaT/1000) );
+		}
+	}
+
+	function ConfettiUpdater()
+	{
+		this.awake = function(o){
+			this.target = o;
+		}
+		this.update = function(deltaT){
+			this.target.updateParticles(deltaT);
+		}
 	}
 
 	exports.Confetti = Confetti;

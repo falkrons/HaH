@@ -677,7 +677,7 @@
 		var no = new THREE.Mesh(
 			new THREE.BoxGeometry(0.01, 0.1, 0.1),
 			new THREE.MeshBasicMaterial({
-				map: new THREE.TextureLoader().load('trash.png')
+				map: new THREE.TextureLoader().load('cross.png')
 			})
 		);
 

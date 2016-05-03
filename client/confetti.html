@@ -25,12 +25,18 @@
 			camera.lookAt(new THREE.Vector3(0,0,0));
 			scene.add(camera);
 			
-			var confetti = new Utils.Confetti(20, 100);
-			scene.add(confetti);
+			var confetti = null;
 
-			setTimeout(function(){
-				confetti.play();
-			}, 500);
+			function kaboom()
+			{
+				scene.remove(confetti);
+				confetti = new Utils.Confetti();
+				confetti.rotation.set(-Math.PI/2,0,0);
+				scene.add(confetti);
+			}
+			
+			kaboom();
+			setInterval(kaboom, 3000);
 
 			var lastT = Date.now();
 			window.requestAnimationFrame(function animate(timestamp)
@@ -38,7 +44,8 @@
 				window.requestAnimationFrame(animate);
 				
 				var nowT = Date.now();
-				confetti.updateParticles(nowT-lastT);
+				//if(confetti) confetti.updateParticles(nowT-lastT);
+				scene.updateAllBehaviors(nowT-lastT);
 				lastT = nowT;
 
 				renderer.render(scene, camera);
