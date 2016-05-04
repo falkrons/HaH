@@ -29,6 +29,8 @@ app.use(morgan('dev'));
 app.use(express.static( libpath.join(__dirname, '../client') ));
 app.use(express.static( libpath.join(__dirname, '../decks') ));
 
+app.get('/status', require('./status.js'));
+
 // return 404 on all other requests
 app.use(function(req,res,next)
 {
