@@ -35,7 +35,7 @@
 			});
 		}
 		else {
-			playerInfo.id = Math.round(Math.random()*0x8000);
+			playerInfo.id = ''+Math.floor(Math.random()*1000);
 			playerInfo.displayName = 'anon'+playerInfo.id;
 		}
 
@@ -780,7 +780,7 @@
 	function winnerSelection(playerId)
 	{
 		// congratulate winner
-		var winnerSeat = root.getObjectByName(parseInt(playerId));
+		var winnerSeat = root.getObjectByName(playerId);
 		var confetti = new Utils.Confetti({delay: 1000});
 		confetti.position.copy(winnerSeat.position);
 		confetti.position.setZ( confetti.position.z + 0.75 );
