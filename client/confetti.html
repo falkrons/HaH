@@ -2,7 +2,9 @@
 <html>
 	<head>
 		<script src='three.min.js'></script>
+		<script src='ColladaLoader.js'></script>
 		<script src='http://sdk.altvr.com/libs/altspace.js/0.12.0/altspace.min.js'></script>
+		<script src='behaviors.js'></script>
 		<script src='confetti.js'></script>
 	</head>
 	<body>
@@ -21,23 +23,41 @@
 			var scene = new THREE.Scene();
 
 			var camera = new THREE.PerspectiveCamera(45, 1280/720, 1, 10);
-			camera.position.set(-5, -1, 0);
-			camera.lookAt(new THREE.Vector3(0,0,0));
+			camera.position.set(0, -1, -5);
+			camera.lookAt(new THREE.Vector3(0,-1,0));
 			scene.add(camera);
 			
+			window.Models = {};
+			var loader = new THREE.ColladaLoader();
+			loader.load('models/confettiball.dae', function(results)
+			{
+				var ball = window.Models.confettiBall = results.scene.children[0];
+
+				var loader = new THREE.TextureLoader();
+				loader.load('models/leftao.png', function(tex){
+					ball.getObjectByName('left').children[0].material = new THREE.MeshBasicMaterial({
+						map: tex, side: THREE.DoubleSide
+					});
+				});
+				loader.load('models/rightao.png', function(tex){
+					ball.getObjectByName('right').children[0].material = new THREE.MeshBasicMaterial({
+						map: tex, side: THREE.DoubleSide
+					});
+					kaboom();
+				});
+
+			});
+
 			var confetti = null;
 
 			function kaboom()
 			{
-				scene.remove(confetti);
 				confetti = new Utils.Confetti();
 				confetti.rotation.set(-Math.PI/2,0,0);
 				scene.add(confetti);
+				setTimeout(kaboom, 3500);
 			}
 			
-			kaboom();
-			setInterval(kaboom, 3000);
-
 			var lastT = Date.now();
 			window.requestAnimationFrame(function animate(timestamp)
 			{

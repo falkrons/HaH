@@ -13,7 +13,7 @@
 
 		opts = opts || {};
 		var particleCount = opts.particleCount || 40;
-		var explosiveForce = opts.explosiveForce || 10;
+		var explosiveForce = opts.explosiveForce || 5;
 		var delay = opts.delay || 500;
 
 		this.particleArray = [];
@@ -30,17 +30,18 @@
 			);
 
 			// init velocity in random direction at random speed up to explosionForce
-			p.velocity = new THREE.Vector3(Math.random()-0.5, Math.random()-0.5, Math.random()-0.5)
+			p.velocity = new THREE.Vector3(Math.random()-0.5, Math.random()-0.5, -Math.random())
 			p.velocity.setLength(explosiveForce*Math.random());
 
 			this.particleArray.push(p);
 		}
 
 		// generate sphere
-		this.sphere = new THREE.Mesh(
+		/*this.sphere = new THREE.Mesh(
 			new THREE.SphereGeometry(0.4, 16, 16),
 			new THREE.MeshBasicMaterial({color: 0xe2cc77})
-		);
+		);*/
+		this.sphere = Models.confettiBall.clone();
 		this.add(this.sphere);
 
 		// deploy fun after delay
@@ -56,7 +57,14 @@
 
 	Confetti.prototype.play = function()
 	{
-		this.sphere.visible = false;
+		// split sphere
+		this.sphere.getObjectByName('right').addBehavior(
+			new Behaviors.Animate(null, null, new THREE.Quaternion().setFromEuler(new THREE.Euler(0,-Math.PI/4,0)), null, 200)
+		);
+		this.sphere.getObjectByName('left').addBehavior(
+			new Behaviors.Animate(null, null, new THREE.Quaternion().setFromEuler(new THREE.Euler(0,Math.PI/4,0)), null, 200)
+		);
+
 		this.add.apply(this, this.particleArray);
 		this.addBehavior(new ConfettiUpdater());
 
@@ -67,7 +75,7 @@
 
 	Confetti.prototype.updateParticles = function(deltaT)
 	{
-		var g = new THREE.Vector3(0,0,-9.8);
+		var g = new THREE.Vector3(0,0,-2);
 
 		for(var i=0; i<this.particleArray.length; i++)
 		{

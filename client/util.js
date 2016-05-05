@@ -8,11 +8,12 @@
 	models.blankCard = null;
 	models.box = null;
 	models.dialog = null;
+	models.confettiBall = null;
 
 	function preloadModels(cb)
 	{
 		var loader = new THREE.ColladaLoader();
-		var modelsToGo = 4;
+		var modelsToGo = 5;
 
 		// pre-load card model
 		loader.load('models/card.dae', function(result)
@@ -55,6 +56,27 @@
 		loader.load('models/dialog.dae', function(result)
 		{
 			models.dialog = result.scene.children[0];
+
+			modelsToGo--;
+			if(modelsToGo === 0)
+				cb();
+		});
+
+		loader.load('models/confettiball.dae', function(results)
+		{
+			models.confettiBall = results.scene.children[0];
+
+			var loader = new THREE.TextureLoader();
+			loader.load('models/leftao.png', function(tex){
+				models.confettiBall.getObjectByName('left').children[0].material = new THREE.MeshBasicMaterial({
+					map: tex, side: THREE.DoubleSide
+				});
+			});
+			loader.load('models/rightao.png', function(tex){
+				models.confettiBall.getObjectByName('right').children[0].material = new THREE.MeshBasicMaterial({
+					map: tex, side: THREE.DoubleSide
+				});
+			});
 
 			modelsToGo--;
 			if(modelsToGo === 0)
