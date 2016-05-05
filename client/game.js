@@ -810,6 +810,11 @@
 			var spot = seat.getObjectByName('card'+i);
 			spot.removeEventListener('cursorup');
 		}
+
+		var yes = seat.getObjectByName('yes'), no = seat.getObjectByName('no');
+		if(yes || no){
+			seat.remove(yes, no);
+		}
 	}
 
 	// export objects from scope
