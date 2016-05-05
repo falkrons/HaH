@@ -152,6 +152,7 @@ function Player(playerId, displayName, socket)
 	this.socket = socket;
 
 	this.hand = [];
+	this.selection = null;
 }
 
 
@@ -171,10 +172,12 @@ function Game(id)
 
 	// one of 'roundStarted', 'playerSelectionPending',
 	//   'czarSelectionPending', 'roundFinished'
-	this.gameState = 'roundStarted';
+	this.state = 'roundFinished';
 
 	// index of player in turnOrder that is czar this round
 	this.czar = 0;
+
+	this.currentBlackCard = null;
 
 	// in-order array of Player objects
 	this.turnOrder = [];
@@ -251,6 +254,21 @@ Game.prototype.getCleanTurnOrder = function()
 	return this.turnOrder.map(function(cur){
 		return {id: cur.id, displayName: cur.displayName, hand: cur.hand};
 	});
+}
+
+Game.prototype.resetRound = function(sockets)
+{
+	this.state = 'roundFinished';
+	if(this.currentBlackCard !== null){
+		this.deck.discardBlackCards([this.currentBlackCard]);
+		this.currentBlackCard = null;
+	}
+
+	for(var i=0; i<this.turnOrder.length; i++){
+		this.turnOrder[i].selection = null;
+	}
+
+	sockets.to(this.id+'_clients').emit('roundReset');
 }
 
 

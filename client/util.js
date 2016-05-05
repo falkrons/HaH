@@ -19,9 +19,8 @@
 		{
 			models.card = result.scene.children[0].children[0];
 			models.card.scale.set(2,2,2);
-			models.card.updateMatrix();
 
-			models.blankCard = generateCard(['']);
+			models.blankCard = generateCard({text:''});
 
 			modelsToGo--;
 			if(modelsToGo === 0)
@@ -33,7 +32,6 @@
 		{
 			models.nameplate = result.scene.children[0].children[0];
 			models.nameplate.scale.set(2,2,2);
-			models.nameplate.updateMatrix();
 
 			modelsToGo--;
 			if(modelsToGo === 0)
@@ -44,7 +42,6 @@
 		{
 			models.box = result.scene.children[0].children[0];
 			models.box.scale.set(2,2,2);
-			models.box.updateMatrix();
 
 			var texLoader = new THREE.TextureLoader();
 			texLoader.load('models/box.png', function(tex){
@@ -65,8 +62,17 @@
 		});
 	}
 
-	function generateCard(text, color)
+	function generateCard(card, color)
 	{
+		if(color === 'black'){
+			var fgColor = '#eee';
+			var bgColor = 'black';
+		}
+		else {
+			fgColor = 'black';
+			bgColor = '#eee';
+		}
+
 		// card face texture resolution
 		var cardWidth = 256;
 		var model = models.card.clone();
@@ -77,22 +83,62 @@
 		var g = bmp.getContext('2d');
 		bmp.width = 2*cardWidth;
 		bmp.height = 2*cardWidth;
-		g.fillStyle = color === 'black' ? 'black' : 'white';
+		g.fillStyle = bgColor;
 		g.fillRect(0, 0, 2*cardWidth, 2*cardWidth);
+		g.fillStyle = fgColor
 
 		// write text
 		g.textAlign = 'left';
 		g.font = 'bold '+(0.09*cardWidth)+'px '+fontStack;
-		g.fillStyle = color === 'black' ? 'white' : 'black';
+		var text = card.text.split('\n');
 		for(var i=0; i<text.length; i++){
 			g.fillText(text[i], 0.08*cardWidth, (0.15+0.12*i)*cardWidth);
 		}
+
+		// draw "PICK X" indicator
+		if(card.numResponses)
+		{
+			g.font = 'bold '+(0.07*cardWidth)+'px '+fontStack;
+			g.textAlign = 'right';
+			g.fillText('PICK', 0.85*cardWidth, 1.33*cardWidth);
+
+			g.beginPath();
+				g.arc(0.91*cardWidth, 1.303*cardWidth, 0.04*cardWidth, 0, 2*Math.PI);
+			g.closePath();
+			g.fill();
+			g.textAlign = 'center';
+			g.fillStyle = bgColor;
+			g.fillText(card.numResponses, 0.91*cardWidth, 1.33*cardWidth);
+
+			g.fillStyle = fgColor;
+			g.textAlign = 'left';
+		}
+
+		// draw "DRAW X" indicator
+		if(card.numDraws)
+		{
+			g.font = 'bold '+(0.07*cardWidth)+'px '+fontStack;
+			g.textAlign = 'right';
+			g.fillText('DRAW', 0.85*cardWidth, 1.22*cardWidth);
+
+			g.beginPath();
+				g.arc(0.91*cardWidth, 1.192*cardWidth, 0.04*cardWidth, 0, 2*Math.PI);
+			g.closePath();
+			g.fill();
+			g.textAlign = 'center';
+			g.fillStyle = bgColor;
+			g.fillText(card.numDraws, 0.91*cardWidth, 1.22*cardWidth);
+
+			g.fillStyle = fgColor;
+			g.textAlign = 'left';
+		}
+
 
 		// draw logo
 		var edgeLength = 15;
 		var x = 0.08*cardWidth, y = 1.33*cardWidth;
 		g.lineWidth = 2;
-		g.strokeStyle = color === 'black' ? 'white' : 'black';
+		g.strokeStyle = fgColor;
 		g.moveTo(x, y);
 		g.lineTo(x+edgeLength/2, y-edgeLength*Math.sin(Math.PI/3));
 		g.lineTo(x+edgeLength, y);
@@ -101,8 +147,14 @@
 		g.stroke();
 
 		// draw footer
+		g.textAlign = 'left';
 		g.font = (0.05*cardWidth)+'px '+fontStack;
-		g.fillText("Holograms Against Humanity", x+1.5*edgeLength, y);
+		if( card.numResponses || card.numDraws ){
+			g.fillText("HAH", x+1.5*edgeLength, y);
+		}
+		else {
+			g.fillText("Holograms Against Humanity", x+1.5*edgeLength, y);
+		}
 
 		// draw card back
 		g.font = 'bold '+(0.15*cardWidth)+'px '+fontStack;
@@ -114,6 +166,8 @@
 		model.material = new THREE.MeshBasicMaterial({
 			map: new THREE.CanvasTexture(bmp)
 		});
+
+		model.userData = card;
 		return model;
 	}
 
@@ -164,7 +218,11 @@
 		var g = bmp.getContext('2d');
 		bmp.width = texWidth;
 		bmp.height = texWidth;
-		g.fillStyle = '#38281C';
+
+		if(name === Game.playerInfo.displayName)
+			g.fillStyle = '#541E1E'; // brick red
+		else
+			g.fillStyle = '#38281C'; // neutral brown
 		g.fillRect(0, 0, texWidth, texWidth);
 
 		g.font = 'bold 25px '+fontStack;
@@ -239,7 +297,7 @@
 
 
 		// point dialog at player
-		var seat = root.getObjectByName(Game.playerInfo.playerId);
+		var seat = root.getObjectByName(Game.playerInfo.id);
 		model.applyMatrix( sphericalToMatrix(0, Math.PI/8, 1.05*tableRadius, 'yzx') );
 		seat.add(model);
 
@@ -279,16 +337,6 @@
 		var angle = 2*Math.PI/newTurnOrder.length;
 		var players = newTurnOrder.map(function(e){return e.id;});
 
-		// flip box when first player joins/leaves
-		if(newTurnOrder.length > 0){
-			gameObjects.box.rotation.set(0, 0, 0);
-			gameObjects.titleCard.visible = false;
-		}
-		else {
-			gameObjects.box.rotation.set(Math.PI, 0, 0);
-			gameObjects.titleCard.visible = true;
-		}
-
 		// add new players, adjust old players
 		for(var i=0; i<newTurnOrder.length; i++)
 		{
@@ -298,10 +346,9 @@
 			{
 				// player is already in the game, move them to position
 				seat.addBehavior( new Behaviors.Animate(
-					new THREE.Vector3(-1.05*tableRadius*Math.sin(i*angle), -1.05*tableRadius*Math.cos(i*angle), 1.5),
-					new THREE.Euler(0, 0, -angle*i),
 					null,
-					600
+					new THREE.Vector3(-1.05*tableRadius*Math.sin(i*angle), -1.05*tableRadius*Math.cos(i*angle), 1.5),
+					new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1), -angle*i)
 				));
 			}
 			else
@@ -318,6 +365,14 @@
 				nameplate.position.set(0, 0.25, -0.64);
 				nameplate.rotation.set(0, 0, Math.PI/2);
 				seat.add(nameplate);
+
+				// add presentation space
+				var center = new THREE.Object3D();
+				center.name = 'presentation';
+				center.position.set(0, 1.05*tableRadius, 1);
+				center.rotation.set(0, 0, Math.PI);
+				center.scale.set(6,6,6);
+				seat.add(center);
 
 				// handle "leave" on self click
 				if(newTurnOrder[i].id === Game.playerInfo.id)
@@ -379,6 +434,10 @@
 					card.name = 'card'+j;
 					card.applyMatrix( Utils.sphericalToMatrix(theta, phi, cardRadius, 'zyx') );
 					seat.add(card);
+
+					// add hover feedback to your own cards
+					if(newTurnOrder[i].id === Game.playerInfo.id)
+						card.addBehavior( new Behaviors.CursorFeedback() );
 				}
 
 				// add seat to the table
@@ -399,7 +458,25 @@
 				root.remove(seat);
 			}
 		}
+
+
 	}
+	//add Idle "are you still there "timeout
+	var idleTimeout = {};
+	var kickTimeout = {};
+	function idleCheck (){
+		idleTimeout = setTimeout(function(){
+        	clearTimeout(idleTimeout);
+        	console.log("you are about to be logged out of the game.");
+        	// setup the yes/no button for staying in the game(it clears the kickTimeout and calls the idleCheck function again).
+        	kickTimeout = setTimeout(function(){
+        		clearTimeout(kickTimeout);
+        		Game.emitPlayerLeave();
+        		console.log("you have been kicked from the game due to inactivity.");
+    		}, 60000);
+    	}, 300000);
+    }
+
 
 	exports.preloadModels = preloadModels;
 	exports.generateCard = generateCard;
@@ -408,6 +485,7 @@
 	exports.generateDialog = generateDialog;
 	exports.sphericalToMatrix = sphericalToMatrix;
 	exports.rebalanceTable = rebalanceTable;
+	exports.idleCheck = idleCheck;
 
 })(window.Utils = window.Utils || {}, window.Models = window.Models || {});
 

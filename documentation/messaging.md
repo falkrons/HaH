@@ -151,7 +151,7 @@ Game Play
 2. Enable card selection from hand.
 
 
-### cardSelection(handIndex, [playerId])
+### cardSelection(handIndexArray, [playerId])
 
 *Triggered by*: A player selecting a card (or group of cards) for play.
 

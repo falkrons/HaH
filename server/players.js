@@ -1,6 +1,7 @@
 'use strict';
 var config = require('../config.json'),
-	structs = require('./structures.js');
+	structs = require('./structures.js'),
+	libgame = require('./game.js');
 
 var activeGames = structs.activeGames;
 
@@ -164,6 +165,27 @@ function leave(id, displayName, message)
 		player.id, player.displayName, game.getCleanTurnOrder(), message);
 
 	console.log('Player', player.displayName, 'has left the game.');
+
+	// reinitialize game if last player leaves
+	if(game.turnOrder.length === 0){
+		activeGames[this.gameId] = new structs.Game(this.gameId);
+	}
+
+	// game is interrupted, reset
+	else if(game.turnOrder.length < 3 || index === game.czar){
+		game.resetRound(this.server);
+		game.czar = game.czar % game.turnOrder.length;
+	}
+
+	// keep czar index up to date
+	else if(index < game.czar){
+		game.czar--;
+	}
+
+	// see if left player was holding up game
+	if(game.state === 'playerSelectionPending'){
+		libgame.checkForLastSelection.call(this, game);
+	}
 }
 
 function kickRequest(id)

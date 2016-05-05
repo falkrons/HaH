@@ -21,6 +21,8 @@
 
 	Rotate.prototype.update = function(deltaT)
 	{
+		if(!this.target.visible) return;
+
 		var oldAngles = this.target.rotation;
 
 		this.target.rotation.set(
@@ -33,13 +35,32 @@
 
 	/*
 	 * Animate the target from transform to transform over time
+	 * Alternate prototype: Animate(finalMatrix, duration, callback)
 	 */
 
-	function Animate(finalPos, finalRot, finalScale, duration, callback)
+	function Animate(finalParent, finalPos, finalQuat, finalScale, duration, callback)
 	{
-		this.finalPos = finalPos;
-		this.finalRot = finalRot;
-		this.finalScale = finalScale;
+		this.parent = finalParent || null;
+
+		if(finalPos instanceof THREE.Matrix4)
+		{
+			// extract position/rotation/scale from matrix
+			this.finalPos = new THREE.Vector3();
+			this.finalQuat = new THREE.Quaternion();
+			this.finalScale = new THREE.Vector3();
+			finalPos.decompose(this.finalPos, this.finalQuat, this.finalScale);
+
+			// shift other arguments
+			duration = finalQuat;
+			callback = finalScale;
+		}
+		else
+		{
+			this.finalPos = finalPos;
+			this.finalQuat = finalQuat;
+			this.finalScale = finalScale;
+		}
+		this.parent = finalParent || null;
 		this.duration = duration || 600;
 		this.callback = callback;
 	}
@@ -48,53 +69,52 @@
 	{
 		this.target = obj;
 
-		this.initialPos = obj.position;
-		this.initialRot = obj.rotation;
-		this.initialScale = obj.scale;
+		// remove any other animations in progress
+		var self = this;
+		obj.__behaviorList.forEach(function(subobj, i, arr){
+			if( subobj instanceof Animate && subobj != self )
+			{
+				if(subobj.callback) subobj.callback(obj);
+				obj.removeBehavior(subobj);
+			}
+		});
+
+		// shuffle hierarchy, but keep world transform the same
+		if(this.parent && this.parent !== obj.parent)
+		{
+			obj.applyMatrix(obj.parent.matrixWorld);
+			var mat = new THREE.Matrix4().getInverse(this.parent.matrixWorld);
+			obj.applyMatrix(mat);
+
+			this.parent.add(obj);
+		}
+
+		// read initial positions
+		this.initialPos = obj.position.clone();
+		this.initialQuat = obj.quaternion.clone();
+		this.initialScale = obj.scale.clone();
 		this.startTime = Date.now();
 	};
 
 	Animate.prototype.update = function(deltaT)
 	{
-		function easeOutQuad(mix, startVal, endVal){
-			if(mix <= 0)
-				return startVal;
-			else if(mix >= 1)
-				return endVal;
-			else
-				return -(endVal-startVal) * mix * (mix-2) + startVal;
-		}
-
+		// compute ease-out based on duration
 		var mix = (Date.now()-this.startTime) / this.duration;
+		mix = mix < 1 ? -mix * (mix-2) : 1;
 
 		// animate position if requested
-		if( this.finalPos )
-		{
-			this.target.position.set(
-				easeOutQuad(mix, this.initialPos.x, this.finalPos.x),
-				easeOutQuad(mix, this.initialPos.y, this.finalPos.y),
-				easeOutQuad(mix, this.initialPos.z, this.finalPos.z)
-			);
+		if( this.finalPos ){
+			this.target.position.lerpVectors(this.initialPos, this.finalPos, mix);
 		}
 
 		// animate rotation if requested
-		if( this.finalRot )
-		{
-			this.target.rotation.set(
-				easeOutQuad(mix, this.initialRot.x, this.finalRot.x),
-				easeOutQuad(mix, this.initialRot.y, this.finalRot.y),
-				easeOutQuad(mix, this.initialRot.z, this.finalRot.z)
-			);
+		if( this.finalQuat ){
+			THREE.Quaternion.slerp(this.initialQuat, this.finalQuat, this.target.quaternion, mix)
 		}
 
 		// animate scale if requested
-		if( this.finalScale )
-		{
-			this.target.scale.set(
-				easeOutQuad(mix, this.initialScale.x, this.finalScale.x),
-				easeOutQuad(mix, this.initialScale.y, this.finalScale.y),
-				easeOutQuad(mix, this.initialScale.z, this.finalScale.z)
-			);
+		if( this.finalScale ){
+			this.target.scale.lerpVectors(this.initialScale, this.finalScale, mix);
 		}
 
 		// terminate animation when done
@@ -104,6 +124,27 @@
 				this.callback.call(this.target);
 		}
 	};
+
+	/*Animate.prototype.finishNow = function()
+	{
+		if( this.finalPos ){
+			this.target.position.copy(this.finalPos);
+		}
+
+		if( this.finalQuat ){
+			this.target.quaternion.copy(this.finalQuat);
+		}
+
+		if( this.finalScale ){
+			this.target.scale.copy(this.finalScale);
+		}
+
+		if(this.target)
+			this.target.removeBehavior(this);
+
+		if(this.callback)
+			this.callback(this.target);
+	};*/
 
 
 	/*
@@ -116,30 +157,36 @@
 
 		this._onCursorEnter = function(evt)
 		{
-			if(activeAnimation){
-				self.target.removeBehavior(activeAnimation);
-			}
-			
-			activeAnimation = new Behaviors.Animate(null, null, self._origScale.clone().multiplyScalar(1.2), 400);
-			activeAnimation.callback = function(){
-				activeAnimation = null;
-			};
+			if(self.target._listeners.cursorup && self.target._listeners.cursorup.length > 0)
+			{
+				if(activeAnimation){
+					self.target.removeBehavior(activeAnimation);
+				}
 
-			self.target.addBehavior(activeAnimation);
+				activeAnimation = new Behaviors.Animate(null, null, null, self._origScale.clone().multiplyScalar(1.2), 400);
+				activeAnimation.callback = function(){
+					activeAnimation = null;
+				};
+
+				self.target.addBehavior(activeAnimation);
+			}
 		};
 
 		this._onCursorLeave = function(evt)
 		{
-			if(activeAnimation){
-				self.target.removeBehavior(activeAnimation);
-			}
-			
-			activeAnimation = new Behaviors.Animate(null, null, self._origScale, 600);
-			activeAnimation.callback = function(){
-				activeAnimation = null;
-			};
+			if(self.target._listeners.cursorup && self.target._listeners.cursorup.length > 0)
+			{
+				if(activeAnimation){
+					self.target.removeBehavior(activeAnimation);
+				}
 
-			self.target.addBehavior(activeAnimation);
+				activeAnimation = new Behaviors.Animate(null, null, null, self._origScale, 400);
+				activeAnimation.callback = function(){
+					activeAnimation = null;
+				};
+
+				self.target.addBehavior(activeAnimation);
+			}
 		};
 
 	}

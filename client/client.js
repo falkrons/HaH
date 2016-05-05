@@ -1,15 +1,39 @@
 'use strict';
 
-/**************************
-	Global variables
-**************************/
-
+// force define String.trim
 if(typeof(String.prototype.trim) === "undefined")
 {
 	String.prototype.trim = function(){
 		return String(this).replace(/^\s+|\s+$/g, '');
 	}
 }
+
+// modify behavior of THREE.Object3D.removeEventListener
+THREE.Object3D.prototype.removeEventListener = function(type, listener)
+{
+	if(this._listeners === undefined) return;
+
+	var listenersArray = this._listeners[type];
+	if(listenersArray !== undefined)
+	{
+		var index = listenersArray.indexOf(listener);
+
+		// NEW! remove all listeners if second argument is absent
+		if(listener === undefined){
+			listenersArray.splice(0);
+		}
+
+		else if(index !== -1){
+			listenersArray.splice(index, 1);
+		}
+	}
+
+};
+
+
+/**************************
+	Global variables
+**************************/
 
 var renderer;
 var camera;
@@ -64,11 +88,13 @@ else
 	document.body.appendChild(renderer.domElement);
 
 	// add an orbiting camera
-	camera = new THREE.PerspectiveCamera(45, 1280/720, 1, 1000);
+	camera = new THREE.PerspectiveCamera(45, 1280/720, 0.01, 1000);
 	camera.up.set(0,0,1);
 	camera.position.set(0, 2*tableRadius, 1.5);
 	camera.lookAt( new THREE.Vector3(0, 0, 1.5) );
 	root.add(camera);
+
+	altspace.utilities.shims.cursor.init(scene, camera, {renderer: renderer});
 
 	Utils.preloadModels(init);
 }
@@ -92,14 +118,19 @@ function init()
 	gameObjects.box.addBehavior(new Behaviors.CursorFeedback());
 	root.add(gameObjects.box);
 
-	// add a big black card
+	// add a rotating presentation space
+	gameObjects.presentation = new THREE.Object3D();
+	gameObjects.presentation.name = 'presentation';
+	gameObjects.presentation.position.set(0, 0, 2.5);
+	gameObjects.presentation.scale.set(6,6,6);
+	gameObjects.presentation.addBehavior( new Behaviors.Rotate(0, 0, 0.5) );
+
+	// add title card
 	gameObjects.titleCard = Utils.generateTitleCard();
-	gameObjects.titleCard.position.setZ(2);
-	gameObjects.titleCard.scale.set(12,12,12);
 	gameObjects.titleCard.rotation.set(Math.PI/2, 0, 0);
 	gameObjects.titleCard.visible = false;
-	gameObjects.titleCard.addBehavior( new Behaviors.Rotate(0, 0.5, 0) );
-	root.add(gameObjects.titleCard);
+	gameObjects.presentation.add(gameObjects.titleCard);
+	root.add(gameObjects.presentation);
 
 	// grab game id from URL
 	var gameId = /[?&]gameId=(\w+)\b/.exec(window.location.search);
@@ -126,11 +157,32 @@ function init()
 
 function render(timestamp)
 {
-	// update camera if necessary
-	if(camera){
-		camera.position.x = 2*tableRadius * Math.sin(timestamp * 2*Math.PI/20000);
-		camera.position.y = 2*tableRadius * Math.cos(timestamp * 2*Math.PI/20000);
-		camera.lookAt( new THREE.Vector3(0, 0, 1.5) );
+	// update camera if necessary	
+	if(camera)
+	{
+		// get client table position
+		var seat = root.getObjectByName(Game.playerInfo.id);
+		if(seat && camera.fov !== 90)
+		{
+			camera.fov = 90;
+			camera.updateProjectionMatrix();
+			camera.position.set(0,0,0);
+			camera.rotation.set(1.5, 0, 0);
+			seat.add(camera);
+		}
+		else if(!seat)
+		{
+			if(camera.fov !== 45){
+				camera.fov = 45;
+				camera.updateProjectionMatrix();
+			}
+
+			var angle = timestamp/20000 * 2*Math.PI;
+			camera.position.x = 2*tableRadius * Math.sin(angle);
+			camera.position.y = 2*tableRadius * Math.cos(angle);
+			camera.position.z = 1.5;
+			camera.lookAt( new THREE.Vector3(0, 0, 1.5) );
+		}
 	}
 
 	// animate

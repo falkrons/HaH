@@ -26,7 +26,10 @@ var app = express();
 app.use(morgan('dev'));
 
 // get static files from <project>/client
-app.use(express.static( libpath.join(__dirname, '../client') ));
+app.use('/client', express.static( libpath.join(__dirname, '../client') ));
+app.use('/decks', express.static( libpath.join(__dirname, '../decks') ));
+
+app.get('/status', require('./status.js'));
 
 // return 404 on all other requests
 app.use(function(req,res,next)
@@ -59,7 +62,12 @@ io.on('connection', function(socket)
 		registerGameListeners(socket);
 
 		// initialize new client
-		socket.emit('init', activeGames[gameId].turnOrder);
+		var game = activeGames[gameId];
+		socket.emit('init', game.getCleanTurnOrder(), game.state,
+			structures.Deck.blackCardList[game.currentBlackCard],
+			game.turnOrder.length > 0 ? game.turnOrder[game.czar].id : null,
+			game.submissions || null
+		);
 		console.log('Client connected to', socket.gameId);
 	}
 	else {
@@ -92,6 +100,10 @@ function registerGameListeners(socket)
 	socket.on('playerKickResponse', players.kickResponse);
 
 	socket.on('dealCards', game.dealCards);
+	socket.on('roundStart', game.roundStart);
+	socket.on('cardSelection', game.cardSelection);
+	socket.on('presentSubmission', game.presentSubmission);
+	socket.on('winnerSelection', game.winnerSelection);
 }
 
 
