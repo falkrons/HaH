@@ -19,7 +19,7 @@ var templateString = [
 	'				th Players',
 	'			each game in activeGames',
 	'				tr',
-	'					td: a(href=`/?gameId=${game.id}`)= game.id',
+	'					td: a(href=`/client/?gameId=${game.id}`)= game.id',
 	'					td #{game.turnOrder.length} / 12'
 ].join('\n');
 

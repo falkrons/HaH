@@ -26,8 +26,8 @@ var app = express();
 app.use(morgan('dev'));
 
 // get static files from <project>/client
-app.use(express.static( libpath.join(__dirname, '../client') ));
-app.use(express.static( libpath.join(__dirname, '../decks') ));
+app.use('/client', express.static( libpath.join(__dirname, '../client') ));
+app.use('/decks', express.static( libpath.join(__dirname, '../decks') ));
 
 app.get('/status', require('./status.js'));
 
