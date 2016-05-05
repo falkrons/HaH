@@ -575,6 +575,14 @@
 			seat.remove(no);
 		}
 
+		// kill selection event handlers
+		if(playerId === playerInfo.id){
+			for(var i=0; i<12; i++){
+				var spot = seat.getObjectByName('card'+i);
+				spot.removeEventListener('cursorup');
+			}
+		}
+
 		// find where selected cards should go
 		var czarSeat = root.getObjectByName(czarId);
 		var finalPos = new THREE.Vector3(czarSeat.position.x/2, czarSeat.position.y/2, 0.825);
@@ -791,10 +799,17 @@
 		}
 		submissionList = [];
 		submissionMap = {};
+		selection = [];
+		czarSelectionPlayer = '';
 
 		var temp = root.getObjectByName('czarStack');
 		root.remove(temp);
 
+		var seat = root.getObjectByName(playerInfo.id);
+		for(var i=0; i<12; i++){
+			var spot = seat.getObjectByName('card'+i);
+			spot.removeEventListener('cursorup');
+		}
 	}
 
 	// export objects from scope
