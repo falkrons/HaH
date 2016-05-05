@@ -784,6 +784,7 @@
 		var confetti = new Utils.Confetti({delay: 1000});
 		confetti.position.copy(winnerSeat.position);
 		confetti.position.setZ( confetti.position.z + 0.75 );
+		confetti.quaternion.copy(winnerSeat.quaternion);
 		root.add(confetti);
 
 		// award black card
