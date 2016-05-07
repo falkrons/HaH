@@ -461,14 +461,20 @@
 
 
 	}
+
 	//add Idle "are you still there "timeout
 	var idleTimeout = {};
 	var kickTimeout = {};
-	function idleCheck (){
+	var idleCheck = function (){
 		idleTimeout = setTimeout(function(){
         	clearTimeout(idleTimeout);
         	console.log("you are about to be logged out of the game.");
-        	// setup the yes/no button for staying in the game(it clears the kickTimeout and calls the idleCheck function again).
+        	generateDialog('AFK WARNING\nAre you there?', idleClear , function()
+						{
+							Game.socket.emit('playerLeave', Game.playerInfo.id, Game.playerInfo.displayName,
+								Game.playerInfo.displayName+' has left the game.'
+							);
+						});
         	kickTimeout = setTimeout(function(){
         		clearTimeout(kickTimeout);
         		Game.emitPlayerLeave();
@@ -476,7 +482,11 @@
     		}, 60000);
     	}, 300000);
     }
-
+    var idleClear = function (){
+    	clearTimeout(kickTimeout);
+    	clearTimeout(idleTimeout);
+    }
+   
 
 	exports.preloadModels = preloadModels;
 	exports.generateCard = generateCard;
@@ -486,6 +496,6 @@
 	exports.sphericalToMatrix = sphericalToMatrix;
 	exports.rebalanceTable = rebalanceTable;
 	exports.idleCheck = idleCheck;
-
+	exports.idleClear = idleClear;
 })(window.Utils = window.Utils || {}, window.Models = window.Models || {});
 
