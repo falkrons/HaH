@@ -69,6 +69,16 @@
 	{
 		this.target = obj;
 
+		// remove any other animations in progress
+		var self = this;
+		obj.__behaviorList.forEach(function(subobj, i, arr){
+			if( subobj instanceof Animate && subobj != self )
+			{
+				if(subobj.callback) subobj.callback(obj);
+				obj.removeBehavior(subobj);
+			}
+		});
+
 		// shuffle hierarchy, but keep world transform the same
 		if(this.parent && this.parent !== obj.parent)
 		{
@@ -115,6 +125,27 @@
 		}
 	};
 
+	/*Animate.prototype.finishNow = function()
+	{
+		if( this.finalPos ){
+			this.target.position.copy(this.finalPos);
+		}
+
+		if( this.finalQuat ){
+			this.target.quaternion.copy(this.finalQuat);
+		}
+
+		if( this.finalScale ){
+			this.target.scale.copy(this.finalScale);
+		}
+
+		if(this.target)
+			this.target.removeBehavior(this);
+
+		if(this.callback)
+			this.callback(this.target);
+	};*/
+
 
 	/*
 	 * Grow object on hover
@@ -126,7 +157,6 @@
 
 		this._onCursorEnter = function(evt)
 		{
-			//console.log(self.target._listeners);
 			if(self.target._listeners.cursorup && self.target._listeners.cursorup.length > 0)
 			{
 				if(activeAnimation){
@@ -150,7 +180,7 @@
 					self.target.removeBehavior(activeAnimation);
 				}
 
-				activeAnimation = new Behaviors.Animate(null, null, null, self._origScale, 600);
+				activeAnimation = new Behaviors.Animate(null, null, null, self._origScale, 400);
 				activeAnimation.callback = function(){
 					activeAnimation = null;
 				};

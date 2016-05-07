@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script src='three.min.js'></script>
+		<script src='http://sdk.altvr.com/libs/altspace.js/0.12.0/altspace.min.js'></script>
+		<script src='confetti.js'></script>
+	</head>
+	<body>
+		<script>
+
+			if(altspace.inClient){
+				var renderer = altspace.getThreeJSRenderer();
+			}
+			else {
+				renderer = new THREE.WebGLRenderer();
+				renderer.setSize(1280, 720);
+				renderer.setClearColor( 0x888888 );
+				document.body.appendChild(renderer.domElement);
+			}
+
+			var scene = new THREE.Scene();
+
+			var camera = new THREE.PerspectiveCamera(45, 1280/720, 1, 10);
+			camera.position.set(-5, -1, 0);
+			camera.lookAt(new THREE.Vector3(0,0,0));
+			scene.add(camera);
+			
+			var confetti = null;
+
+			function kaboom()
+			{
+				scene.remove(confetti);
+				confetti = new Utils.Confetti();
+				confetti.rotation.set(-Math.PI/2,0,0);
+				scene.add(confetti);
+			}
+			
+			kaboom();
+			setInterval(kaboom, 3000);
+
+			var lastT = Date.now();
+			window.requestAnimationFrame(function animate(timestamp)
+			{
+				window.requestAnimationFrame(animate);
+				
+				var nowT = Date.now();
+				//if(confetti) confetti.updateParticles(nowT-lastT);
+				scene.updateAllBehaviors(nowT-lastT);
+				lastT = nowT;
+
+				renderer.render(scene, camera);
+			});
+
+		</script>
+	</body>
+</html>

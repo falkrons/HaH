@@ -73,6 +73,7 @@
 
 		socket.on('cardSelectionComplete', cardSelectionComplete);
 		socket.on('presentSubmission', presentSubmission);
+		socket.on('winnerSelection', winnerSelection);
 	}
 
 
@@ -187,7 +188,7 @@
 		}
 
 		console.log('New player joined:', displayName);
-		Utils.idleCheck();
+		//Utils.idleCheck();
 
 
 	}
@@ -266,7 +267,6 @@
 			blackCard = Utils.generateCard(newBlackCard, 'black');
 			blackCard.applyMatrix( Utils.sphericalToMatrix(0, -Math.PI/4, 0.4, 'zyx') );
 			blackCard.scale.set(2,2,2);
-			console.log('blackCard scale', blackCard.scale);
 			blackCard.name = 'blackCard';
 		}
 
@@ -308,11 +308,13 @@
 		// move things around to line up with the new hand
 		for(var i=0; i<hand.length; i++)
 		{
+			var card = curCards[hand[i].index];
+
 			// move cards that didn't change to new position
-			if(curCards[hand[i].index])
+			if(card)
 			{
 				// animate from old position to new position
-				curCards[hand[i].index].addBehavior(new Behaviors.Animate(cardRoots[i],
+				card.addBehavior(new Behaviors.Animate(cardRoots[i],
 					new THREE.Vector3(0,0,0), new THREE.Quaternion(), new THREE.Vector3(2,2,2))
 				);
 			}
@@ -320,7 +322,7 @@
 			else
 			{
 				if(hand[i])
-					var card = Utils.generateCard(hand[i], 'white');
+					card = Utils.generateCard(hand[i], 'white');
 				else
 					card = Models.blankCard.clone();
 
@@ -586,6 +588,7 @@
 			if(tempCard)
 			{
 				// animate, and remove all but one on completion
+				tempCard.name = 'toCzarStack';
 				tempCard.addBehavior( new Behaviors.Animate(root, finalPos, finalRot, null, 600,
 					function(){
 						if(!root.getObjectByName('czarStack')){
@@ -620,11 +623,18 @@
 		}
 	
 		submissionMap = selections;
+		submissionMap[''] = [];
 		submissionList = displayList;
 
 		// replace placeholder stack with real cards
-		var temp = root.getObjectByName('czarStack');
-		if(temp) temp.parent.remove(temp);
+		for(var i=0; i<root.children.length; i++)
+		{
+			var temp = root.children[i];
+			if(temp.name === 'czarStack' || temp.name === 'toCzarStack'){
+				temp.removeAllBehaviors();
+				root.remove(temp);
+			}
+		}
 
 		var czarSeat = root.getObjectByName(czarId);
 		var finalPos = new THREE.Vector3(czarSeat.position.x/2, czarSeat.position.y/2, 0.825);
@@ -659,7 +669,6 @@
 
 	}
 
-	//var czarSelectionIndex = -1;
 	function handleCzarSelection(submissionIndex)
 	{
 		var seat = root.getObjectByName(czarId);
@@ -667,31 +676,6 @@
 
 		// present the submission
 		socket.emit('presentSubmission', submission.playerId);
-
-		// put previous selection back
-		/*if(czarSelectionIndex >= 0 && czarSelectionIndex !== submissionIndex)
-		{
-			for(var i=0; i<submissionList[czarSelectionIndex].length; i++)
-			{
-				var card = submissionList[czarSelectionIndex][i];
-				var spot = seat.getObjectByName('card'+czarSelectionIndex);
-
-				card.addBehavior(new Behaviors.Animate(spot,
-					new THREE.Vector3(0,0.01*i,-0.01*i), new THREE.Quaternion(), new THREE.Vector3(2,2,2)
-				));
-			}
-		}*/
-
-		//czarSelectionIndex = submissionIndex;
-
-		// animate
-		/*var spacing = 0.3;
-		for(var i=0; i<submission.length; i++)
-		{
-			var mat = Utils.sphericalToMatrix(spacing*(-(submission.length-1)/2 + i), 0, 0.5);
-			mat.multiply( new THREE.Matrix4().makeScale(2,2,2) );
-			submission[i].addBehavior( new Behaviors.Animate(seat, mat) );
-		}*/
 
 		// spawn confirmation boxes
 		var yes = new THREE.Mesh(
@@ -704,7 +688,7 @@
 		var no = new THREE.Mesh(
 			new THREE.BoxGeometry(0.01, 0.1, 0.1),
 			new THREE.MeshBasicMaterial({
-				map: new THREE.TextureLoader().load('trash.png')
+				map: new THREE.TextureLoader().load('cross.png')
 			})
 		);
 
@@ -712,11 +696,19 @@
 		yes.name = 'yes';
 		yes.addBehavior( new Behaviors.CursorFeedback() );
 		yes.applyMatrix( Utils.sphericalToMatrix(0.6, 0, 0.5, 'xyz') );
+		yes.addEventListener('cursorup', function(){
+			socket.emit('winnerSelection', submission.playerId);
+			seat.remove(yes, no);
+		});
 		seat.add(yes);
 
 		no.name = 'no';
 		no.addBehavior( new Behaviors.CursorFeedback() );
 		no.applyMatrix( Utils.sphericalToMatrix(-0.6, 0, 0.5, 'xyz') );
+		no.addEventListener('cursorup', function(){
+			socket.emit('presentSubmission', '');
+			seat.remove(yes, no);
+		});
 		seat.add(no);
 	}
 
@@ -737,41 +729,35 @@
 		if( czarSelectionPlayer && czarSelectionPlayer !== playerId)
 		{
 			var czarSeat = root.getObjectByName(czarId);
-			var czarSelectionIndex = submissionList.indexOf(submission);
+			var czarSelectionIndex = submissionList.indexOf(submissionMap[czarSelectionPlayer]);
+			var spot = czarSeat.getObjectByName('card'+czarSelectionIndex);
 			for(var i=0; i<submissionList[czarSelectionIndex].length; i++)
 			{
 				var card = submissionList[czarSelectionIndex][i];
-				var spot = czarSeat.getObjectByName('card'+czarSelectionIndex);
-
 				card.addBehavior(new Behaviors.Animate(spot,
 					new THREE.Vector3(0,0.01*i,-0.01*i), new THREE.Quaternion(), new THREE.Vector3(2,2,2)
 				));
 			}
 		}
 
-		// clear old cards
-		/*if(czarSelectionPlayer && czarSelectionPlayer !== playerId)
-		{
-			center.traverse(function(o){
-				if(o !== center && o.name !== 'blackCard')
-					o.parent.remove(o);
-			});
-		}*/
-
 		czarSelectionPlayer = playerId;
 
 		// reposition black card
 		var blackCard = center.getObjectByName('blackCard');
 		var separation = 0.15;
-		blackCard.position.setX(submission.length*separation/2);
+		blackCard.addBehavior( new Behaviors.Animate(null,
+			blackCard.position.clone().setX(submission.length*separation/2)
+		));
 
 		// position submission
 		for(var i=0; i<submission.length; i++)
 		{
 			var card = submission[i];
-			card.position.set(-separation*(i+1) + submission.length*separation/2, 0, 0);
-			card.quaternion.setFromEuler(new THREE.Euler(-Math.PI/2,0,Math.PI));
-			center.add(card);
+			card.addBehavior( new Behaviors.Animate(center,
+				new THREE.Vector3(-separation*(i+1) + submission.length*separation/2, 0, 0),
+				new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI/2,0,Math.PI)),
+				new THREE.Vector3(2,2,2)
+			));
 		}
 
 		if(submission.length === 3){
@@ -780,6 +766,34 @@
 		else {
 			center.scale.set(6,6,6);
 		}
+
+	}
+
+	function winnerSelection(playerId)
+	{
+		// congratulate winner
+		var winnerSeat = root.getObjectByName(parseInt(playerId));
+		var confetti = new Utils.Confetti({delay: 1000});
+		confetti.position.copy(winnerSeat.position);
+		confetti.position.setZ( confetti.position.z + 0.75 );
+		root.add(confetti);
+
+		// award black card
+
+		// clean up from round
+		for(var i=0; i<submissionList.length; i++){
+			for(var j=0; j<submissionList[i].length; j++)
+			{
+				var card = submissionList[i][j];
+				if(card.parent)
+					card.parent.remove(card);
+			}
+		}
+		submissionList = [];
+		submissionMap = {};
+
+		var temp = root.getObjectByName('czarStack');
+		root.remove(temp);
 
 	}
 
