@@ -37,20 +37,21 @@ function dealCards()
 	// for each player in the game
 	for(var i=0; i<game.turnOrder.length; i++)
 	{
-		if(i === game.czar) continue;
-
 		var player = game.turnOrder[i];
 
-		// zero out card selection
-		player.selection = null;
+		if(i !== game.czar)
+		{
+			// zero out card selection
+			player.selection = null;
 
-		// draw necessary number of cards from deck
-		var additions = game.deck.dealWhiteCards(
-			10 + (structs.Deck.blackCardList[black].numDraws || 0) - player.hand.length
-		);
+			// draw necessary number of cards from deck
+			var additions = game.deck.dealWhiteCards(
+				10 + (structs.Deck.blackCardList[black].numDraws || 0) - player.hand.length
+			);
 
-		// add cards to hand
-		player.hand.push.apply(player.hand, additions);
+			// add cards to hand
+			player.hand.push.apply(player.hand, additions);
+		}
 
 		// convert indexes to full card descriptions
 		var fullHand = player.hand.map(function(cur){
@@ -194,9 +195,8 @@ function winnerSelection(playerId)
 		if(i === game.czar) continue;
 
 		var player = game.turnOrder[i];
-		for(var j=0; j<player.selection.length; j++)
-		{
-			game.deck.discardWhiteCards([player.hand[player.selection[j]]]);
+		game.deck.discardWhiteCards(player.selection.map(x => player.hand[x]));
+		for(var j=0; j<player.selection.length; j++){
 			player.hand.splice(player.selection[j]-j, 1);
 		}
 	}

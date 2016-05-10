@@ -80,33 +80,37 @@ Deck.prototype.dealWhiteCards = function(count)
 	for(var i=0; i<count; i++)
 	{
 		if(this.whiteDeck.length == 0){
-			this.whiteDeck = Deck.getShuffledList(Deck.whiteCardList.length);
+			this.whiteDeck = Deck.shuffleList(this.whiteDiscard);
 			this.whiteDiscard = [];
 		}
 
 		hand.push( this.whiteDeck.pop() );
 	}
 
+	console.log('Dealing white', hand);
 	return hand;
 }
 
 Deck.prototype.dealBlackCard = function()
 {
 	if(this.blackDeck.length == 0){
-		this.blackDeck = Deck.getShuffledList(Deck.blackCardList.length);
+		this.blackDeck = Deck.shuffleList(this.blackDiscard);
 		this.blackDiscard = [];
 	}
 
+	console.log('Dealing black', this.blackDeck[this.blackDeck.length-1]);
 	return this.blackDeck.pop();
 }
 
 Deck.prototype.discardWhiteCards = function(cards)
 {
+	console.log('Discarding white', cards);
 	this.whiteDiscard.push.apply(this.whiteDiscard, cards);
 }
 
 Deck.prototype.discardBlackCards = function(cards)
 {
+	console.log('Discarding black', cards);
 	this.blackDiscard.push.apply(this.blackDiscard, cards);
 }
 
