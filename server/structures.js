@@ -80,7 +80,7 @@ Deck.prototype.dealWhiteCards = function(count)
 	for(var i=0; i<count; i++)
 	{
 		if(this.whiteDeck.length == 0){
-			this.whiteDeck = shuffleList( this.whiteDiscard );
+			this.whiteDeck = Deck.getShuffledList(Deck.whiteCardList.length);
 			this.whiteDiscard = [];
 		}
 
@@ -93,7 +93,7 @@ Deck.prototype.dealWhiteCards = function(count)
 Deck.prototype.dealBlackCard = function()
 {
 	if(this.blackDeck.length == 0){
-		this.blackDeck = shuffleList( this.blackDiscard );
+		this.blackDeck = Deck.getShuffledList(Deck.blackCardList.length);
 		this.blackDiscard = [];
 	}
 

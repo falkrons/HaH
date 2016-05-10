@@ -37,6 +37,8 @@ function dealCards()
 	// for each player in the game
 	for(var i=0; i<game.turnOrder.length; i++)
 	{
+		if(i === game.czar) continue;
+
 		var player = game.turnOrder[i];
 
 		// zero out card selection
