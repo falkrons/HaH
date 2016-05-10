@@ -89,9 +89,9 @@ else
 
 	// add an orbiting camera
 	camera = new THREE.PerspectiveCamera(45, 1280/720, 0.01, 1000);
-	camera.up.set(0,0,1);
+	camera.up.set(0,0,5);
 	camera.position.set(0, 2*tableRadius, 1.5);
-	camera.lookAt( new THREE.Vector3(0, 0, 1.5) );
+	camera.lookAt( new THREE.Vector3(0, 0, 0) );
 	root.add(camera);
 
 	altspace.utilities.shims.cursor.init(scene, camera, {renderer: renderer});
@@ -102,6 +102,9 @@ else
 
 function init()
 {
+	root.addEventListener('cursorenter', Utils.idleClear );
+	root.addEventListener('cursorleave', Utils.idleCheck );
+
 	// add table surface
 	var table = new THREE.Mesh(
 		new THREE.CylinderGeometry(tableRadius, tableRadius, 0.05, 36, 1),
@@ -164,9 +167,9 @@ function render(timestamp)
 		var seat = root.getObjectByName(Game.playerInfo.id);
 		if(seat && camera.fov !== 90)
 		{
-			camera.fov = 90;
+			camera.fov = 100;
 			camera.updateProjectionMatrix();
-			camera.position.set(0,0,0);
+			camera.position.set(0,-0.1,-0.2);
 			camera.rotation.set(1.5, 0, 0);
 			seat.add(camera);
 		}
