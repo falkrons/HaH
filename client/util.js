@@ -490,14 +490,11 @@
 	var idleCheck = function (){
 		idleTimeout = setTimeout(function(){
         	clearTimeout(idleTimeout);
-        	console.log("you are about to be logged out of the game.");
-        	generateDialog('AFK WARNING\nAre you there?', idleClear , function()
-						{
-							Game.socket.emit('playerLeave', Game.playerInfo.id, Game.playerInfo.displayName,
-								Game.playerInfo.displayName+' has left the game.'
-							);
-						});
-        	kickTimeout = setTimeout(function(){
+        	generateDialog('AFK WARNING\nAre you there?', idleClear , function(){
+				Game.socket.emit('playerLeave', Game.playerInfo.id, Game.playerInfo.displayName,
+				Game.playerInfo.displayName+' has left the game.');
+			});
+        	kickTimeout = setTimeout(function(){	
         		clearTimeout(kickTimeout);
         		Game.emitPlayerLeave();
         		console.log("you have been kicked from the game due to inactivity.");
