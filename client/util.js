@@ -366,6 +366,8 @@
 			var seat = root.getObjectByName(newTurnOrder[i].id);
 			if(seat)
 			{
+				var nameplate = seat.getObjectByName('nameplate');
+
 				// player is already in the game, move them to position
 				seat.addBehavior( new Behaviors.Animate(
 					null,
@@ -382,10 +384,11 @@
 				seat.rotation.set(0, 0, -angle*i);
 
 				// add nameplate for the player
-				var nameplate = generateNameplate(newTurnOrder[i].displayName);
+				nameplate = generateNameplate(newTurnOrder[i].displayName);
 				nameplate.name = 'nameplate';
 				nameplate.position.set(0, 0.25, -0.64);
 				nameplate.rotation.set(0, 0, Math.PI/2);
+				nameplate.addBehavior( new Behaviors.CursorFeedback() );
 				seat.add(nameplate);
 
 				// add presentation space
@@ -395,38 +398,6 @@
 				center.rotation.set(0, 0, Math.PI);
 				center.scale.set(6,6,6);
 				seat.add(center);
-
-				// handle "leave" on self click
-				if(newTurnOrder[i].id === Game.playerInfo.id)
-				{
-					// register "Leave" action
-					nameplate.addEventListener('cursorup', function(evt)
-					{
-						generateDialog('Are you sure you want to\nleave the game?', function()
-						{
-							Game.socket.emit('playerLeave', Game.playerInfo.id, Game.playerInfo.displayName,
-								Game.playerInfo.displayName+' has left the game.'
-							);
-						});
-					});
-					nameplate.addBehavior( new Behaviors.CursorFeedback() );
-				}
-
-				// handle "kick" if still a player
-				else if(players.indexOf(Game.playerInfo.id) > -1)
-				{
-					// register "Kick" action
-					(function(nameplate, opponentInfo){
-						nameplate.addEventListener('cursorup', function(evt)
-						{
-							generateDialog('Do you want to kick\n'+opponentInfo.displayName+'?', function(){
-								console.log('kicking');
-								Game.socket.emit('playerKickRequest', opponentInfo.id, opponentInfo.displayName);
-							});
-						});
-						nameplate.addBehavior( new Behaviors.CursorFeedback() );
-					})(nameplate, newTurnOrder[i]);
-				}
 
 				var cardRadius = 0.5, row1Angle = Math.PI/5, row2Angle = Math.PI/3,
 					row1Sep = Math.PI/10, row2Sep = 1.5*Math.PI/10;
@@ -465,6 +436,7 @@
 				// add seat to the table
 				root.add(seat);
 			}
+
 		}
 
 		// remove absent players

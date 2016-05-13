@@ -175,6 +175,44 @@
 			gameObjects.box.addEventListener('cursorup', function(){
 				socket.emit('dealCards');
 			});
+
+			// handle "leave" on self click
+			if(newTurnOrder[i].id === Game.playerInfo.id)
+			{
+				// prevent multiple handlers
+				nameplate.removeEventListener('cursorup');
+
+				// register "Leave" action
+				nameplate.addEventListener('cursorup', function(evt)
+				{
+					generateDialog('Are you sure you want to\nleave the game?', function()
+					{
+						Game.socket.emit('playerLeave', Game.playerInfo.id, Game.playerInfo.displayName,
+							Game.playerInfo.displayName+' has left the game.'
+						);
+					});
+				});
+			}
+
+			// handle "kick" if still a player
+			else if(players.indexOf(Game.playerInfo.id) > -1)
+			{
+				// prevent multiple handlers
+				nameplate.removeEventListener('cursorup');
+
+				// register "Kick" action
+				(function(nameplate, opponentInfo){
+					nameplate.addEventListener('cursorup', function(evt)
+					{
+						generateDialog('Do you want to kick\n'+opponentInfo.displayName+'?', function(){
+							console.log('kicking');
+							Game.socket.emit('playerKickRequest', opponentInfo.id, opponentInfo.displayName);
+						});
+					});
+				})(nameplate, newTurnOrder[i]);
+			}
+
+
 		}
 
 		// hide request dialog if present
@@ -188,9 +226,6 @@
 		}
 
 		console.log('New player joined:', displayName);
-		//Utils.idleCheck();
-
-
 	}
 
 	function playerJoinDenied(id, displayName)
@@ -807,14 +842,17 @@
 		root.remove(temp);
 
 		var seat = root.getObjectByName(playerInfo.id);
-		for(var i=0; i<12; i++){
-			var spot = seat.getObjectByName('card'+i);
-			spot.removeEventListener('cursorup');
-		}
+		if(seat)
+		{
+			for(var i=0; i<12; i++){
+				var spot = seat.getObjectByName('card'+i);
+				spot.removeEventListener('cursorup');
+			}
 
-		var yes = seat.getObjectByName('yes'), no = seat.getObjectByName('no');
-		if(yes || no){
-			seat.remove(yes, no);
+			var yes = seat.getObjectByName('yes'), no = seat.getObjectByName('no');
+			if(yes || no){
+				seat.remove(yes, no);
+			}
 		}
 	}
 
