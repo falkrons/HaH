@@ -685,15 +685,20 @@
 		// present the submission
 		socket.emit('presentSubmission', submission.playerId);
 
+		// nuke confirmation boxes if present
+		var yes = seat.getObjectByName('yes');
+		var no = seat.getObjectByName('no');
+		seat.remove(yes,no);
+
 		// spawn confirmation boxes
-		var yes = new THREE.Mesh(
+		yes = new THREE.Mesh(
 			new THREE.BoxGeometry(0.01, 0.1, 0.1),
 			new THREE.MeshBasicMaterial({
 				map: new THREE.TextureLoader().load('check.png')
 			})
 		);
 
-		var no = new THREE.Mesh(
+		no = new THREE.Mesh(
 			new THREE.BoxGeometry(0.01, 0.1, 0.1),
 			new THREE.MeshBasicMaterial({
 				map: new THREE.TextureLoader().load('cross.png')
