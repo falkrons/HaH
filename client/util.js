@@ -12,76 +12,112 @@
 
 	function preloadModels(cb)
 	{
-		var loader = new THREE.ColladaLoader();
-		var modelsToGo = 5;
+		var textures = {};
 
-		// pre-load card model
-		loader.load('models/card.dae', function(result)
+		// kick off preloading
+		loadTextures(function(){ loadModels(cb); });
+
+		function loadTextures(cb)
 		{
-			models.card = result.scene.children[0].children[0];
-			models.card.scale.set(2,2,2);
+			var textureLoader = new THREE.TextureLoader();
+			var texturesToGo = 5;
 
-			models.blankCard = generateCard({text:''});
-
-			modelsToGo--;
-			if(modelsToGo === 0)
-				cb();
-		});
-
-		// preload nameplate model
-		loader.load('models/nameplate.dae', function(result)
-		{
-			models.nameplate = result.scene.children[0].children[0];
-			models.nameplate.scale.set(2,2,2);
-
-			modelsToGo--;
-			if(modelsToGo === 0)
-				cb();
-		});
-
-		loader.load('models/box.dae', function(result)
-		{
-			models.box = result.scene.children[0].children[0];
-			models.box.scale.set(2,2,2);
-
-			var texLoader = new THREE.TextureLoader();
-			texLoader.load('models/box.png', function(tex){
-				models.box.material = new THREE.MeshBasicMaterial({map: tex});
-				modelsToGo--;
-				if(modelsToGo === 0)
-					cb();
+			textureLoader.load('models/box.png', function(tex){
+				textures.box = tex;
+				if(--texturesToGo === 0) cb();
 			});
-		});
 
-		loader.load('models/dialog.dae', function(result)
+			textureLoader.load('models/leftao.png', function(tex){
+				textures.confettiLeftAO = tex;
+				if(--texturesToGo === 0) cb();
+			});
+
+			textureLoader.load('models/rightao.png', function(tex){
+				textures.confettiRightAO = tex;
+				if(--texturesToGo === 0) cb();
+			});
+			
+			textureLoader.load('check.png', function(tex){
+				textures.check = tex;
+				if(--texturesToGo === 0) cb();
+			});
+			
+			textureLoader.load('cross.png', function(tex){
+				textures.cross = tex;
+				if(--texturesToGo === 0) cb();
+			});
+		}
+
+		function loadModels(cb)
 		{
-			models.dialog = result.scene.children[0];
+			var modelLoader = new THREE.ColladaLoader();
+			var modelsToGo = 5;
 
-			modelsToGo--;
-			if(modelsToGo === 0)
-				cb();
-		});
+			// pre-load card model
+			modelLoader.load('models/card.dae', function(result)
+			{
+				models.card = result.scene.children[0].children[0];
+				models.card.scale.set(2,2,2);
 
-		loader.load('models/confettiball.dae', function(results)
-		{
-			models.confettiBall = results.scene.children[0];
+				models.blankCard = generateCard({text:''});
 
-			var loader = new THREE.TextureLoader();
-			loader.load('models/leftao.png', function(tex){
+				if(--modelsToGo === 0) cb();
+			});
+
+			// preload nameplate model
+			modelLoader.load('models/nameplate.dae', function(result)
+			{
+				models.nameplate = result.scene.children[0].children[0];
+				models.nameplate.scale.set(2,2,2);
+
+				if(--modelsToGo === 0) cb();
+			});
+
+			modelLoader.load('models/box.dae', function(result)
+			{
+				models.box = result.scene.children[0].children[0];
+				models.box.scale.set(2,2,2);
+				models.box.material = new THREE.MeshBasicMaterial({map: textures.box});
+
+				if(--modelsToGo === 0) cb();
+			});
+
+			modelLoader.load('models/dialog.dae', function(result)
+			{
+				models.dialog = result.scene.children[0];
+
+				if(--modelsToGo === 0) cb();
+			});
+
+			modelLoader.load('models/confettiball.dae', function(results)
+			{
+				models.confettiBall = results.scene.children[0];
 				models.confettiBall.getObjectByName('left').children[0].material = new THREE.MeshBasicMaterial({
-					map: tex, side: THREE.DoubleSide
+					map: textures.confettiLeftAO, side: THREE.DoubleSide
 				});
-			});
-			loader.load('models/rightao.png', function(tex){
 				models.confettiBall.getObjectByName('right').children[0].material = new THREE.MeshBasicMaterial({
-					map: tex, side: THREE.DoubleSide
+					map: textures.confettiRightAO, side: THREE.DoubleSide
 				});
+
+				if(--modelsToGo === 0) cb();
 			});
 
-			modelsToGo--;
-			if(modelsToGo === 0)
-				cb();
-		});
+			// generate models for confirmation boxes
+			models.yesBox = new THREE.Mesh(
+				new THREE.BoxGeometry(0.01, 0.1, 0.1),
+				new THREE.MeshBasicMaterial({
+					map: textures.check
+				})
+			);
+			
+			models.noBox = new THREE.Mesh(
+				new THREE.BoxGeometry(0.01, 0.1, 0.1),
+				new THREE.MeshBasicMaterial({
+					map: textures.cross
+				})
+			);
+			
+		}
 	}
 
 	function generateCard(card, color)

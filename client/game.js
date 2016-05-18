@@ -506,19 +506,8 @@
 
 
 			// spawn confirmation boxes
-			var yes = new THREE.Mesh(
-				new THREE.BoxGeometry(0.01, 0.1, 0.1),
-				new THREE.MeshBasicMaterial({
-					map: new THREE.TextureLoader().load('check.png')
-				})
-			);
-
-			var no = new THREE.Mesh(
-				new THREE.BoxGeometry(0.01, 0.1, 0.1),
-				new THREE.MeshBasicMaterial({
-					map: new THREE.TextureLoader().load('cross.png')
-				})
-			);
+			var yes = Models.yesBox.clone();
+			var no = Models.noBox.clone();
 
 			// place confirmation boxes
 			yes.name = 'yes';
@@ -689,19 +678,8 @@
 		seat.remove(yes,no);
 
 		// spawn confirmation boxes
-		yes = new THREE.Mesh(
-			new THREE.BoxGeometry(0.01, 0.1, 0.1),
-			new THREE.MeshBasicMaterial({
-				map: new THREE.TextureLoader().load('check.png')
-			})
-		);
-
-		no = new THREE.Mesh(
-			new THREE.BoxGeometry(0.01, 0.1, 0.1),
-			new THREE.MeshBasicMaterial({
-				map: new THREE.TextureLoader().load('cross.png')
-			})
-		);
+		yes = Models.yesBox.clone();
+		no = Models.noBox.clone();
 
 		// place confirmation boxes
 		yes.name = 'yes';
