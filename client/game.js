@@ -476,6 +476,7 @@
 		var mat = Utils.sphericalToMatrix(spacing*selection.length/2, 0, 0.5);
 		mat.multiply( new THREE.Matrix4().makeScale(2,2,2) );
 		card.addBehavior( new Behaviors.Animate(seat, mat) );
+		cardRoot.getBehaviorByType('CursorFeedback')._onCursorLeave();
 
 		// move other cards aside for new one
 		var oldCard = seat.getObjectByName('selection'+(selection.length-1));
@@ -544,11 +545,12 @@
 					var spot = seat.getObjectByName('card'+handIndex);
 					card.position.set(0,0,0);
 					card.rotation.set(0,0,0);
+					card.scale.set(2,2,2);
 
 					// add back click handlers
-					card.addEventListener('cursorup', function(evt){
+					/*card.addEventListener('cursorup', function(evt){
 						handleCardSelection(handIndex);
-					});
+					});*/
 					spot.add(card);
 				});
 
@@ -567,13 +569,8 @@
 
 		// kill confirmation boxes if necessary
 		var yes = seat.getObjectByName('yes');
-		if(yes){
-			seat.remove(yes);
-		}
 		var no = seat.getObjectByName('no');
-		if(no){
-			seat.remove(no);
-		}
+		seat.remove(yes, no);
 
 		// kill selection event handlers
 		if(playerId === playerInfo.id){
@@ -670,6 +667,7 @@
 				submissionSpot.addEventListener('cursorup', function()
 				{
 					console.log('Selecting submission at', index);
+					submissionSpot.getBehaviorByType('CursorFeedback')._onCursorLeave();
 					handleCzarSelection(index);
 				});
 			}

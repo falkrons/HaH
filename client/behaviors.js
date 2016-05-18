@@ -188,8 +188,9 @@
 				self.target.addBehavior(activeAnimation);
 			}
 		};
-
 	}
+
+	CursorFeedback.prototype.type = 'CursorFeedback';
 
 	CursorFeedback.prototype.awake = function(obj)
 	{
