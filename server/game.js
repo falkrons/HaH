@@ -141,11 +141,11 @@ function checkForLastSelection(game)
 		var p = game.turnOrder[i];
 
 		// we're done here if someone hasn't selected yet
-		if(i !== game.czar && p.hand.length > 0 && p.selection === null)
-			return;
-		else if(i === game.czar)
+		if(i === game.czar)
 			continue;
-		else
+		else if(p.hand.length > 0 && p.selection === null)
+			return;
+		else if(p.selection !== null)
 			submissions[p.id] = p.selection.map(function(c){
 				return structs.Deck.whiteCardList[ p.hand[c] ];
 			});
@@ -195,9 +195,12 @@ function winnerSelection(playerId)
 		if(i === game.czar) continue;
 
 		var player = game.turnOrder[i];
-		game.deck.discardWhiteCards(player.selection.map(x => player.hand[x]));
-		for(var j=0; j<player.selection.length; j++){
-			player.hand.splice(player.selection[j]-j, 1);
+		if(player.selection)
+		{
+			game.deck.discardWhiteCards(player.selection.map(x => player.hand[x]));
+			for(var j=0; j<player.selection.length; j++){
+				player.hand.splice(player.selection[j]-j, 1);
+			}
 		}
 	}
 

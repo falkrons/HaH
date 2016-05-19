@@ -155,9 +155,9 @@ function leave(id, displayName, message)
 	player.socket.leave(game.id+'_players');
 
 	// remove pending kick votes (if any)
-	var index = game.pendingKickVotes.indexOf(game.kickVoteForId(player.id));
-	if(index > -1){
-		game.pendingKickVotes.splice(index, 1);
+	var kickIndex = game.pendingKickVotes.indexOf(game.kickVoteForId(player.id));
+	if(kickIndex > -1){
+		game.pendingKickVotes.splice(kickIndex, 1);
 	}
 
 	// inform other clients of player's departure
