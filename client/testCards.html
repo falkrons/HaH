@@ -11,7 +11,7 @@
 		
 			var index = /index=(\d+)/.exec(window.location.search);
 			if(index) index = parseInt(index[1]);
-			else index = 0;
+			else index = -1;
 			
 			var type = /type=([^&]+)/.exec(window.location.search);
 			if(type) type = type[1];
@@ -25,7 +25,10 @@
 				.then(function(data){
 					console.log(data);
 					cardData = data;
-					var card = Utils.generateCard(data[type][index], type);
+					if(type === 'black' && index === -1)
+						var card = Utils.generateTitleCard();
+					else
+						var card = Utils.generateCard(data[type][index], type);
 					var texture = card.material.map.image;
 					document.getElementById('canvasContainer').appendChild(texture);
 				});
