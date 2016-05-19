@@ -120,6 +120,25 @@
 		}
 	}
 
+	function makeSafeFont(g, text, maxWidth)
+	{
+		// get pixel width of longest line
+		var textWidth = Math.max.apply(null, text.map(function(s){return g.measureText(s).width;}));
+
+		// if longest line is longer than specified max width
+		if( textWidth > maxWidth )
+		{
+			// scale down font to bring width down to maxWidth
+			var font = g.font;
+			var fontSize = /[0-9.]+px/.exec(font)[0];
+			var fontSizeValue = parseFloat(fontSize);
+			fontSizeValue = (maxWidth/textWidth) * fontSizeValue;
+			font = font.replace(fontSize, fontSizeValue+'px');
+
+			g.font = font;
+		}
+	}
+
 	function generateCard(card, color)
 	{
 		if(color === 'black'){
@@ -149,6 +168,7 @@
 		g.textAlign = 'left';
 		g.font = 'bold '+(0.09*cardWidth)+'px '+fontStack;
 		var text = card.text.split('\n');
+		makeSafeFont(g, text, 0.84*cardWidth);
 		for(var i=0; i<text.length; i++){
 			g.fillText(text[i], 0.08*cardWidth, (0.15+0.12*i)*cardWidth);
 		}
@@ -157,6 +177,7 @@
 		if(card.numResponses)
 		{
 			g.font = 'bold '+(0.07*cardWidth)+'px '+fontStack;
+			makeSafeFont(g, ['PICK 2'], 0.25*cardWidth);
 			g.textAlign = 'right';
 			g.fillText('PICK', 0.85*cardWidth, 1.33*cardWidth);
 
@@ -176,6 +197,7 @@
 		if(card.numDraws)
 		{
 			g.font = 'bold '+(0.07*cardWidth)+'px '+fontStack;
+			makeSafeFont(g, ['DRAW 2'], 0.3*cardWidth);
 			g.textAlign = 'right';
 			g.fillText('DRAW', 0.85*cardWidth, 1.22*cardWidth);
 
@@ -193,7 +215,7 @@
 
 
 		// draw logo
-		var edgeLength = 15;
+		var edgeLength = 1/16*cardWidth;
 		var x = 0.08*cardWidth, y = 1.33*cardWidth;
 		g.lineWidth = 2;
 		g.strokeStyle = fgColor;
@@ -211,11 +233,13 @@
 			g.fillText("HAH", x+1.5*edgeLength, y);
 		}
 		else {
+			makeSafeFont(g, ['Holograms Against Humanity'], .6525*cardWidth);
 			g.fillText("Holograms Against Humanity", x+1.5*edgeLength, y);
 		}
 
 		// draw card back
 		g.font = 'bold '+(0.15*cardWidth)+'px '+fontStack;
+		makeSafeFont(g, ['Holograms','Against','Humanity'], 0.8*cardWidth);
 		g.fillText('Holograms', 1.1*cardWidth, 0.22*cardWidth);
 		g.fillText('Against', 1.1*cardWidth, 0.37*cardWidth);
 		g.fillText('Humanity', 1.1*cardWidth, 0.52*cardWidth);
@@ -246,6 +270,7 @@
 
 		// draw card
 		g.font = 'bold '+(0.15*cardWidth)+'px '+fontStack;
+		makeSafeFont(g, ['Holograms','Against','Humanity'], 0.8*cardWidth);
 		g.fillStyle = 'white';
 
 		g.fillText('Holograms', 0.1*cardWidth, 0.22*cardWidth);
