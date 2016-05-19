@@ -217,7 +217,7 @@ function kickRequest(id)
 	game.pendingKickVotes.push({
 		'player': player,
 		'yes': 0, 'no': 0,
-		'majority': Math.ceil((turnOrder[playerGame].length-1)/2),
+		'majority': Math.ceil((game.turnOrder.length-1)/2),
 		'voters': []
 	});
 	kickResponse.call(this, player.id, player.displayName, true);

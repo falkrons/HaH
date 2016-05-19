@@ -163,7 +163,7 @@
 
 	function playerJoin(id, displayName, newTurnOrder)
 	{
-		Utils.rebalanceTable(newTurnOrder, turnOrder);
+		Utils.rebalanceTable(newTurnOrder, turnOrder, id);
 		turnOrder.splice(0); turnOrder.push.apply(turnOrder, newTurnOrder);
 
 		gameObjects.box.rotation.set(0, 0, 0);

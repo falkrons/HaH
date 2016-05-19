@@ -36,12 +36,12 @@
 				textures.confettiRightAO = tex;
 				if(--texturesToGo === 0) cb();
 			});
-			
+
 			textureLoader.load('check.png', function(tex){
 				textures.check = tex;
 				if(--texturesToGo === 0) cb();
 			});
-			
+
 			textureLoader.load('cross.png', function(tex){
 				textures.cross = tex;
 				if(--texturesToGo === 0) cb();
@@ -109,14 +109,14 @@
 					map: textures.check
 				})
 			);
-			
+
 			models.noBox = new THREE.Mesh(
 				new THREE.BoxGeometry(0.01, 0.1, 0.1),
 				new THREE.MeshBasicMaterial({
 					map: textures.cross
 				})
 			);
-			
+
 		}
 	}
 
@@ -387,7 +387,7 @@
 		return mat;
 	}
 
-	function rebalanceTable(newTurnOrder, oldTurnOrder)
+	function rebalanceTable(newTurnOrder, oldTurnOrder, newPlayerId)
 	{
 		newTurnOrder = newTurnOrder || [];
 		oldTurnOrder = oldTurnOrder || [];
@@ -408,6 +408,21 @@
 					new THREE.Vector3(-1.05*tableRadius*Math.sin(i*angle), -1.05*tableRadius*Math.cos(i*angle), 1.5),
 					new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1), -angle*i)
 				));
+
+				// add a kick handler if the seat was added before the current player joined
+				if( Game.playerInfo.id === newPlayerId )
+				{
+					// register "Kick" action
+					(function(nameplate, opponentInfo){
+						nameplate.addEventListener('cursorup', function(evt)
+						{
+							generateDialog('Do you want to kick\n'+opponentInfo.displayName+'?', function(){
+								console.log('kicking');
+								Game.socket.emit('playerKickRequest', opponentInfo.id, opponentInfo.displayName);
+							});
+						});
+					})(seat.getObjectByName('nameplate'), newTurnOrder[i]);
+				}
 			}
 			else
 			{
@@ -422,6 +437,7 @@
 				nameplate.name = 'nameplate';
 				nameplate.position.set(0, 0.25, -0.64);
 				nameplate.rotation.set(0, 0, Math.PI/2);
+				nameplate.addBehavior( new Behaviors.CursorFeedback() );
 				seat.add(nameplate);
 
 				// add presentation space
@@ -445,7 +461,6 @@
 							);
 						});
 					});
-					nameplate.addBehavior( new Behaviors.CursorFeedback() );
 				}
 
 				// handle "kick" if still a player
@@ -460,7 +475,6 @@
 								Game.socket.emit('playerKickRequest', opponentInfo.id, opponentInfo.displayName);
 							});
 						});
-						nameplate.addBehavior( new Behaviors.CursorFeedback() );
 					})(nameplate, newTurnOrder[i]);
 				}
 
@@ -530,7 +544,7 @@
 				Game.socket.emit('playerLeave', Game.playerInfo.id, Game.playerInfo.displayName,
 				Game.playerInfo.displayName+' has left the game.');
 			});
-        	kickTimeout = setTimeout(function(){	
+        	kickTimeout = setTimeout(function(){
         		clearTimeout(kickTimeout);
         		Game.emitPlayerLeave();
         		console.log("you have been kicked from the game due to inactivity.");
@@ -541,7 +555,7 @@
     	clearTimeout(kickTimeout);
     	clearTimeout(idleTimeout);
     }
-   
+
 
 	exports.preloadModels = preloadModels;
 	exports.generateCard = generateCard;
