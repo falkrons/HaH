@@ -26,10 +26,24 @@ var app = express();
 app.use(morgan('dev'));
 
 // get static files from <project>/client
-app.use('/client', express.static( libpath.join(__dirname, '../client') ));
+app.use('/static', express.static( libpath.join(__dirname, '../client') ));
 app.use('/decks', express.static( libpath.join(__dirname, '../decks') ));
 
-app.get('/status', require('./status.js'));
+app.get('/play', function(req,res,next)
+{
+	if(!req.query.gameId){
+		const ab = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijlkmnopqrstuvwxyz0123456789';
+		var id = '';
+		for(var i=0; i<16; i++)
+			id += ab[ Math.floor(Math.random()*ab.length) ];
+		res.redirect('?gameId='+id);
+	}
+	else {
+		res.sendFile(libpath.join(__dirname, '../client/index.html'));
+	}
+});
+
+app.get('/', require('./status.js'));
 
 // return 404 on all other requests
 app.use(function(req,res,next)

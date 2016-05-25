@@ -22,27 +22,27 @@
 			var textureLoader = new THREE.TextureLoader();
 			var texturesToGo = 5;
 
-			textureLoader.load('models/box.png', function(tex){
+			textureLoader.load('/static/models/box.png', function(tex){
 				textures.box = tex;
 				if(--texturesToGo === 0) cb();
 			});
 
-			textureLoader.load('models/leftao.png', function(tex){
+			textureLoader.load('/static/models/leftao.png', function(tex){
 				textures.confettiLeftAO = tex;
 				if(--texturesToGo === 0) cb();
 			});
 
-			textureLoader.load('models/rightao.png', function(tex){
+			textureLoader.load('/static/models/rightao.png', function(tex){
 				textures.confettiRightAO = tex;
 				if(--texturesToGo === 0) cb();
 			});
 
-			textureLoader.load('check.png', function(tex){
+			textureLoader.load('/static/check.png', function(tex){
 				textures.check = tex;
 				if(--texturesToGo === 0) cb();
 			});
 
-			textureLoader.load('cross.png', function(tex){
+			textureLoader.load('/static/cross.png', function(tex){
 				textures.cross = tex;
 				if(--texturesToGo === 0) cb();
 			});
@@ -54,7 +54,7 @@
 			var modelsToGo = 5;
 
 			// pre-load card model
-			modelLoader.load('models/card.dae', function(result)
+			modelLoader.load('/static/models/card.dae', function(result)
 			{
 				models.card = result.scene.children[0].children[0];
 				models.card.scale.set(2,2,2);
@@ -65,7 +65,7 @@
 			});
 
 			// preload nameplate model
-			modelLoader.load('models/nameplate.dae', function(result)
+			modelLoader.load('/static/models/nameplate.dae', function(result)
 			{
 				models.nameplate = result.scene.children[0].children[0];
 				models.nameplate.scale.set(2,2,2);
@@ -73,7 +73,7 @@
 				if(--modelsToGo === 0) cb();
 			});
 
-			modelLoader.load('models/box.dae', function(result)
+			modelLoader.load('/static/models/box.dae', function(result)
 			{
 				models.box = result.scene.children[0].children[0];
 				models.box.scale.set(2,2,2);
@@ -82,14 +82,14 @@
 				if(--modelsToGo === 0) cb();
 			});
 
-			modelLoader.load('models/dialog.dae', function(result)
+			modelLoader.load('/static/models/dialog.dae', function(result)
 			{
 				models.dialog = result.scene.children[0];
 
 				if(--modelsToGo === 0) cb();
 			});
 
-			modelLoader.load('models/confettiball.dae', function(results)
+			modelLoader.load('/static/models/confettiball.dae', function(results)
 			{
 				models.confettiBall = results.scene.children[0];
 				models.confettiBall.getObjectByName('left').children[0].material = new THREE.MeshBasicMaterial({

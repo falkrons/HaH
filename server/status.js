@@ -7,6 +7,7 @@ var templateString = [
 	'doctype html',
 	'html',
 	'	head',
+	'		title Active games | Holograms Against Humanity',
 	'		style.',
 	'			tr:nth-child(even) {',
 	'				background-color: whitesmoke;',
@@ -20,7 +21,8 @@ var templateString = [
 	'			each game in activeGames',
 	'				tr',
 	'					td: a(href=`/client/?gameId=${game.id}`)= game.id',
-	'					td #{game.turnOrder.length} / 12'
+	'					td #{game.turnOrder.length} / 12',
+	'		a(href="/play") Create new game'
 ].join('\n');
 
 var template = pug.compile(templateString, {});
