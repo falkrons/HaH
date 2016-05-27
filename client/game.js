@@ -8,6 +8,7 @@
 	var playerInfo = {};
 	var hand = [];
 	var selection = []; // just from my hand
+	var gameState = '';
 
 	var submissionMap = {};
 	var submissionList = []; // from everyone's hand
@@ -88,7 +89,7 @@
 		);
 	}
 
-	function init(newTurnOrder, gameState, blackCard, czarId, submissions)
+	function init(newTurnOrder, newGameState, blackCard, czarId, submissions)
 	{
 		if(newTurnOrder.length === 0){
 			gameObjects.box.rotation.set(Math.PI, 0, 0);
@@ -113,6 +114,8 @@
 		// hook up click-to-join handler
 		gameObjects.box.removeEventListener('cursorup');
 		gameObjects.box.addEventListener('cursorup', emitPlayerJoinRequest);
+
+		gameState = newGameState;
 
 		// sync game state
 		var states = ['roundFinished', 'roundStarted', 'playerSelectionPending', 'czarSelectionPending'];
@@ -172,9 +175,10 @@
 		if(id === playerInfo.id)
 		{
 			gameObjects.box.removeEventListener('cursorup');
-			gameObjects.box.addEventListener('cursorup', function(){
-				socket.emit('dealCards');
-			});
+			if(gameState === 'roundFinished')
+				gameObjects.box.addEventListener('cursorup', function(){
+					socket.emit('dealCards');
+				});
 		}
 
 		// hide request dialog if present
@@ -256,6 +260,11 @@
 
 	function dealCards(newHand, newBlackCard, newCzarId)
 	{
+		gameState = 'roundStarted';
+		if(root.getObjectByName(playerInfo.id)){
+			gameObjects.box.removeEventListener('cursorup');
+		}
+
 		if( newBlackCard && (!blackCard || newBlackCard.index !== blackCard.userData.index) )
 		{
 			// clean up from previous round
@@ -439,6 +448,8 @@
 
 	function roundStart()
 	{
+		gameState = 'playerSelectionPending';
+
 		// identify pres area
 		var seat = root.getObjectByName(playerInfo.id);
 		if(seat)
@@ -609,6 +620,8 @@
 
 	function cardSelectionComplete(selections)
 	{
+		gameState = 'czarSelectionPending';
+		
 		// put responses in some random order
 		var displayList = [];
 		for(var user in selections)
@@ -769,6 +782,13 @@
 
 	function winnerSelection(playerId)
 	{
+		gameState = 'roundFinished';
+		if(root.getObjectByName(playerInfo.id)){
+			gameObjects.box.addEventListener('cursorup', function(){
+				socket.emit('dealCards');
+			});
+		}
+
 		// congratulate winner
 		var winnerSeat = root.getObjectByName(playerId);
 		var confetti = new Utils.Confetti({delay: 1000});
