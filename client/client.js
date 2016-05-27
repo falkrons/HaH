@@ -69,8 +69,8 @@ if( altspace.inClient )
 		root.position.setY( -enc.innerHeight/2 );
 		root.rotation.set( -Math.PI/2, 0, 0 );
 
-		if( Math.min(enc.innerWidth, enc.innerDepth) / enc.pixelsPerMeter < 3 )
-			tableRadius = 0.5 * Math.min(enc.innerWidth, enc.innerDepth) / enc.pixelsPerMeter;
+		var enclosureRadius = 0.5 * Math.min(enc.innerWidth, enc.innerDepth) / enc.pixelsPerMeter;
+		tableRadius = Math.min(tableRadius, enclosureRadius);
 
 		// render 2d version if space is flat
 		if( enc.innerDepth < 10 ){

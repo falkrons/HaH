@@ -258,10 +258,19 @@
 	{
 		if( newBlackCard && (!blackCard || newBlackCard.index !== blackCard.userData.index) )
 		{
-			// kill old black card
+			// clean up from previous round
 			if(blackCard && blackCard.parent){
 				blackCard.parent.remove(blackCard);
 			}
+			for(var i=0; i<submissionList.length; i++){
+				for(var j=0; j<submissionList[i].length; j++)
+				{
+					var card = submissionList[i][j];
+					if(card.parent)
+						card.parent.remove(card);
+				}
+			}
+			submissionList = [];
 
 			// generate new card
 			blackCard = Utils.generateCard(newBlackCard, 'black');
@@ -400,7 +409,7 @@
 						// animate from card box
 						gameObjects.box.add(card);
 						card.addBehavior(new Behaviors.Animate(cardRoots[i],
-							new THREE.Vector3(0,0,0), new THREE.Quaternion()
+							new THREE.Vector3(0,0,0), new THREE.Quaternion(), new THREE.Vector3(2,2,2)
 						));
 					}
 				}
@@ -764,22 +773,22 @@
 		var winnerSeat = root.getObjectByName(playerId);
 		var confetti = new Utils.Confetti({delay: 1000});
 		confetti.position.copy(winnerSeat.position);
-		confetti.position.setZ( confetti.position.z + 0.75 );
+		confetti.position.setZ( confetti.position.z + 1.1 );
 		confetti.quaternion.copy(winnerSeat.quaternion);
 		root.add(confetti);
 
 		// award black card
 
 		// clean up from round
-		for(var i=0; i<submissionList.length; i++){
+		/*for(var i=0; i<submissionList.length; i++){
 			for(var j=0; j<submissionList[i].length; j++)
 			{
 				var card = submissionList[i][j];
 				if(card.parent)
 					card.parent.remove(card);
 			}
-		}
-		submissionList = [];
+		}*/
+		//submissionList = [];
 		submissionMap = {};
 		selection = [];
 		czarSelectionPlayer = '';
