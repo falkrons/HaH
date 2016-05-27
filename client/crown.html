@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script src='three.min.js'></script>
+		<script src='ColladaLoader.js'></script>
+		<script src='http://sdk.altvr.com/libs/altspace.js/0.12.0/altspace.min.js'></script>
+		<script src='behaviors.js'></script>
+	</head>
+	<body>
+		<script>
+
+			if(altspace.inClient){
+				var renderer = altspace.getThreeJSRenderer();
+			}
+			else {
+				renderer = new THREE.WebGLRenderer();
+				renderer.setSize(1280, 720);
+				renderer.setClearColor( 0x888888 );
+				document.body.appendChild(renderer.domElement);
+			}
+
+			var scene = new THREE.Scene();
+
+			var camera = new THREE.PerspectiveCamera(45, 1280/720, 1, 10);
+			camera.position.set(0, -1, -5);
+			camera.lookAt(new THREE.Vector3(0,-1,0));
+			scene.add(camera);
+
+			var crownRoot = new THREE.Object3D();
+			scene.add(crownRoot);
+
+
+
+		</script>
+	</body>
+</html>
