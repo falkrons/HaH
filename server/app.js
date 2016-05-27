@@ -102,6 +102,10 @@ function registerGameListeners(socket)
 		var player = activeGames[this.gameId].playerForSocket(this);
 		if(player)
 			players.leave.call(this, player.id, player.displayName, player.displayName+' has disconnected.');
+
+		// destroy game when last client disconnects
+		if(!this.adapter.rooms[this.gameId+'_clients'])
+			delete activeGames[this.gameId];
 	});
 
 
