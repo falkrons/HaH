@@ -1,0 +1,16 @@
+{
+  "black": [
+    {"text": "What happened\nat Crystal's last\nparty?"},
+	{"text": "What's the first sign\nof simulation\nsickness?"},
+	{"text": "_______: The latest\nin VR technology."},
+	{"text": "_______ is the\nworst VR peripheral\nI ever Kickstarted."}
+  ],
+  "white": [
+    {"text": "That funky\nRift DK2 smell."},
+	{"text": "Sneezing in\nyour headset."},
+	{"text": "A super sweaty\nheadset."},
+	{"text": "The early signs\nof simulation\nsickness."},
+	{"text": "Putting your Vive\nwand through\na $5000 TV."},
+	{"text": "Virtual reality porn."}
+  ]
+}
