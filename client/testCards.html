@@ -22,7 +22,8 @@
 			Utils.preloadModels(function()
 			{
 				$.getJSON('/decks/altspace.json')
-				.then(function(data){
+				.then(function(data)
+				{
 					console.log(data);
 					cardData = data;
 					if(type === 'black' && index === -1)
@@ -30,6 +31,17 @@
 					else
 						var card = Utils.generateCard(data[type][index], type);
 					var texture = card.material.map.image;
+					
+					// draw debug pattern
+					var g = texture.getContext('2d');
+					g.strokeStyle = type === 'black' ? 'white' : 'black';
+					g.lineWidth = 1;
+					for(var i=0; i<256; i+=16){
+						g.moveTo(i,0);
+						g.lineTo(i,100);
+					}
+					g.stroke();
+					
 					document.getElementById('canvasContainer').appendChild(texture);
 				});
 			});
