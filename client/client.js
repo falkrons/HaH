@@ -77,7 +77,7 @@ if( altspace.inClient )
 			document.body.innerHTML = staticPage;
 		}
 		else {
-			Utils.preloadModels(init);
+			Utils.preloadAssets(init);
 		}
 	});
 }
@@ -98,7 +98,7 @@ else
 
 	altspace.utilities.shims.cursor.init(scene, camera, {renderer: renderer});
 
-	Utils.preloadModels(init);
+	Utils.preloadAssets(init);
 }
 
 

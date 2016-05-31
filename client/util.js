@@ -1,21 +1,16 @@
 'use strict';
 
+window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
-(function(exports, models)
+(function(exports, models, sounds)
 {
-	models.card = null;
-	models.nameplate = null;
-	models.blankCard = null;
-	models.box = null;
-	models.dialog = null;
-	models.confettiBall = null;
-
-	function preloadModels(cb)
+	function preloadAssets(cb)
 	{
 		var textures = {};
 
 		// kick off preloading
 		loadTextures(function(){ loadModels(cb); });
+		loadSounds(); // note: sound loading is non-blocking unlike models
 
 		function loadTextures(cb)
 		{
@@ -116,7 +111,63 @@
 					map: textures.cross
 				})
 			);
+		}
 
+		function loadSound(url, cb)
+		{
+			var xhr = new XMLHttpRequest();
+			xhr.open('GET', url, true);
+			xhr.responseType = 'arraybuffer';
+			xhr.onload = function()
+			{
+				if(xhr.status === 200 || xhr.status === 304){
+					sounds.ctx.decodeAudioData(xhr.response,
+						function(buffer){
+							var gainNode = sounds.ctx.createGain();
+							var source = sounds.ctx.createBufferSource();
+							source.buffer = buffer;
+							source.connect(gainNode);
+							cb(source, gainNode);
+						},
+						function(err){
+							console.error('Failed to decode', url);
+						}
+					);
+				}
+			};
+			xhr.send();
+		}
+
+		function loadSounds()
+		{
+			// set up sound subsystem
+			sounds.ctx = new AudioContext();
+			sounds.masterVol = sounds.ctx.createGain();
+			sounds.masterVol.connect(sounds.ctx.destination);
+
+			// load confetti sound
+			loadSound('/static/audio/fanfare with pop.ogg', function(source, volumeControl)
+			{
+				sounds.fanfare = source;
+				sounds.fanfareVol = volumeControl;
+				sounds.fanfareVol.connect(sounds.masterVol);
+			});
+
+			// load ding sound
+			loadSound('/static/audio/ding ding.ogg', function(source, volumeControl)
+			{
+				sounds.dialogDing = source;
+				sounds.dialogDingVol = volumeControl;
+				sounds.dialogDingVol.connect(sounds.masterVol);
+			});
+
+			// load card sound
+			loadSound('/static/audio/card_flick.ogg', function(source, volumeControl)
+			{
+				sounds.card = source;
+				sounds.cardVol = volumeControl;
+				sounds.cardVol.connect(sounds.masterVol);
+			});
 		}
 	}
 
@@ -604,7 +655,7 @@
     }
 
 
-	exports.preloadModels = preloadModels;
+	exports.preloadAssets = preloadAssets;
 	exports.generateCard = generateCard;
 	exports.generateTitleCard = generateTitleCard;
 	exports.generateNameplate = generateNameplate;
@@ -613,5 +664,5 @@
 	exports.rebalanceTable = rebalanceTable;
 	exports.idleCheck = idleCheck;
 	exports.idleClear = idleClear;
-})(window.Utils = window.Utils || {}, window.Models = window.Models || {});
+})(window.Utils = window.Utils || {}, window.Models = window.Models || {}, window.Sounds = window.Sounds || {});
 
