@@ -120,6 +120,14 @@
 		}
 	}
 
+	// ugh, nasty hack
+	if( /AltspaceVR-App build-ffa7f08 Mobile/.test(window.navigator.userAgent) ){
+		var fontScale = 0.85;
+	}
+	else {
+		fontScale = 1.0;
+	}
+
 	function makeSafeFont(g, text, maxWidth)
 	{
 		// get pixel width of longest line
@@ -166,7 +174,7 @@
 
 		// write text
 		g.textAlign = 'left';
-		g.font = 'bold '+(0.09*cardWidth)+'px '+fontStack;
+		g.font = 'bold '+(0.09*cardWidth*fontScale)+'px '+fontStack;
 		var text = card.text.split('\n');
 		makeSafeFont(g, text, 0.84*cardWidth);
 		for(var i=0; i<text.length; i++){
@@ -176,7 +184,7 @@
 		// draw "PICK X" indicator
 		if(card.numResponses)
 		{
-			g.font = 'bold '+(0.07*cardWidth)+'px '+fontStack;
+			g.font = 'bold '+(0.07*cardWidth*fontScale)+'px '+fontStack;
 			makeSafeFont(g, ['PICK 2'], 0.25*cardWidth);
 			g.textAlign = 'right';
 			g.fillText('PICK', 0.85*cardWidth, 1.33*cardWidth);
@@ -196,7 +204,7 @@
 		// draw "DRAW X" indicator
 		if(card.numDraws)
 		{
-			g.font = 'bold '+(0.07*cardWidth)+'px '+fontStack;
+			g.font = 'bold '+(0.07*cardWidth*fontScale)+'px '+fontStack;
 			makeSafeFont(g, ['DRAW 2'], 0.3*cardWidth);
 			g.textAlign = 'right';
 			g.fillText('DRAW', 0.85*cardWidth, 1.22*cardWidth);
@@ -228,7 +236,7 @@
 
 		// draw footer
 		g.textAlign = 'left';
-		g.font = (0.05*cardWidth)+'px '+fontStack;
+		g.font = (0.05*cardWidth*fontScale)+'px '+fontStack;
 		if( card.numResponses || card.numDraws ){
 			g.fillText("HAH", x+1.5*edgeLength, y);
 		}
@@ -238,7 +246,7 @@
 		}
 
 		// draw card back
-		g.font = 'bold '+(0.15*cardWidth)+'px '+fontStack;
+		g.font = 'bold '+(0.15*cardWidth*fontScale)+'px '+fontStack;
 		makeSafeFont(g, ['Holograms','Against','Humanity'], 0.8*cardWidth);
 		g.fillText('Holograms', 1.1*cardWidth, 0.22*cardWidth);
 		g.fillText('Against', 1.1*cardWidth, 0.37*cardWidth);
@@ -269,7 +277,7 @@
 		g.fillRect(0, 0, 2*cardWidth, 2*cardWidth);
 
 		// draw card
-		g.font = 'bold '+(0.15*cardWidth)+'px '+fontStack;
+		g.font = 'bold '+(0.15*cardWidth*fontScale)+'px '+fontStack;
 		makeSafeFont(g, ['Holograms','Against','Humanity'], 0.8*cardWidth);
 		g.fillStyle = 'white';
 
@@ -308,7 +316,8 @@
 			g.fillStyle = '#38281C'; // neutral brown
 		g.fillRect(0, 0, texWidth, texWidth);
 
-		g.font = 'bold 25px '+fontStack;
+		g.font = 'bold '+(0.1*texWidth*fontScale)+'px '+fontStack;
+		makeSafeFont(g, [name], 0.9*texWidth);
 		g.textAlign = 'center';
 		g.fillStyle = 'white';
 		g.fillText(name, texWidth/2, 35);
