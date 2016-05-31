@@ -42,7 +42,7 @@ var root = new THREE.Object3D();
 scene.add(root);
 
 var gameObjects = {};
-var tableRadius = 1.5;
+var tableRadius = 1.75;
 
 var staticPage = [
 	'<p style="width:250px; height:350px; background-color:black; color:white;'+

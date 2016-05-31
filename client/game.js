@@ -555,6 +555,7 @@
 					card.position.set(0,0,0);
 					card.rotation.set(0,0,0);
 					card.scale.set(2,2,2);
+					card.name = '';
 
 					// add back click handlers
 					/*card.addEventListener('cursorup', function(evt){
