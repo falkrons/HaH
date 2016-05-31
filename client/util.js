@@ -289,6 +289,19 @@
 		g.fillText('Against', 1.1*cardWidth, 0.37*cardWidth);
 		g.fillText('Humanity', 1.1*cardWidth, 0.52*cardWidth);
 
+		g.font = 'bold '+(0.05*cardWidth*fontScale)+'px '+fontStack;
+		var legal = [
+			'© Cards Against Humanity LLC',
+			'Licensed under CC BY-NC-SA',
+			'cardsagainsthumanity.com',
+			'Developed for Altspace by:',
+			'StevenPatrick, falkrons, schmidtec'];
+		makeSafeFont(g, legal, 0.86*cardWidth);
+		for(var i=0; i<legal.length; i++){
+			g.fillText(legal[i], 0.07*cardWidth, (1.06 + 0.07*i)*cardWidth);
+			g.fillText(legal[i], 1.07*cardWidth, (1.06 + 0.07*i)*cardWidth);
+		}
+
 		// assign texture
 		model.material = new THREE.MeshBasicMaterial({
 			map: new THREE.CanvasTexture(bmp)
