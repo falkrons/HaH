@@ -4,6 +4,7 @@
 		<script src='three.min.js'></script>
 		<script src='ColladaLoader.js'></script>
 		<script src='http://sdk.altvr.com/libs/altspace.js/0.12.0/altspace.min.js'></script>
+		<script src='util.js'></script>
 		<script src='behaviors.js'></script>
 		<script src='confetti.js'></script>
 	</head>
@@ -27,25 +28,8 @@
 			camera.lookAt(new THREE.Vector3(0,-1,0));
 			scene.add(camera);
 			
-			window.Models = {};
-			var loader = new THREE.ColladaLoader();
-			loader.load('models/confettiball.dae', function(results)
-			{
-				var ball = window.Models.confettiBall = results.scene.children[0];
-
-				var loader = new THREE.TextureLoader();
-				loader.load('models/leftao.png', function(tex){
-					ball.getObjectByName('left').children[0].material = new THREE.MeshBasicMaterial({
-						map: tex, side: THREE.DoubleSide
-					});
-				});
-				loader.load('models/rightao.png', function(tex){
-					ball.getObjectByName('right').children[0].material = new THREE.MeshBasicMaterial({
-						map: tex, side: THREE.DoubleSide
-					});
-					kaboom();
-				});
-
+			Utils.preloadAssets(function(){
+				kaboom();
 			});
 
 			var confetti = null;
@@ -55,6 +39,7 @@
 				confetti = new Utils.Confetti();
 				confetti.rotation.set(-Math.PI/2,0,0);
 				scene.add(confetti);
+				Sounds.playSound('fanfare');
 				setTimeout(kaboom, 3500);
 			}
 			
