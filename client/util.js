@@ -121,7 +121,7 @@
 	}
 
 	// ugh, nasty hack
-	if( /AltspaceVR-App build-ffa7f08 Mobile/.test(window.navigator.userAgent) ){
+	if( /AltspaceVR-App build-[0-9a-f]{7} Mobile/.test(window.navigator.userAgent) ){
 		var fontScale = 0.85;
 	}
 	else {
