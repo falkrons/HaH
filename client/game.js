@@ -142,10 +142,61 @@
 		
 		// zero out czar
 		czarId = '';
+		gameState = 'roundFinished';
 
-		// TODO: return any selected cards to their hands
+		// if playing
+		var seat = root.getObjectByName(playerInfo.id);
+		if(seat)
+		{
+			// return any selected cards to the hand
+			selection.forEach(function(handIndex, selectionIndex)
+			{
+				var card = seat.getObjectByName('selection'+selectionIndex);
+				if(!card){
+					card = Utils.generateCard(hand[handIndex]);
+				}
 
-		// TODO: reset any click handlers
+				var spot = seat.getObjectByName('card'+handIndex);
+				card.position.set(0,0,0);
+				card.rotation.set(0,0,0);
+				card.scale.set(2,2,2);
+				card.name = '';
+
+				spot.add(card);
+
+			});
+
+			// kill yes/no boxes if present
+			var yes = seat.getObjectByName('yes');
+			var no = seat.getObjectByName('no');
+			seat.remove(yes, no);
+
+			// zero out selection
+			selection = [];
+
+			// reset any click handlers
+			gameObjects.box.removeEventListener('cursorup');
+			gameObjects.box.addEventListener('cursorup', function(){
+				socket.emit('dealCards');
+			});
+
+			for(var i=0; i<12; i++){
+				var card = seat.getObjectByName('card'+i);
+				card.removeEventListener('cursorup');
+			}
+		}
+
+		// kill submissions if present
+		for(var player in submissionMap){
+			for(var i=0; i<submissionMap[player].length; i++){
+				if(submissionMap[player][i].parent)
+					submissionMap[player][i].parent.remove(submissionMap[player][i]);
+			}
+		}
+
+		submissionMap = {};
+		submissionList = [];
+
 	}
 
 	function playerJoinRequest(id, displayName)
@@ -463,7 +514,6 @@
 		blackCard.position.set(0,0,0);
 		blackCard.rotation.set(-Math.PI/2,0,Math.PI);
 		center.add(blackCard);
-		console.log('blackCard scale', blackCard.scale);
 
 		// enable clicking on cards
 		if(seat && playerInfo.id !== czarId)
