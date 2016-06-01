@@ -375,6 +375,8 @@
 					o.visible = true;
 			});
 		}
+		
+		Sounds.playSound('card');
 	}
 
 	function updateAllHands(handLength, newCzarId)
@@ -617,6 +619,8 @@
 				) );
 			}
 		}
+		
+		Sounds.playSound('card');
 	}
 
 	function cardSelectionComplete(selections)
@@ -779,6 +783,7 @@
 			center.scale.set(6,6,6);
 		}
 
+		Sounds.playSound('card');
 	}
 
 	function winnerSelection(playerId)
@@ -797,6 +802,7 @@
 		confetti.position.setZ( confetti.position.z + 1.1 );
 		confetti.quaternion.copy(winnerSeat.quaternion);
 		root.add(confetti);
+		Sounds.playSound('fanfare');
 
 		// award black card
 

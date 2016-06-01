@@ -124,10 +124,8 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 					sounds.ctx.decodeAudioData(xhr.response,
 						function(buffer){
 							var gainNode = sounds.ctx.createGain();
-							var source = sounds.ctx.createBufferSource();
-							source.buffer = buffer;
-							source.connect(gainNode);
-							cb(source, gainNode);
+							gainNode.connect(sounds.masterVol);
+							cb(buffer, gainNode);
 						},
 						function(err){
 							console.error('Failed to decode', url);
@@ -144,21 +142,20 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 			sounds.ctx = new AudioContext();
 			sounds.masterVol = sounds.ctx.createGain();
 			sounds.masterVol.connect(sounds.ctx.destination);
+			sounds.masterVol.gain = 0.2;
 
 			// load confetti sound
 			loadSound('/static/audio/fanfare with pop.ogg', function(source, volumeControl)
 			{
 				sounds.fanfare = source;
 				sounds.fanfareVol = volumeControl;
-				sounds.fanfareVol.connect(sounds.masterVol);
 			});
 
 			// load ding sound
 			loadSound('/static/audio/ding ding.ogg', function(source, volumeControl)
 			{
-				sounds.dialogDing = source;
-				sounds.dialogDingVol = volumeControl;
-				sounds.dialogDingVol.connect(sounds.masterVol);
+				sounds.ding = source;
+				sounds.dingVol = volumeControl;
 			});
 
 			// load card sound
@@ -166,9 +163,20 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 			{
 				sounds.card = source;
 				sounds.cardVol = volumeControl;
-				sounds.cardVol.connect(sounds.masterVol);
 			});
 		}
+	}
+	
+	sounds.playSound = function(soundName)
+	{
+		var source = sounds.ctx.createBufferSource();
+		source.buffer = sounds[soundName];
+		source.connect( sounds[soundName+'Vol'] );
+		
+		if(soundName === 'fanfare')
+			source.start(sounds.ctx.currentTime + 0.4);
+		else
+			source.start();
 	}
 
 	// ugh, nasty hack
@@ -457,6 +465,8 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		model.applyMatrix( sphericalToMatrix(0, Math.PI/8, 1.05*tableRadius, 'yzx') );
 		seat.add(model);
 
+		sounds.playSound('ding');
+		
 		return model;
 	}
 
