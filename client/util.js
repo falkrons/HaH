@@ -142,7 +142,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 			sounds.ctx = new AudioContext();
 			sounds.masterVol = sounds.ctx.createGain();
 			sounds.masterVol.connect(sounds.ctx.destination);
-			sounds.masterVol.gain.value = 0.5;
+			sounds.masterVol.gain.value = 0.25;
 
 			// load confetti sound
 			loadSound('/static/audio/fanfare with pop.ogg', function(source, volumeControl)
