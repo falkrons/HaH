@@ -294,7 +294,7 @@
 			'© Cards Against Humanity LLC',
 			'Licensed under CC BY-NC-SA',
 			'cardsagainsthumanity.com',
-			'Developed for Altspace by:',
+			'Developed for AltspaceVR by:',
 			'StevenPatrick, falkrons, schmidtec'];
 		makeSafeFont(g, legal, 0.86*cardWidth);
 		for(var i=0; i<legal.length; i++){
