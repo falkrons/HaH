@@ -4,6 +4,8 @@
 		<script src='three.min.js'></script>
 		<script src='ColladaLoader.js'></script>
 		<script src='http://sdk.altvr.com/libs/altspace.js/0.12.0/altspace.min.js'></script>
+		<script src='util.js'></script>
+		<script src='crown.js'></script>
 		<script src='behaviors.js'></script>
 	</head>
 	<body>
@@ -20,16 +22,47 @@
 			}
 
 			var scene = new THREE.Scene();
+			var root = new THREE.Object3D();
+			scene.add(root);
 
-			var camera = new THREE.PerspectiveCamera(45, 1280/720, 1, 10);
-			camera.position.set(0, -1, -5);
-			camera.lookAt(new THREE.Vector3(0,-1,0));
-			scene.add(camera);
+			var arm = new THREE.Object3D();
+			root.add(arm);
+			arm.addBehavior( new Behaviors.Rotate(0,0,0.5) );
+			var camera = new THREE.PerspectiveCamera(45, 1280/720, 0.1, 10);
+			camera.position.set(0, -1, 0);
+			camera.up.set(0,0,1);
+			camera.lookAt(new THREE.Vector3(0,0,0));
+			arm.add(camera);
 
-			var crownRoot = new THREE.Object3D();
-			scene.add(crownRoot);
+			var crown = new Utils.Crown();
+			root.add(crown);
 
+			var loader = new THREE.ColladaLoader();
+			loader.load('/static/models/card.dae', function(result){
+				Models.card = result.scene.children[0].children[0];
+				Models.card.scale.set(2,2,2);
+				Models.blankCard = Utils.generateCard({text:''});
+				init();
+			});
 
+			function init()
+			{
+				window.card1 = Utils.generateCard({text: 'What\'s that smell?'}, 'black');
+				card1.position.set(0,0.2, 0.2);
+				crown.addCard(card1);
+			}
+
+			var lastT = Date.now();
+			window.requestAnimationFrame(function animate(timestamp)
+			{
+				window.requestAnimationFrame(animate);
+				
+				var nowT = Date.now();
+				scene.updateAllBehaviors(nowT-lastT);
+				lastT = nowT;
+
+				renderer.render(scene, camera);
+			});
 
 		</script>
 	</body>
