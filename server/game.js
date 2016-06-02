@@ -118,7 +118,7 @@ function cardSelection(indexes)
 	}
 	for(var i=0; i<indexes.length; i++){
 		// check for index-out-of-bounds and double-select
-		if(!player.hand[i] || indexes.indexOf(indexes[i]) !== i){
+		if(player.hand[i] === undefined || indexes.indexOf(indexes[i]) !== i){
 			this.emit('error', 'Invalid card selection: out of bounds or duplicate');
 			return;
 		}

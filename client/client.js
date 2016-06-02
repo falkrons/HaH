@@ -42,7 +42,7 @@ var root = new THREE.Object3D();
 scene.add(root);
 
 var gameObjects = {};
-var tableRadius = 1.5;
+var tableRadius = 1.75;
 
 var staticPage = [
 	'<p style="width:250px; height:350px; background-color:black; color:white;'+
@@ -68,14 +68,16 @@ if( altspace.inClient )
 		root.scale.set(enc.pixelsPerMeter, enc.pixelsPerMeter, enc.pixelsPerMeter);
 		root.position.setY( -enc.innerHeight/2 );
 		root.rotation.set( -Math.PI/2, 0, 0 );
-		tableRadius = (enc.innerWidth < enc.innerDepth ? enc.innerWidth : enc.innerDepth)/2 / enc.pixelsPerMeter;
+
+		var enclosureRadius = 0.5 * Math.min(enc.innerWidth, enc.innerDepth) / enc.pixelsPerMeter;
+		tableRadius = Math.min(tableRadius, enclosureRadius);
 
 		// render 2d version if space is flat
 		if( enc.innerDepth < 10 ){
 			document.body.innerHTML = staticPage;
 		}
 		else {
-			Utils.preloadModels(init);
+			Utils.preloadAssets(init);
 		}
 	});
 }
@@ -96,7 +98,7 @@ else
 
 	altspace.utilities.shims.cursor.init(scene, camera, {renderer: renderer});
 
-	Utils.preloadModels(init);
+	Utils.preloadAssets(init);
 }
 
 

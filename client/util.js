@@ -1,21 +1,16 @@
 'use strict';
 
+window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
-(function(exports, models)
+(function(exports, models, sounds)
 {
-	models.card = null;
-	models.nameplate = null;
-	models.blankCard = null;
-	models.box = null;
-	models.dialog = null;
-	models.confettiBall = null;
-
-	function preloadModels(cb)
+	function preloadAssets(cb)
 	{
 		var textures = {};
 
 		// kick off preloading
 		loadTextures(function(){ loadModels(cb); });
+		loadSounds(); // note: sound loading is non-blocking unlike models
 
 		function loadTextures(cb)
 		{
@@ -116,8 +111,80 @@
 					map: textures.cross
 				})
 			);
-
 		}
+
+		function loadSound(url, cb)
+		{
+			var xhr = new XMLHttpRequest();
+			xhr.open('GET', url, true);
+			xhr.responseType = 'arraybuffer';
+			xhr.onload = function()
+			{
+				if(xhr.status === 200 || xhr.status === 304){
+					sounds.ctx.decodeAudioData(xhr.response,
+						function(buffer){
+							var gainNode = sounds.ctx.createGain();
+							gainNode.connect(sounds.masterVol);
+							cb(buffer, gainNode);
+						},
+						function(err){
+							console.error('Failed to decode', url);
+						}
+					);
+				}
+			};
+			xhr.send();
+		}
+
+		function loadSounds()
+		{
+			// set up sound subsystem
+			sounds.ctx = new AudioContext();
+			sounds.masterVol = sounds.ctx.createGain();
+			sounds.masterVol.connect(sounds.ctx.destination);
+			sounds.masterVol.gain.value = 0.25;
+
+			// load confetti sound
+			loadSound('/static/audio/fanfare with pop.ogg', function(source, volumeControl)
+			{
+				sounds.fanfare = source;
+				sounds.fanfareVol = volumeControl;
+			});
+
+			// load ding sound
+			loadSound('/static/audio/ding ding.ogg', function(source, volumeControl)
+			{
+				sounds.ding = source;
+				sounds.dingVol = volumeControl;
+			});
+
+			// load card sound
+			loadSound('/static/audio/card_flick.ogg', function(source, volumeControl)
+			{
+				sounds.card = source;
+				sounds.cardVol = volumeControl;
+			});
+		}
+	}
+	
+	sounds.playSound = function(soundName)
+	{
+		var source = sounds.ctx.createBufferSource();
+		source.buffer = sounds[soundName];
+		source.connect( sounds[soundName+'Vol'] );
+		
+		if(soundName === 'fanfare')
+			source.start(0, 1.4);
+		else
+			source.start(0);
+	}
+
+	// ugh, nasty hack
+	if( /AltspaceVR-App build-[0-9a-f]{7} Mobile/.test(window.navigator.userAgent) ){
+		var fontScale = 0.85;
+	}
+	else {
+		fontScale = 1.0;
 	}
 
 	function makeSafeFont(g, text, maxWidth)
@@ -166,7 +233,7 @@
 
 		// write text
 		g.textAlign = 'left';
-		g.font = 'bold '+(0.09*cardWidth)+'px '+fontStack;
+		g.font = 'bold '+(0.09*cardWidth*fontScale)+'px '+fontStack;
 		var text = card.text.split('\n');
 		makeSafeFont(g, text, 0.84*cardWidth);
 		for(var i=0; i<text.length; i++){
@@ -176,7 +243,7 @@
 		// draw "PICK X" indicator
 		if(card.numResponses)
 		{
-			g.font = 'bold '+(0.07*cardWidth)+'px '+fontStack;
+			g.font = 'bold '+(0.07*cardWidth*fontScale)+'px '+fontStack;
 			makeSafeFont(g, ['PICK 2'], 0.25*cardWidth);
 			g.textAlign = 'right';
 			g.fillText('PICK', 0.85*cardWidth, 1.33*cardWidth);
@@ -196,7 +263,7 @@
 		// draw "DRAW X" indicator
 		if(card.numDraws)
 		{
-			g.font = 'bold '+(0.07*cardWidth)+'px '+fontStack;
+			g.font = 'bold '+(0.07*cardWidth*fontScale)+'px '+fontStack;
 			makeSafeFont(g, ['DRAW 2'], 0.3*cardWidth);
 			g.textAlign = 'right';
 			g.fillText('DRAW', 0.85*cardWidth, 1.22*cardWidth);
@@ -228,7 +295,7 @@
 
 		// draw footer
 		g.textAlign = 'left';
-		g.font = (0.05*cardWidth)+'px '+fontStack;
+		g.font = (0.05*cardWidth*fontScale)+'px '+fontStack;
 		if( card.numResponses || card.numDraws ){
 			g.fillText("HAH", x+1.5*edgeLength, y);
 		}
@@ -238,7 +305,7 @@
 		}
 
 		// draw card back
-		g.font = 'bold '+(0.15*cardWidth)+'px '+fontStack;
+		g.font = 'bold '+(0.15*cardWidth*fontScale)+'px '+fontStack;
 		makeSafeFont(g, ['Holograms','Against','Humanity'], 0.8*cardWidth);
 		g.fillText('Holograms', 1.1*cardWidth, 0.22*cardWidth);
 		g.fillText('Against', 1.1*cardWidth, 0.37*cardWidth);
@@ -269,7 +336,7 @@
 		g.fillRect(0, 0, 2*cardWidth, 2*cardWidth);
 
 		// draw card
-		g.font = 'bold '+(0.15*cardWidth)+'px '+fontStack;
+		g.font = 'bold '+(0.15*cardWidth*fontScale)+'px '+fontStack;
 		makeSafeFont(g, ['Holograms','Against','Humanity'], 0.8*cardWidth);
 		g.fillStyle = 'white';
 
@@ -280,6 +347,19 @@
 		g.fillText('Holograms', 1.1*cardWidth, 0.22*cardWidth);
 		g.fillText('Against', 1.1*cardWidth, 0.37*cardWidth);
 		g.fillText('Humanity', 1.1*cardWidth, 0.52*cardWidth);
+
+		g.font = 'bold '+(0.05*cardWidth*fontScale)+'px '+fontStack;
+		var legal = [
+			'© Cards Against Humanity LLC',
+			'Licensed under CC BY-NC-SA',
+			'cardsagainsthumanity.com',
+			'Developed for AltspaceVR by:',
+			'StevenPatrick, falkrons, schmidtec'];
+		makeSafeFont(g, legal, 0.86*cardWidth);
+		for(var i=0; i<legal.length; i++){
+			g.fillText(legal[i], 0.07*cardWidth, (1.06 + 0.07*i)*cardWidth);
+			g.fillText(legal[i], 1.07*cardWidth, (1.06 + 0.07*i)*cardWidth);
+		}
 
 		// assign texture
 		model.material = new THREE.MeshBasicMaterial({
@@ -308,7 +388,8 @@
 			g.fillStyle = '#38281C'; // neutral brown
 		g.fillRect(0, 0, texWidth, texWidth);
 
-		g.font = 'bold 25px '+fontStack;
+		g.font = 'bold '+(0.1*texWidth*fontScale)+'px '+fontStack;
+		makeSafeFont(g, [name], 0.9*texWidth);
 		g.textAlign = 'center';
 		g.fillStyle = 'white';
 		g.fillText(name, texWidth/2, 35);
@@ -384,6 +465,8 @@
 		model.applyMatrix( sphericalToMatrix(0, Math.PI/8, 1.05*tableRadius, 'yzx') );
 		seat.add(model);
 
+		sounds.playSound('ding');
+		
 		return model;
 	}
 
@@ -582,7 +665,7 @@
     }
 
 
-	exports.preloadModels = preloadModels;
+	exports.preloadAssets = preloadAssets;
 	exports.generateCard = generateCard;
 	exports.generateTitleCard = generateTitleCard;
 	exports.generateNameplate = generateNameplate;
@@ -591,5 +674,5 @@
 	exports.rebalanceTable = rebalanceTable;
 	exports.idleCheck = idleCheck;
 	exports.idleClear = idleClear;
-})(window.Utils = window.Utils || {}, window.Models = window.Models || {});
+})(window.Utils = window.Utils || {}, window.Models = window.Models || {}, window.Sounds = window.Sounds || {});
 

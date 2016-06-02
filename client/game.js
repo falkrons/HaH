@@ -8,6 +8,7 @@
 	var playerInfo = {};
 	var hand = [];
 	var selection = []; // just from my hand
+	var gameState = '';
 
 	var submissionMap = {};
 	var submissionList = []; // from everyone's hand
@@ -88,7 +89,7 @@
 		);
 	}
 
-	function init(newTurnOrder, gameState, blackCard, czarId, submissions)
+	function init(newTurnOrder, newGameState, blackCard, czarId, submissions)
 	{
 		if(newTurnOrder.length === 0){
 			gameObjects.box.rotation.set(Math.PI, 0, 0);
@@ -113,6 +114,8 @@
 		// hook up click-to-join handler
 		gameObjects.box.removeEventListener('cursorup');
 		gameObjects.box.addEventListener('cursorup', emitPlayerJoinRequest);
+
+		gameState = newGameState;
 
 		// sync game state
 		var states = ['roundFinished', 'roundStarted', 'playerSelectionPending', 'czarSelectionPending'];
@@ -139,10 +142,61 @@
 		
 		// zero out czar
 		czarId = '';
+		gameState = 'roundFinished';
 
-		// TODO: return any selected cards to their hands
+		// if playing
+		var seat = root.getObjectByName(playerInfo.id);
+		if(seat)
+		{
+			// return any selected cards to the hand
+			selection.forEach(function(handIndex, selectionIndex)
+			{
+				var card = seat.getObjectByName('selection'+selectionIndex);
+				if(!card){
+					card = Utils.generateCard(hand[handIndex]);
+				}
 
-		// TODO: reset any click handlers
+				var spot = seat.getObjectByName('card'+handIndex);
+				card.position.set(0,0,0);
+				card.rotation.set(0,0,0);
+				card.scale.set(2,2,2);
+				card.name = '';
+
+				spot.add(card);
+
+			});
+
+			// kill yes/no boxes if present
+			var yes = seat.getObjectByName('yes');
+			var no = seat.getObjectByName('no');
+			seat.remove(yes, no);
+
+			// zero out selection
+			selection = [];
+
+			// reset any click handlers
+			gameObjects.box.removeEventListener('cursorup');
+			gameObjects.box.addEventListener('cursorup', function(){
+				socket.emit('dealCards');
+			});
+
+			for(var i=0; i<12; i++){
+				var card = seat.getObjectByName('card'+i);
+				card.removeEventListener('cursorup');
+			}
+		}
+
+		// kill submissions if present
+		for(var player in submissionMap){
+			for(var i=0; i<submissionMap[player].length; i++){
+				if(submissionMap[player][i].parent)
+					submissionMap[player][i].parent.remove(submissionMap[player][i]);
+			}
+		}
+
+		submissionMap = {};
+		submissionList = [];
+
 	}
 
 	function playerJoinRequest(id, displayName)
@@ -172,9 +226,10 @@
 		if(id === playerInfo.id)
 		{
 			gameObjects.box.removeEventListener('cursorup');
-			gameObjects.box.addEventListener('cursorup', function(){
-				socket.emit('dealCards');
-			});
+			if(gameState === 'roundFinished')
+				gameObjects.box.addEventListener('cursorup', function(){
+					socket.emit('dealCards');
+				});
 		}
 
 		// hide request dialog if present
@@ -256,12 +311,26 @@
 
 	function dealCards(newHand, newBlackCard, newCzarId)
 	{
+		gameState = 'roundStarted';
+		if(root.getObjectByName(playerInfo.id)){
+			gameObjects.box.removeEventListener('cursorup');
+		}
+
 		if( newBlackCard && (!blackCard || newBlackCard.index !== blackCard.userData.index) )
 		{
-			// kill old black card
+			// clean up from previous round
 			if(blackCard && blackCard.parent){
 				blackCard.parent.remove(blackCard);
 			}
+			for(var i=0; i<submissionList.length; i++){
+				for(var j=0; j<submissionList[i].length; j++)
+				{
+					var card = submissionList[i][j];
+					if(card.parent)
+						card.parent.remove(card);
+				}
+			}
+			submissionList = [];
 
 			// generate new card
 			blackCard = Utils.generateCard(newBlackCard, 'black');
@@ -357,6 +426,8 @@
 					o.visible = true;
 			});
 		}
+		
+		Sounds.playSound('card');
 	}
 
 	function updateAllHands(handLength, newCzarId)
@@ -400,7 +471,7 @@
 						// animate from card box
 						gameObjects.box.add(card);
 						card.addBehavior(new Behaviors.Animate(cardRoots[i],
-							new THREE.Vector3(0,0,0), new THREE.Quaternion()
+							new THREE.Vector3(0,0,0), new THREE.Quaternion(), new THREE.Vector3(2,2,2)
 						));
 					}
 				}
@@ -430,6 +501,8 @@
 
 	function roundStart()
 	{
+		gameState = 'playerSelectionPending';
+
 		// identify pres area
 		var seat = root.getObjectByName(playerInfo.id);
 		if(seat)
@@ -441,7 +514,6 @@
 		blackCard.position.set(0,0,0);
 		blackCard.rotation.set(-Math.PI/2,0,Math.PI);
 		center.add(blackCard);
-		console.log('blackCard scale', blackCard.scale);
 
 		// enable clicking on cards
 		if(seat && playerInfo.id !== czarId)
@@ -535,6 +607,7 @@
 					card.position.set(0,0,0);
 					card.rotation.set(0,0,0);
 					card.scale.set(2,2,2);
+					card.name = '';
 
 					// add back click handlers
 					/*card.addEventListener('cursorup', function(evt){
@@ -596,10 +669,14 @@
 				) );
 			}
 		}
+		
+		Sounds.playSound('card');
 	}
 
 	function cardSelectionComplete(selections)
 	{
+		gameState = 'czarSelectionPending';
+		
 		// put responses in some random order
 		var displayList = [];
 		for(var user in selections)
@@ -756,30 +833,39 @@
 			center.scale.set(6,6,6);
 		}
 
+		Sounds.playSound('card');
 	}
 
 	function winnerSelection(playerId)
 	{
+		gameState = 'roundFinished';
+		if(root.getObjectByName(playerInfo.id)){
+			gameObjects.box.addEventListener('cursorup', function(){
+				socket.emit('dealCards');
+			});
+		}
+
 		// congratulate winner
 		var winnerSeat = root.getObjectByName(playerId);
 		var confetti = new Utils.Confetti({delay: 1000});
 		confetti.position.copy(winnerSeat.position);
-		confetti.position.setZ( confetti.position.z + 1 );
+		confetti.position.setZ( confetti.position.z + 1.1 );
 		confetti.quaternion.copy(winnerSeat.quaternion);
 		root.add(confetti);
+		Sounds.playSound('fanfare');
 
 		// award black card
 
 		// clean up from round
-		for(var i=0; i<submissionList.length; i++){
+		/*for(var i=0; i<submissionList.length; i++){
 			for(var j=0; j<submissionList[i].length; j++)
 			{
 				var card = submissionList[i][j];
 				if(card.parent)
 					card.parent.remove(card);
 			}
-		}
-		submissionList = [];
+		}*/
+		//submissionList = [];
 		submissionMap = {};
 		selection = [];
 		czarSelectionPlayer = '';
