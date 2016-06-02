@@ -4,11 +4,13 @@ var express = require('express'),
 	morgan = require('morgan'),
 	libpath = require('path'),
 	socketio = require('socket.io'),
-	liburl = require('url');
+	liburl = require('url'),
+	bodyParser = require('body-parser');
 
 var structures = require('./structures.js'),
 	players = require('./players.js'),
 	game = require('./game.js'),
+	feedback = require('./feedback.js'),
 	config = require('../config.json');
 
 var activeGames = structures.activeGames;
@@ -25,9 +27,15 @@ var app = express();
 // enable logging
 app.use(morgan('dev'));
 
+// enable body parsing
+app.use(bodyParser.json());
+
 // get static files from <project>/client
 app.use('/static', express.static( libpath.join(__dirname, '../client') ));
 app.use('/decks', express.static( libpath.join(__dirname, '../decks') ));
+
+app.get('/', require('./status.js'));
+app.post('/feedback', feedback.feedbackRequest);
 
 app.get('/play', function(req,res,next)
 {
@@ -42,8 +50,6 @@ app.get('/play', function(req,res,next)
 		res.sendFile(libpath.join(__dirname, '../client/index.html'));
 	}
 });
-
-app.get('/', require('./status.js'));
 
 // return 404 on all other requests
 app.use(function(req,res,next)
