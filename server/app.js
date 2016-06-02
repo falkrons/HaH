@@ -27,16 +27,15 @@ var app = express();
 // enable logging
 app.use(morgan('dev'));
 
-// enable body parsing
-app.use(bodyParser.json());
-
 // get static files from <project>/client
 app.use('/static', express.static( libpath.join(__dirname, '../client') ));
 app.use('/decks', express.static( libpath.join(__dirname, '../decks') ));
 
+// load the pages that AREN'T the game
 app.get('/', require('./status.js'));
-app.post('/feedback', feedback.feedbackRequest);
+app.post('/feedback', bodyParser.json(), feedback.feedbackRequest);
 
+// bootstrap the game page
 app.get('/play', function(req,res,next)
 {
 	if(!req.query.gameId){
