@@ -1,5 +1,8 @@
 'use strict';
 
+// the hats example:
+//  https://github.com/AltspaceVR/AltspaceSDK/blob/master/examples/hats.html
+
 (function(exports)
 {
 	// card positions
