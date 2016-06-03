@@ -11,8 +11,13 @@
 	<body>
 		<script>
 
+			var scene = new THREE.Scene();
+			var root = new THREE.Object3D();
+			scene.add(root);
+
 			if(altspace.inClient){
 				var renderer = altspace.getThreeJSRenderer();
+				root.rotation.set( -Math.PI/2, 0, 0 );
 			}
 			else {
 				renderer = new THREE.WebGLRenderer();
@@ -21,15 +26,13 @@
 				document.body.appendChild(renderer.domElement);
 			}
 
-			var scene = new THREE.Scene();
-			var root = new THREE.Object3D();
-			scene.add(root);
+
 
 			var arm = new THREE.Object3D();
 			root.add(arm);
 			arm.addBehavior( new Behaviors.Rotate(0,0,0.5) );
 			var camera = new THREE.PerspectiveCamera(45, 1280/720, 0.1, 10);
-			camera.position.set(0, -1, 0);
+			camera.position.set(0, 1, 0);
 			camera.up.set(0,0,1);
 			camera.lookAt(new THREE.Vector3(0,0,0));
 			arm.add(camera);
@@ -48,15 +51,26 @@
 			function init()
 			{
 				window.card1 = Utils.generateCard({text: 'What\'s that smell?'}, 'black');
-				card1.position.set(0,0.2, 0.2);
 				crown.addCard(card1);
+
+				window.card2 = Utils.generateCard({text: 'How does\nPresident Obama\nunwind?'}, 'black');
+				crown.addCard(card2);
+
+				window.card3 = Utils.generateCard({text: 'How does\nPresident Obama\nunwind?'}, 'black');
+				crown.addCard(card3);
+
+				window.card4 = Utils.generateCard({text: 'How does\nPresident Obama\nunwind?'}, 'black');
+				crown.addCard(card4);
+
+				window.card5 = Utils.generateCard({text: 'How does\nPresident Obama\nunwind?'}, 'black');
+				crown.addCard(card5);
 			}
 
 			var lastT = Date.now();
 			window.requestAnimationFrame(function animate(timestamp)
 			{
 				window.requestAnimationFrame(animate);
-				
+
 				var nowT = Date.now();
 				scene.updateAllBehaviors(nowT-lastT);
 				lastT = nowT;
