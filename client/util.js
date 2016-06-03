@@ -526,7 +526,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 						{
 							generateDialog('Do you want to kick\n'+opponentInfo.displayName+'?', function(){
 								console.log('kicking');
-								Game.socket.emit('playerKickRequest', opponentInfo.id, opponentInfo.displayName);
+								socket.emit('playerKickRequest', opponentInfo.id, opponentInfo.displayName);
 							});
 						});
 					})(seat.getObjectByName('nameplate'), newTurnOrder[i]);
@@ -564,7 +564,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 					{
 						generateDialog('Are you sure you want to\nleave the game?', function()
 						{
-							Game.socket.emit('playerLeave', Game.playerInfo.id, Game.playerInfo.displayName,
+							socket.emit('playerLeave', Game.playerInfo.id, Game.playerInfo.displayName,
 								Game.playerInfo.displayName+' has left the game.'
 							);
 						});
@@ -580,7 +580,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 						{
 							generateDialog('Do you want to kick\n'+opponentInfo.displayName+'?', function(){
 								console.log('kicking');
-								Game.socket.emit('playerKickRequest', opponentInfo.id, opponentInfo.displayName);
+								socket.emit('playerKickRequest', opponentInfo.id, opponentInfo.displayName);
 							});
 						});
 					})(nameplate, newTurnOrder[i]);
@@ -649,7 +649,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		idleTimeout = setTimeout(function(){
         	clearTimeout(idleTimeout);
         	generateDialog('AFK WARNING\nAre you there?', idleClear , function(){
-				Game.socket.emit('playerLeave', Game.playerInfo.id, Game.playerInfo.displayName,
+				socket.emit('playerLeave', Game.playerInfo.id, Game.playerInfo.displayName,
 				Game.playerInfo.displayName+' has left the game.');
 			});
         	kickTimeout = setTimeout(function(){

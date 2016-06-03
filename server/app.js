@@ -33,9 +33,11 @@ app.get('/play', function(req,res,next)
 {
 	if(!req.query.gameId){
 		const ab = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijlkmnopqrstuvwxyz0123456789';
-		var id = '';
-		for(var i=0; i<16; i++)
-			id += ab[ Math.floor(Math.random()*ab.length) ];
+		do {
+			var id = '';
+			for(var i=0; i<16; i++)
+				id += ab[ Math.floor(Math.random()*ab.length) ];
+		} while(activeGames[id]);
 		res.redirect('?gameId='+id);
 	}
 	else {

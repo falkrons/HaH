@@ -1,9 +1,10 @@
 'use strict';
 
+var socket;
+
 // don't pollute the global namespace
 (function(exports)
 {
-	var socket;
 	var turnOrder = [];
 	var playerInfo = {};
 	var hand = [];
@@ -41,7 +42,7 @@
 		}
 
 		// initialize the socket connection
-		Game.socket = socket = io('/?gameId='+gameId);
+		socket = io('/?gameId='+gameId);
 
 		// debug listener
 		var onevent = socket.onevent;
