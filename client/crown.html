@@ -32,9 +32,9 @@
 			root.add(arm);
 			arm.addBehavior( new Behaviors.Rotate(0,0,0.5) );
 			var camera = new THREE.PerspectiveCamera(45, 1280/720, 0.1, 10);
-			camera.position.set(0, 1, 0);
+			camera.position.set(0, 0.7, 0.2);
 			camera.up.set(0,0,1);
-			camera.lookAt(new THREE.Vector3(0,0,0));
+			camera.lookAt(new THREE.Vector3(0,0,0.15));
 			arm.add(camera);
 
 			var crown = new Utils.Crown();
@@ -64,6 +64,12 @@
 
 				window.card5 = Utils.generateCard({text: 'How does\nPresident Obama\nunwind?'}, 'black');
 				crown.addCard(card5);
+
+				window.card6 = Utils.generateCard({text: 'How does\nPresident Obama\nunwind?'}, 'black');
+				crown.addCard(card6);
+
+				window.card7 = Utils.generateCard({text: 'How does\nPresident Obama\nunwind?'}, 'black');
+				crown.addCard(card7);
 			}
 
 			var lastT = Date.now();
