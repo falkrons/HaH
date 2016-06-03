@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en"> <head>
+    <title></title>
+    <div id="infoBoard" style="color: #000099; text-align: left; font-size: 40px;">
+    	<form>
+		Short Description: <input type="text" name="Title" id = "title"><br>
+		<input type="radio" name="type" value="bug" id= "radio0"> Bug<br>
+  		<input type="radio" name="type" value="enhancement" id= "radio1"> Feature Request<br>
+  		<input type="radio" name="type" value="card-idea" id= "radio2"> Card Request<br>
+		Issue in Detail: <input type="text" name="Body" id = "body"><br>
+		<input type="button" value="Submit" onclick = "sendData()">
+	</form></div>
+   <script>
+   	var xhr = new XMLHttpRequest();
+   	xhr.open("POST", "hah.nodriftreality.com/feedback", true);
+	
+	function sendData(){
+	var feedBack = {
+		"title" : document.getElementById("title").value,
+		"body" : document.getElementById("body").value,
+		// I may have to wrap this in an array?
+		"labels" : document.querySelector('input[name = "type"]:checked').value
+	};
+	xhr.send(JSON.stringify(feedBack));
+ console.log(feedBack);
+}
+</script>
+    </head> <body alpha = 1>
+</body> </html>
