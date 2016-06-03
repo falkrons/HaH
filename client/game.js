@@ -230,6 +230,8 @@
 				gameObjects.box.addEventListener('cursorup', function(){
 					socket.emit('dealCards');
 				});
+
+			ga('send', 'event', 'Player', 'join');
 		}
 
 		// hide request dialog if present
@@ -265,6 +267,8 @@
 
 		if(id === playerInfo.id)
 		{
+			ga('send', 'event', 'Player', 'leave');
+
 			gameObjects.box.removeEventListener('cursorup');
 			gameObjects.box.addEventListener('cursorup', emitPlayerJoinRequest);
 
@@ -355,6 +359,9 @@
 
 	function updatePlayerHand(newHand, newCzarId)
 	{
+		// track player-rounds to google analytics
+		ga('send', 'event', 'PlayerRound', 'start');
+
 		// set hand
 		hand = newHand;
 
@@ -873,15 +880,22 @@
 		var temp = root.getObjectByName('czarStack');
 		root.remove(temp);
 
+		// for player
 		var seat = root.getObjectByName(playerInfo.id);
-		for(var i=0; i<12; i++){
-			var spot = seat.getObjectByName('card'+i);
-			spot.removeEventListener('cursorup');
-		}
+		if(seat)
+		{
+			// disable card selection
+			for(var i=0; i<12; i++){
+				var spot = seat.getObjectByName('card'+i);
+				spot.removeEventListener('cursorup');
+			}
 
-		var yes = seat.getObjectByName('yes'), no = seat.getObjectByName('no');
-		if(yes || no){
+			// remove any yes/no boxes
+			var yes = seat.getObjectByName('yes'), no = seat.getObjectByName('no');
 			seat.remove(yes, no);
+
+			// track round completion
+			ga('send', 'event', 'PlayerRound', 'end');
 		}
 	}
 
