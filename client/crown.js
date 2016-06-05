@@ -21,6 +21,9 @@
 	{
 		THREE.Object3D.call(this);
 
+		this.rotation.set(-Math.PI/2, 0, Math.PI);
+		this.scale.multiplyScalar(1.4);
+
 		// add head model (temp)
 		/*var head = new THREE.Mesh(
 			new THREE.SphereGeometry(0.15, 16,16),
@@ -49,17 +52,17 @@
 
 	function Sync3D()
 	{
-		
+
 	}
 
 	Sync3D.prototype.awake = function(obj)
 	{
-		
+
 	}
 
 	Sync3D.prototype.update = function(obj)
 	{
-		
+
 	}
 
 	exports.Crown = Crown;

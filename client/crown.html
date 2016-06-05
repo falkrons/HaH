@@ -14,31 +14,44 @@
 			var scene = new THREE.Scene();
 			var root = new THREE.Object3D();
 			scene.add(root);
+			var skeleton;
 
-			if(altspace.inClient){
+			var crown = new Utils.Crown();
+			root.add(crown);
+
+			if(altspace.inClient)
+			{
 				var renderer = altspace.getThreeJSRenderer();
-				root.rotation.set( -Math.PI/2, 0, 0 );
+				altspace.getEnclosure().then(function(enc)
+				{
+					// reset coordinate space
+					root.scale.set(enc.pixelsPerMeter, enc.pixelsPerMeter, enc.pixelsPerMeter);
+					crown.scale.multiplyScalar(enc.pixelsPerMeter);
+				});
+				altspace.getThreeJSTrackingSkeleton().then(function(skel)
+				{
+					skeleton = skel;
+					scene.add(skel);
+					var head = skel.getJoint('Head');
+					console.log('adding crown to head');
+					head.add(crown);
+				});
 			}
 			else {
 				renderer = new THREE.WebGLRenderer();
 				renderer.setSize(1280, 720);
 				renderer.setClearColor( 0x888888 );
+
+				var arm = new THREE.Object3D();
+				root.add(arm);
+				arm.addBehavior( new Behaviors.Rotate(0,0.5,0) );
+				var camera = new THREE.PerspectiveCamera(45, 1280/720, 0.1, 10);
+				camera.position.set(0, 0.2, 0.7);
+				camera.lookAt(new THREE.Vector3(0,0.15,0));
+				arm.add(camera);
+
 				document.body.appendChild(renderer.domElement);
 			}
-
-
-
-			var arm = new THREE.Object3D();
-			root.add(arm);
-			arm.addBehavior( new Behaviors.Rotate(0,0,0.5) );
-			var camera = new THREE.PerspectiveCamera(45, 1280/720, 0.1, 10);
-			camera.position.set(0, 0.7, 0.2);
-			camera.up.set(0,0,1);
-			camera.lookAt(new THREE.Vector3(0,0,0.15));
-			arm.add(camera);
-
-			var crown = new Utils.Crown();
-			root.add(crown);
 
 			var loader = new THREE.ColladaLoader();
 			loader.load('/static/models/card.dae', function(result){
