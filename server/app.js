@@ -119,11 +119,18 @@ function registerGameListeners(socket)
 	socket.on('playerKickRequest', players.kickRequest);
 	socket.on('playerKickResponse', players.kickResponse);
 
+	// register game events
 	socket.on('dealCards', game.dealCards);
 	socket.on('roundStart', game.roundStart);
 	socket.on('cardSelection', game.cardSelection);
 	socket.on('presentSubmission', game.presentSubmission);
 	socket.on('winnerSelection', game.winnerSelection);
+
+	// register object sync events
+	socket.on('objectUpdate', function(objName, matrix){
+		//console.log('objectUpdate', objName, matrix);
+		this.to(this.gameId+'_clients').emit('objectUpdate', objName, matrix);
+	});
 }
 
 

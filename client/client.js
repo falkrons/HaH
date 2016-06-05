@@ -114,7 +114,7 @@ function init()
 	);
 	table.position.setZ(0.8);
 	table.rotation.set(Math.PI/2, 0, 0);
-	root.add(table);
+	//root.add(table);
 
 	// add game box
 	gameObjects.box = Models.box;

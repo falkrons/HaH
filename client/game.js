@@ -140,7 +140,7 @@ var socket;
 			blackCard.parent.remove(blackCard);
 			blackCard = null;
 		}
-		
+
 		// zero out czar
 		czarId = '';
 		gameState = 'roundFinished';
@@ -224,6 +224,16 @@ var socket;
 		gameObjects.box.rotation.set(0, 0, 0);
 		gameObjects.titleCard.visible = false;
 
+		// add crown
+		var crown = new Utils.Crown();
+		crown.name = 'crown_'+id;
+		scene.add(crown);
+		crown.addBehavior(new Behaviors.Object3DSync(socket, id));
+		crown.addCard( Models.blankCard.clone() );
+		crown.addCard( Models.blankCard.clone() );
+		crown.addCard( Models.blankCard.clone() );
+		console.log(crown);
+
 		if(id === playerInfo.id)
 		{
 			gameObjects.box.removeEventListener('cursorup');
@@ -231,6 +241,13 @@ var socket;
 				gameObjects.box.addEventListener('cursorup', function(){
 					socket.emit('dealCards');
 				});
+
+			altspace.getThreeJSTrackingSkeleton().then(function(skel)
+			{
+				scene.add(skel);
+				var head = skel.getJoint('Head');
+				head.add(crown);
+			});
 		}
 
 		// hide request dialog if present
@@ -245,7 +262,6 @@ var socket;
 
 		console.log('New player joined:', displayName);
 		//Utils.idleCheck();
-
 
 	}
 
@@ -427,7 +443,7 @@ var socket;
 					o.visible = true;
 			});
 		}
-		
+
 		Sounds.playSound('card');
 	}
 
@@ -651,7 +667,7 @@ var socket;
 		// animate to in front of czar
 		for(var i=0; i<handIndexes.length; i++)
 		{
-			var tempCard = seat.getObjectByName('selection'+i) 
+			var tempCard = seat.getObjectByName('selection'+i)
 				|| seat.getObjectByName('card'+handIndexes[i]).children[0];
 			if(tempCard)
 			{
@@ -670,14 +686,14 @@ var socket;
 				) );
 			}
 		}
-		
+
 		Sounds.playSound('card');
 	}
 
 	function cardSelectionComplete(selections)
 	{
 		gameState = 'czarSelectionPending';
-		
+
 		// put responses in some random order
 		var displayList = [];
 		for(var user in selections)
@@ -693,7 +709,7 @@ var socket;
 			var index = Math.floor(Math.random() * displayList.length);
 			displayList.splice(index, 0, selections[user]);
 		}
-	
+
 		submissionMap = selections;
 		submissionMap[''] = [];
 		submissionList = displayList;

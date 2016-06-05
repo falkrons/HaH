@@ -17,12 +17,14 @@
 		[7.59392548843607e-9, 4.356159044593966e-10, 1, 0, -0.11435118317604065, 0.9934403896331787, 4.356159044593966e-10, 0, -0.9934403896331787, -0.11435118317604065, 7.59392548843607e-9, 0, -0.12503184378147125, -0.02170942910015583, 0.11999999731779099, 1]
 	];
 
-	function Crown(owner)
+	function Crown()
 	{
 		THREE.Object3D.call(this);
 
-		this.rotation.set(-Math.PI/2, 0, Math.PI);
-		this.scale.multiplyScalar(1.4);
+		this.root = new THREE.Object3D();
+		this.root.rotation.set(-Math.PI/2, 0, Math.PI);
+		this.root.scale.multiplyScalar(1.4);
+		this.add(this.root);
 
 		// add head model (temp)
 		/*var head = new THREE.Mesh(
@@ -37,7 +39,7 @@
 
 	Crown.prototype.addCard = function(card)
 	{
-		var index = this.children.length;
+		var index = this.root.children.length;
 		if(index >= cardPosition.length){
 			console.log('card overflow', index);
 			return;
@@ -46,23 +48,7 @@
 		card.matrix.fromArray(cardPosition[index]);
 		card.matrix.decompose(card.position, card.quaternion, card.scale);
 		card.worldMatrixNeedsUpdate = true;
-		this.add(card);
-	}
-
-
-	function Sync3D()
-	{
-
-	}
-
-	Sync3D.prototype.awake = function(obj)
-	{
-
-	}
-
-	Sync3D.prototype.update = function(obj)
-	{
-
+		this.root.add(card);
 	}
 
 	exports.Crown = Crown;
