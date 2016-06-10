@@ -112,6 +112,11 @@ var socket;
 		// save turn order (without reassigning obj)
 		turnOrder.splice(0); turnOrder.push.apply(turnOrder, newTurnOrder);
 
+		newTurnOrder.forEach(function(p){
+			var crown = new Utils.Crown(p.id);
+			scene.add(crown);
+		});
+
 		// hook up click-to-join handler
 		gameObjects.box.removeEventListener('cursorup');
 		gameObjects.box.addEventListener('cursorup', emitPlayerJoinRequest);
@@ -225,14 +230,19 @@ var socket;
 		gameObjects.titleCard.visible = false;
 
 		// add crown
-		var crown = new Utils.Crown();
-		crown.name = 'crown_'+id;
+		var crown = new Utils.Crown(id);
 		scene.add(crown);
-		crown.addBehavior(new Behaviors.Object3DSync(socket, id));
-		crown.addCard( Models.blankCard.clone() );
-		crown.addCard( Models.blankCard.clone() );
-		crown.addCard( Models.blankCard.clone() );
 		console.log(crown);
+
+		// hide request dialog if present
+		var seat = root.getObjectByName(playerInfo.id);
+		if(seat)
+		{
+			var dialog;
+			if(dialog = seat.getObjectByName('join_'+id)){
+				seat.remove(dialog);
+			}
+		}
 
 		if(id === playerInfo.id)
 		{
@@ -242,21 +252,17 @@ var socket;
 					socket.emit('dealCards');
 				});
 
-			altspace.getThreeJSTrackingSkeleton().then(function(skel)
+			if(altspace.inClient)
 			{
-				scene.add(skel);
-				var head = skel.getJoint('Head');
-				head.add(crown);
-			});
-		}
-
-		// hide request dialog if present
-		var seat = root.getObjectByName(playerInfo.id);
-		if(seat)
-		{
-			var dialog;
-			if(dialog = seat.getObjectByName('join_'+id)){
-				seat.remove(dialog);
+				altspace.getThreeJSTrackingSkeleton().then(function(skel){
+					scene.add(skel);
+					var head = skel.getJoint('Head');
+					head.add(crown);
+				});
+			}
+			else
+			{
+				camera.add(crown);
 			}
 		}
 
@@ -290,6 +296,11 @@ var socket;
 					model.removeEventListener('cursorup');
 				}
 			});
+		}
+
+		var crown = scene.getObjectByName('crown_'+id);
+		if(crown){
+			scene.remove(crown);
 		}
 
 		// hide request dialog if present

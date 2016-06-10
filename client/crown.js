@@ -17,14 +17,23 @@
 		[7.59392548843607e-9, 4.356159044593966e-10, 1, 0, -0.11435118317604065, 0.9934403896331787, 4.356159044593966e-10, 0, -0.9934403896331787, -0.11435118317604065, 7.59392548843607e-9, 0, -0.12503184378147125, -0.02170942910015583, 0.11999999731779099, 1]
 	];
 
-	function Crown()
+	function Crown(owner)
 	{
 		THREE.Object3D.call(this);
 
+		this.name = 'crown_'+owner;
+		this.scale.multiplyScalar(root.scale.x);
+
 		this.root = new THREE.Object3D();
 		this.root.rotation.set(-Math.PI/2, 0, Math.PI);
-		this.root.scale.multiplyScalar(1.4);
+		this.root.scale.multiplyScalar(1.4)
+
 		this.add(this.root);
+		this.addBehavior(new Behaviors.Object3DSync(socket, owner));
+
+		this.addCard( Models.blankCard.clone() );
+		this.addCard( Models.blankCard.clone() );
+		this.addCard( Models.blankCard.clone() );
 
 		// add head model (temp)
 		/*var head = new THREE.Mesh(

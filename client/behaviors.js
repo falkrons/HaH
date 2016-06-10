@@ -231,6 +231,7 @@
 	Object3DSync.prototype.awake = function(obj)
 	{
 		this.target = obj;
+		obj.matrixAutoUpdate = false;
 	}
 
 	Object3DSync.prototype.update = function(deltaT)
