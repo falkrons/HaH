@@ -51,6 +51,7 @@ Deck.loadCards = function()
 						var data = JSON.parse(data);
 					}
 					catch(e){
+						data = null;
 						console.error('Error parsing', name);
 						console.error(e);
 					}
