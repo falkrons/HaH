@@ -94,6 +94,7 @@ else
 	camera.up.set(0,0,5);
 	camera.position.set(0, 2*tableRadius, 1.5);
 	camera.lookAt( new THREE.Vector3(0, 0, 0) );
+	camera.addBehavior( new Behaviors.CameraControls() );
 	root.add(camera);
 
 	altspace.utilities.shims.cursor.init(scene, camera, {renderer: renderer});
@@ -163,7 +164,7 @@ function init()
 function render(timestamp)
 {
 	// update camera if necessary	
-	if(camera)
+	/*if(camera)
 	{
 		// get client table position
 		var seat = root.getObjectByName(Game.playerInfo.id);
@@ -188,7 +189,7 @@ function render(timestamp)
 			camera.position.z = 1.5;
 			camera.lookAt( new THREE.Vector3(0, 0, 1.5) );
 		}
-	}
+	}*/
 
 	// animate
 	scene.updateAllBehaviors();

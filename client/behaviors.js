@@ -263,14 +263,35 @@
 		if(objName === this.target.name){
 			console.log('syncing position');
 			this.target.matrix.fromArray(matrix);
+			this.target.matrixWorldNeedsUpdate = true;
 		}
 	}
+
+	function CameraControls()
+	{
+		
+	}
+	CameraControls.prototype.constructor = CameraControls;
+
+	CameraControls.prototype.awake = function(obj)
+	{
+		this.target = obj;
+		var mousedown = false;
+		window.addEventListener('mousedown', function(evt)
+		{
+			
+		});
+	}
+
+	CameraControls.prototype.update = function(deltaT){};
+
 
 
 	exports.Rotate = Rotate;
 	exports.Animate = Animate;
 	exports.CursorFeedback = CursorFeedback;
 	exports.Object3DSync = Object3DSync;
+	exports.CameraControls = CameraControls;
 
 })(window.Behaviors = window.Behaviors || {});
 
