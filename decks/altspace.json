@@ -13,7 +13,7 @@
 	{"text": "When life gives you\n_______, make _______.", "numResponses": 2},
 	{"text": "We're all out of _______,\nI'll just use _______\ninstead.", "numResponses": 2},
 	{"text": "Hey, would you like\nto see my pet _______?"},
-	{"text": "Whose your _______?"},
+	{"text": "Who's' your _______?"},
 	{"text": "What is the safeword?"},
 	{"text": "How's your _______?"},
 	{"text": "Scientists recently\ndiscovered a new element\nwhich they have\nappropriately named _______."},
@@ -53,7 +53,6 @@
 	{"text": "Your father."},
 	//--
 	{"text": "My best friend."},
-	{"text": "Your mother."},
 	{"text": "My virginity."}
   ]
 }
