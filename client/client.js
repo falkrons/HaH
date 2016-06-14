@@ -92,7 +92,7 @@ else
 	// add an orbiting camera
 	camera = new THREE.PerspectiveCamera(45, 1280/720, 0.01, 1000);
 	camera.up.set(0,0,5);
-	camera.position.set(0, 2*tableRadius, 1.5);
+	camera.position.set(0, 6*tableRadius, 1.5);
 	camera.lookAt( new THREE.Vector3(0, 0, 0) );
 	root.add(camera);
 
@@ -114,7 +114,7 @@ function init()
 	);
 	table.position.setZ(0.8);
 	table.rotation.set(Math.PI/2, 0, 0);
-	//root.add(table);
+	root.add(table);
 
 	// add game box
 	gameObjects.box = Models.box;
@@ -183,8 +183,8 @@ function render(timestamp)
 			}
 
 			var angle = timestamp/20000 * 2*Math.PI;
-			camera.position.x = 2*tableRadius * Math.sin(angle);
-			camera.position.y = 2*tableRadius * Math.cos(angle);
+			camera.position.x = 6*tableRadius * Math.sin(angle);
+			camera.position.y = 6*tableRadius * Math.cos(angle);
 			camera.position.z = 1.5;
 			camera.lookAt( new THREE.Vector3(0, 0, 1.5) );
 		}

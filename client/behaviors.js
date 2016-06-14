@@ -217,7 +217,7 @@
 	{
 		this.socket = socket;
 		this.owner = owner;
-		this.updateInterval = 100;
+		this.updateInterval = 500;
 		this.lastUpdate = 0;
 		this.lastMatrix = [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
 
@@ -241,7 +241,8 @@
 		if(Game.playerInfo.id === this.owner && this.lastUpdate > this.updateInterval)
 		{
 			this.lastUpdate -= this.updateInterval;
-
+			this.target.updateMatrixWorld();
+				
 			var matrixChanged = false, i = 0;
 			while(!matrixChanged && i < 16){
 				matrixChanged = matrixChanged || this.target.matrixWorld.elements[i] !== this.lastMatrix[i];
@@ -263,6 +264,7 @@
 		if(objName === this.target.name){
 			console.log('syncing position');
 			this.target.matrix.fromArray(matrix);
+			this.target.matrixWorldNeedsUpdate = true;
 		}
 	}
 
