@@ -8,7 +8,21 @@
 	{"text": "How's this for a\nband name: _______\nand the _______s!", "numResponses": 2},
 	{"text": "Imma let you finish,\nbut _______ had the\nbest _______ of all\ntime.", "numResponses": 2},
 	{"text": "Make America\n_______ Again!"},
-	{"text": "Why did Grumpy\nthreaten a\nsmall child?"}
+	{"text": "Why did Grumpy\nthreaten a\nsmall child?"},
+	{"text": "I brought home\n_______ for\nthe kids."},
+	{"text": "When life gives you\n_______, make _______.", "numResponses": 2},
+	{"text": "We're all out of _______,\nI'll just use _______\ninstead.", "numResponses": 2},
+	{"text": "Hey, would you like\nto see my pet _______?"},
+	{"text": "Whose your _______?"},
+	{"text": "What is the safeword?"},
+	{"text": "How's your _______?"},
+	{"text": "Scientists recently\ndiscovered a new element\nwhich they have\nappropriately named _______."},
+	{"text": "_______ for president!"},
+	{"text": "One time, I shoved\na whole _______ in my\near!"},
+	{"text": "Nooo! You can't leave\nme here with these _______!"},
+	{"text": "My favorite boyscout\nbadge is the _______ badge."},
+	{"text": "I value your _______,\nnot your _______.", "numResponses": 2},
+	{"text": "Sometimes I like to lay\nin my _______ and pretend\nI am a _______.", "numResponses": 2}
   ],
   "white": [
     {"text": "That funky\nRift DK2 smell."},
@@ -25,6 +39,21 @@
 	{"text": "Feeling the Bern."},
 	{"text": "A happy little tree."},
 	{"text": "Orange politicians."},
-	{"text": "Cramming a baby\nin a toaster."}
+	{"text": "Cramming a baby\nin a toaster."},
+	{"text": "A prison sentence."},
+	{"text": "A dagger made out\nof a toothbrush."},
+	{"text": "An escape tunnel."},
+	{"text": "A secret that isn't\na secret anymore."},
+	{"text": "My porn stash."},
+	{"text": "A porn stache."},
+	{"text": "Dat boi."},
+	{"text": "Uncontrollable muscle spasms."},
+	//how did you miss these??
+	{"text": "Your mother."},
+	{"text": "Your father."},
+	//--
+	{"text": "My best friend."},
+	{"text": "Your mother."},
+	{"text": "My virginity."}
   ]
 }
