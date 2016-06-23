@@ -30,7 +30,7 @@
 	{"text": "May I tell you\nabout our specials?\nTonight we have\na nice _______."},
 	{"text": "I value your\n_______, not your\n_______.", "numResponses": 2},
 	{"text": "I am _______,\nleader of _______.", "numResponses": 2},
-	{"text": "Sometimes I like to\nlay in my _______\nand pretend I\nam a _______.", "numResponses": 2}
+	{"text": "Sometimes I like to\nlay on _______\nand pretend I\nam _______.", "numResponses": 2}
   ],
   "white": [
     {"text": "That funky\nRift DK2 smell."},
