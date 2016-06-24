@@ -296,7 +296,10 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		// draw footer
 		g.textAlign = 'left';
 		g.font = (0.05*cardWidth*fontScale)+'px '+fontStack;
-		if( card.numResponses || card.numDraws ){
+		if( card.creator ){
+			g.fillText(card.creator, x+1.5*edgeLength, y);
+		}
+		else if( card.numResponses || card.numDraws ){
 			g.fillText("HAH", x+1.5*edgeLength, y);
 		}
 		else {
