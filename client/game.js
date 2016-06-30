@@ -373,9 +373,15 @@
 		for(var temp=0; temp<12; temp++)
 		{
 			var cardRoot = seat.getObjectByName('card'+temp);
-			if(cardRoot.children.length > 0){
+			if(cardRoot.children.length > 0)
+			{
 				var child = cardRoot.children[0];
 				curCards[child.userData.index] = child;
+
+				// attempt to remove any stuck cards
+				cardRoot.remove.apply(cardRoot, cardRoot.children);
+				if(hand.indexOf(child.userData.index) >= 0)
+					cardRoot.add(child);
 			}
 
 			cardRoots.push(cardRoot);
