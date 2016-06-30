@@ -53,6 +53,33 @@ var staticPage = [
 	'</p>'
 ].join('\n');
 
+function toggleSuggestionForm()
+{
+	var x = document.getElementsByTagName('iframe')[0];
+	if(x.style.display === 'none'){
+		x.style.display = 'block';
+		root.traverse(function(obj){
+			if(obj.name === 'presentation'){
+				obj.visible = false;
+				obj.children.forEach(function(c){
+					c.visible = false;
+				});
+			}
+		});
+	}
+	else {
+		x.style.display = 'none';
+		root.traverse(function(obj){
+			if(obj.name === 'presentation'){
+				obj.visible = true;
+				obj.children.forEach(function(c){
+					c.visible = true;
+				});
+			}
+		});
+	}
+}
+
 /**************************
 	Initialize scene
 **************************/
