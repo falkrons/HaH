@@ -4,11 +4,13 @@ var express = require('express'),
 	morgan = require('morgan'),
 	libpath = require('path'),
 	socketio = require('socket.io'),
-	liburl = require('url');
+	liburl = require('url'),
+	bodyParser = require('body-parser');
 
 var structures = require('./structures.js'),
 	players = require('./players.js'),
 	game = require('./game.js'),
+	feedback = require('./feedback.js'),
 	config = require('../config.json');
 
 var activeGames = structures.activeGames;
@@ -29,6 +31,11 @@ app.use(morgan('dev'));
 app.use('/static', express.static( libpath.join(__dirname, '../client') ));
 app.use('/decks', express.static( libpath.join(__dirname, '../decks') ));
 
+// load the pages that AREN'T the game
+app.get('/', require('./status.js'));
+app.post('/feedback', bodyParser.json(), feedback.feedbackRequest);
+
+// bootstrap the game page
 app.get('/play', function(req,res,next)
 {
 	if(!req.query.gameId){
@@ -42,8 +49,6 @@ app.get('/play', function(req,res,next)
 		res.sendFile(libpath.join(__dirname, '../client/index.html'));
 	}
 });
-
-app.get('/', require('./status.js'));
 
 // return 404 on all other requests
 app.use(function(req,res,next)
