@@ -694,6 +694,13 @@
 		var displayList = [];
 		for(var user in selections)
 		{
+			// track played event
+			if(czarId === playerInfo.id && selections[user].length === 1)
+			{
+				var text = selections[user][0].text.replace('\n', ' ');
+				ga('send', 'event', 'CardTracking', 'playedCard', text);
+			}
+
 			// generate card models from descriptions
 			for(var i=0; i<selections[user].length; i++){
 				selections[user][i] = Utils.generateCard(selections[user][i], 'white');
@@ -852,6 +859,14 @@
 	function winnerSelection(playerId)
 	{
 		gameState = 'roundFinished';
+
+		// track winner event
+		if(czarId === playerInfo.id && submissionMap[playerId].length === 1)
+		{
+			var text = submissionMap[playerId][0].userData.text.replace('\n', ' ');
+			ga('send', 'event', 'CardTracking', 'winningCard', text);
+		}
+
 		if(root.getObjectByName(playerInfo.id)){
 			gameObjects.box.addEventListener('cursorup', function(){
 				socket.emit('dealCards');
