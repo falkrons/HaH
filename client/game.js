@@ -379,9 +379,9 @@
 				curCards[child.userData.index] = child;
 
 				// attempt to remove any stuck cards
-				cardRoot.remove.apply(cardRoot, cardRoot.children);
-				if(hand.indexOf(child.userData.index) >= 0)
-					cardRoot.add(child);
+				//cardRoot.remove.apply(cardRoot, cardRoot.children);
+				//if(hand.indexOf(child.userData.index) >= 0)
+					//cardRoot.add(child);
 			}
 
 			cardRoots.push(cardRoot);
