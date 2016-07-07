@@ -91,6 +91,14 @@
 
 	function init(newTurnOrder, newGameState, blackCard, czarId, submissions)
 	{
+		if(turnOrder.length > 0){
+			var cacheBuster = /[&?]cacheBuster=([^&]+)/.exec(window.location.search);
+			if(cacheBuster)
+				window.location.replace( window.location.search.replace(cacheBuster[0], '&cacheBuster='+cacheBuster[1]+'1') );
+			else
+				window.location.replace( window.location.search + '&cacheBuster=1' );
+		}
+
 		if(newTurnOrder.length === 0){
 			gameObjects.box.rotation.set(Math.PI, 0, 0);
 			gameObjects.titleCard.visible = true;
@@ -139,7 +147,7 @@
 			blackCard.parent.remove(blackCard);
 			blackCard = null;
 		}
-		
+
 		// zero out czar
 		czarId = '';
 		gameState = 'roundFinished';
@@ -373,15 +381,13 @@
 		for(var temp=0; temp<12; temp++)
 		{
 			var cardRoot = seat.getObjectByName('card'+temp);
-			if(cardRoot.children.length > 0)
+			for(var x=0; x<cardRoot.children.length; x++)
 			{
-				var child = cardRoot.children[0];
-				curCards[child.userData.index] = child;
-
-				// attempt to remove any stuck cards
-				//cardRoot.remove.apply(cardRoot, cardRoot.children);
-				//if(hand.indexOf(child.userData.index) >= 0)
-					//cardRoot.add(child);
+				var child = cardRoot.children[x];
+				if(hand.indexOf(child.userData.index) >= 0)
+					curCards[child.userData.index] = child;
+				else
+					cardRoot.remove(child);)
 			}
 
 			cardRoots.push(cardRoot);
@@ -439,7 +445,7 @@
 					o.visible = true;
 			});
 		}
-		
+
 		Sounds.playSound('card');
 	}
 
@@ -663,7 +669,7 @@
 		// animate to in front of czar
 		for(var i=0; i<handIndexes.length; i++)
 		{
-			var tempCard = seat.getObjectByName('selection'+i) 
+			var tempCard = seat.getObjectByName('selection'+i)
 				|| seat.getObjectByName('card'+handIndexes[i]).children[0];
 			if(tempCard)
 			{
@@ -682,14 +688,14 @@
 				) );
 			}
 		}
-		
+
 		Sounds.playSound('card');
 	}
 
 	function cardSelectionComplete(selections)
 	{
 		gameState = 'czarSelectionPending';
-		
+
 		// put responses in some random order
 		var displayList = [];
 		for(var user in selections)
@@ -712,7 +718,7 @@
 			var index = Math.floor(Math.random() * displayList.length);
 			displayList.splice(index, 0, selections[user]);
 		}
-	
+
 		submissionMap = selections;
 		submissionMap[''] = [];
 		submissionList = displayList;
