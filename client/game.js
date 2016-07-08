@@ -387,7 +387,7 @@
 				if(hand.indexOf(child.userData.index) >= 0)
 					curCards[child.userData.index] = child;
 				else
-					cardRoot.remove(child);)
+					cardRoot.remove(child);
 			}
 
 			cardRoots.push(cardRoot);
