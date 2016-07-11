@@ -15,6 +15,7 @@
 
 	var blackCard = null;
 	var czarId = '';
+	var joinBlocked = false;
 
 	function connectToGame(gameId)
 	{
@@ -201,22 +202,25 @@
 
 	function playerJoinRequest(id, displayName)
 	{
-		var dialog = Utils.generateDialog('Can this player join?\n'+displayName,
-			function(){
-				socket.emit('playerJoin', id, displayName);
-			},
-			function(){
-				socket.emit('playerJoinDenied', id, displayName);
-			}
-		);
-		dialog.name = 'join_'+id;
+		if (!joinBlocked){
+			var dialog = Utils.generateDialog('Can this player join?\n'+displayName,
+				function(){
+					socket.emit('playerJoin', id, displayName);
+				},
+				function(){
+					socket.emit('playerJoinDenied', id, displayName);
+				}
+			);
+			dialog.name = 'join_'+id;
 
-		// auto-join
-		//socket.emit('playerJoin', id, displayName);
+			// auto-join
+			//socket.emit('playerJoin', id, displayName);
+		}
 	}
 
 	function playerJoin(id, displayName, newTurnOrder)
 	{
+
 		Utils.rebalanceTable(newTurnOrder, turnOrder, id);
 		turnOrder.splice(0); turnOrder.push.apply(turnOrder, newTurnOrder);
 
@@ -250,12 +254,17 @@
 
 	function playerJoinDenied(id, displayName)
 	{
+		joinBlocked = true;
 		// hide request dialog if present
 		var seat = root.getObjectByName(playerInfo.id);
 		var dialog;
 		if(dialog = seat.getObjectByName('join_'+id)){
 			seat.remove(dialog);
 		}
+		var joinDenied = setTimeout(function(){       
+        	clearTimeout(joinDenied);
+        	joinBlocked = false;
+    	}, 5000)
 	}
 
 	function playerLeave(id, displayName, newTurnOrder)
