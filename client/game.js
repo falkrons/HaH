@@ -254,17 +254,19 @@
 
 	function playerJoinDenied(id, displayName)
 	{
-		joinBlocked = true;
 		// hide request dialog if present
 		var seat = root.getObjectByName(playerInfo.id);
 		var dialog;
 		if(dialog = seat.getObjectByName('join_'+id)){
 			seat.remove(dialog);
 		}
-		var joinDenied = setTimeout(function(){       
-        	clearTimeout(joinDenied);
-        	joinBlocked = false;
-    	}, 5000)
+
+		if(id === playerInfo.id){
+			joinBlocked = true;
+			setTimeout(function(){
+	        	joinBlocked = false;
+	    	}, 5000);
+		}
 	}
 
 	function playerLeave(id, displayName, newTurnOrder)
