@@ -104,6 +104,7 @@ if( altspace.inClient )
 		root.scale.set(enc.pixelsPerMeter, enc.pixelsPerMeter, enc.pixelsPerMeter);
 		root.position.setY( -enc.innerHeight/2 );
 		root.rotation.set( -Math.PI/2, 0, 0 );
+		root.userData = enc;
 
 		var enclosureRadius = 0.5 * Math.min(enc.innerWidth, enc.innerDepth) / enc.pixelsPerMeter;
 		tableRadius = Math.min(tableRadius, enclosureRadius);
@@ -119,6 +120,9 @@ if( altspace.inClient )
 }
 else
 {
+	// fake enclosure data
+	root.userData = {innerWidth: 3, innerDepth: 3, innerHeight: 3, pixelsPerMeter: 1};
+
 	// set up preview renderer, in case we're out of world
 	renderer = new THREE.WebGLRenderer();
 	renderer.setSize(1280, 720);
@@ -142,6 +146,20 @@ function init()
 {
 	root.addEventListener('cursorenter', Utils.idleClear );
 	root.addEventListener('cursorleave', Utils.idleCheck );
+
+	// add suggestion box
+	var suggest = new THREE.Mesh(
+		new THREE.BoxGeometry(0.3, 0.3, 0.3),
+		new THREE.MeshBasicMaterial({map: window.suggestionTexture})
+	);
+	var x = root.userData.innerWidth/2 / root.userData.pixelsPerMeter - 0.15,
+		y = root.userData.innerDepth/2 / root.userData.pixelsPerMeter - 0.15,
+		z = root.userData.innerHeight / root.userData.pixelsPerMeter - 0.15;
+	suggest.position.set(x,y,z);
+	suggest.rotateX(Math.PI/2);
+	root.add(suggest);
+	suggest.addEventListener('cursorup', toggleSuggestionForm);
+	suggest.addBehavior( new Behaviors.CursorFeedback() );
 
 	// add table surface
 	var table = new THREE.Mesh(

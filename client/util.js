@@ -15,7 +15,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		function loadTextures(cb)
 		{
 			var textureLoader = new THREE.TextureLoader();
-			var texturesToGo = 5;
+			var texturesToGo = 6;
 
 			textureLoader.load('/static/models/box.png', function(tex){
 				textures.box = tex;
@@ -39,6 +39,11 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
 			textureLoader.load('/static/cross.png', function(tex){
 				textures.cross = tex;
+				if(--texturesToGo === 0) cb();
+			});
+
+			textureLoader.load('/static/suggestion.png', function(tex){
+				window.suggestionTexture = tex;
 				if(--texturesToGo === 0) cb();
 			});
 		}
