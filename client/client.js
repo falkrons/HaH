@@ -82,7 +82,8 @@ function toggleSuggestionForm()
 			if(obj.name === 'presentation'){
 				obj.visible = true;
 				obj.children.forEach(function(c){
-					c.visible = true;
+					if(c !== gameObjects.titleCard)
+						c.visible = true;
 				});
 			}
 		});
