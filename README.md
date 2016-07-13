@@ -15,6 +15,8 @@ Setup
 	$ npm install
 	```
 
+3. Configure server by copying `config.sample.json` to `config.json`.
+
 3. Start server
 	```
 	$ node server/app.js

@@ -1,5 +1,6 @@
 {
 	"port": 7878,
 	"minPlayers": 4,
-	"maxPlayers": 12
+	"maxPlayers": 12,
+	"githubAccessToken": "000000d15ea5eddefec8edbadd0ff1cecafebabe"
 }

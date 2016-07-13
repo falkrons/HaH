@@ -15,7 +15,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		function loadTextures(cb)
 		{
 			var textureLoader = new THREE.TextureLoader();
-			var texturesToGo = 5;
+			var texturesToGo = 6;
 
 			textureLoader.load('/static/models/box.png', function(tex){
 				textures.box = tex;
@@ -39,6 +39,11 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
 			textureLoader.load('/static/cross.png', function(tex){
 				textures.cross = tex;
+				if(--texturesToGo === 0) cb();
+			});
+
+			textureLoader.load('/static/suggestion.png', function(tex){
+				window.suggestionTexture = tex;
 				if(--texturesToGo === 0) cb();
 			});
 		}
@@ -296,7 +301,10 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		// draw footer
 		g.textAlign = 'left';
 		g.font = (0.05*cardWidth*fontScale)+'px '+fontStack;
-		if( card.numResponses || card.numDraws ){
+		if( card.creator ){
+			g.fillText(card.creator, x+1.5*edgeLength, y);
+		}
+		else if( card.numResponses || card.numDraws ){
 			g.fillText("HAH", x+1.5*edgeLength, y);
 		}
 		else {
@@ -353,7 +361,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 			'© Cards Against Humanity LLC',
 			'Licensed under CC BY-NC-SA',
 			'cardsagainsthumanity.com',
-			'Developed for AltspaceVR by:',
+			'Adapted for AltspaceVR by:',
 			'StevenPatrick, falkrons, schmidtec'];
 		makeSafeFont(g, legal, 0.86*cardWidth);
 		for(var i=0; i<legal.length; i++){

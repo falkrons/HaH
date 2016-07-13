@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en"> <head>
+    <title></title>
+    <div id="infoBoard" style="color: #000099; text-align: left; font-size: 40px;">
+    	<form>
+		Short Description: <input type="text" name="Title" id = "title"><br>
+		<input type="radio" name="type" value="bug" id= "radio0"> Bug<br>
+  		<input type="radio" name="type" value="enhancement" id= "radio1"> Feature Request<br>
+  		<input type="radio" name="type" value="card-idea" id= "radio2"> Card Request<br>
+		Issue in Detail: <input type="text" name="Body" id = "body"><br>
+		<input type="button" value="Submit" onclick = "sendData()">
+	</form></div>
+   <script>
+   var playerInfo = {};
+   	if(altspace.inClient){
+			altspace.getUser().then(function(userInfo)
+			{
+				if(userInfo && userInfo.userId && userInfo.displayName){
+					playerInfo.displayName = userInfo.displayName;
+				}
+				else
+				{
+					console.log("you have been logged out of Coherent.");
+					var message = document.createElement('h1');
+					message.innerHTML = 'You\'ve been logged out of Coherent. Log in to join.';
+					document.body.insertBefore(message, document.body.children[0]);
+				}
+			});
+	}
+	else {
+		playerInfo.id = ''+Math.floor(Math.random()*1000);
+		playerInfo.displayName = 'WebClient'+playerInfo.id;
+	}
+	console.log(playerInfo.displayName);
+   	var xhr = new XMLHttpRequest();
+   	xhr.open("POST", "/feedback", true);
+   	xhr.setRequestHeader("Content-Type", "application/JSON")
+	
+	function sendData(){
+	var feedBack = {
+		"title" : document.getElementById("title").value,
+		"body" : document.getElementById("body").value,
+		"labels" : document.querySelector('input[name = "type"]:checked').value,
+		"username" : playerInfo.displayName
+	};
+	xhr.send(JSON.stringify(feedBack));
+ console.log(JSON.stringify(feedBack));
+}
+</script>
+    </head> <body alpha = 1>
+</body> </html>

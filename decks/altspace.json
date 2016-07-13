@@ -4,7 +4,15 @@
 	{"text": "What's the first sign\nof simulation\nsickness?"},
 	{"text": "_______: The latest\nin VR technology."},
 	{"text": "_______ is the\nworst VR peripheral\nI ever Kickstarted."},
-	{"text": "Coming soon\nto AltspaceVR:\n_______ live in VR!"}
+	{"text": "Coming soon\nto AltspaceVR:\n_______ live in VR!"},
+	{"text": "How's this for a\nband name: _______\nand the _______s!", "numResponses": 2},
+	{"text": "Imma let you finish,\nbut _______ had the\nbest _______ of all\ntime.", "numResponses": 2},
+	{"text": "Make America\n_______ Again!"},
+	{"text": "I brought home\nsome _______ for\nthe kids.", "creator": "GrumpyCrouton"},
+	{"text": "When life gives you\n_______, make\n_______.", "numResponses": 2, "creator": "GrumpyCrouton"},
+	{"text": "I can't help it...\n_______ just tastes\nso good!", "creator": "GrumpyCrouton"},
+	{"text": "Nooo! You can't\nleave me here\nwith _______!", "creator": "GrumpyCrouton"},
+	{"text": "My favorite\nboyscout badge is\nthe _______ badge.", "creator": "GrumpyCrouton"}
   ],
   "white": [
     {"text": "That funky\nRift DK2 smell."},
@@ -12,6 +20,24 @@
 	{"text": "A super sweaty\nheadset."},
 	{"text": "The early signs\nof simulation\nsickness."},
 	{"text": "Putting your Vive\nwand through\na $5000 TV."},
-	{"text": "Virtual reality porn."}
+	{"text": "Virtual reality porn."},
+	{"text": "Cymatic Bruce's\ncustom avatar."},
+	{"text": "Dumpster babies.", "creator": "GrumpyCrouton"},
+	{"text": "Feeling the Bern."},
+	{"text": "Pushing someone\ndown a flight\nof stairs.", "creator": "GrumpyCrouton"},
+	{"text": "Not looking\nat explosions.", "creator": "GrumpyCrouton"},
+	{"text": "Injecting marijuanas.", "creator": "GrumpyCrouton"},
+	{"text": "Lighting a homeless\nperson's cardboard\nbox on fire.", "creator": "GrumpyCrouton"},
+	{"text": "Putting a can of\nDr Pepper© in your\nanus and whispering\n\"The doctor is in.\"", "creator": "GrumpyCrouton"},
+	{"text": "A dagger made out\nof a toothbrush.", "creator": "GrumpyCrouton"},
+	{"text": "Finding Waldo.", "creator": "GrumpyCrouton"},
+	{"text": "Kung Fury.", "creator": "GrumpyCrouton"},
+	{"text": "Giving homeless\npeople monopoly\nmoney.", "creator": "GrumpyCrouton"},
+	{"text": "A small black dick.", "creator": "GrumpyCrouton"},
+	{"text": "The biggest dick.", "creator": "GrumpyCrouton"},
+	{"text": "Masturbating in\npublic.", "creator": "GrumpyCrouton"},
+	{"text": "Uncontrollable\nmuscle spasms.", "creator": "GrumpyCrouton"},
+	{"text": "Your mother.", "creator": "GrumpyCrouton"},
+	{"text": "My virginity.", "creator": "GrumpyCrouton"}
   ]
 }

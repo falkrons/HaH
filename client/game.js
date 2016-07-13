@@ -16,6 +16,7 @@ var socket;
 
 	var blackCard = null;
 	var czarId = '';
+	var joinBlocked = false;
 
 	function connectToGame(gameId)
 	{
@@ -92,6 +93,14 @@ var socket;
 
 	function init(newTurnOrder, newGameState, blackCard, czarId, submissions)
 	{
+		if(turnOrder.length > 0){
+			var cacheBuster = /[&?]cacheBuster=([^&]+)/.exec(window.location.search);
+			if(cacheBuster)
+				window.location.replace( window.location.search.replace(cacheBuster[0], '&cacheBuster='+cacheBuster[1]+'1') );
+			else
+				window.location.replace( window.location.search + '&cacheBuster=1' );
+		}
+
 		if(newTurnOrder.length === 0){
 			gameObjects.box.rotation.set(Math.PI, 0, 0);
 			gameObjects.titleCard.visible = true;
@@ -207,22 +216,25 @@ var socket;
 
 	function playerJoinRequest(id, displayName)
 	{
-		var dialog = Utils.generateDialog('Can this player join?\n'+displayName,
-			function(){
-				socket.emit('playerJoin', id, displayName);
-			},
-			function(){
-				socket.emit('playerJoinDenied', id, displayName);
-			}
-		);
-		dialog.name = 'join_'+id;
+		if (!joinBlocked){
+			var dialog = Utils.generateDialog('Can this player join?\n'+displayName,
+				function(){
+					socket.emit('playerJoin', id, displayName);
+				},
+				function(){
+					socket.emit('playerJoinDenied', id, displayName);
+				}
+			);
+			dialog.name = 'join_'+id;
 
-		// auto-join
-		//socket.emit('playerJoin', id, displayName);
+			// auto-join
+			//socket.emit('playerJoin', id, displayName);
+		}
 	}
 
 	function playerJoin(id, displayName, newTurnOrder)
 	{
+
 		Utils.rebalanceTable(newTurnOrder, turnOrder, id);
 		turnOrder.splice(0); turnOrder.push.apply(turnOrder, newTurnOrder);
 
@@ -233,6 +245,17 @@ var socket;
 		var crown = new Utils.Crown(id);
 		scene.add(crown);
 		console.log(crown);
+
+		if(id === playerInfo.id)
+		{
+			gameObjects.box.removeEventListener('cursorup');
+			if(gameState === 'roundFinished')
+				gameObjects.box.addEventListener('cursorup', function(){
+					socket.emit('dealCards');
+				});
+
+			ga('send', 'event', 'Player', 'join');
+		}
 
 		// hide request dialog if present
 		var seat = root.getObjectByName(playerInfo.id);
@@ -279,6 +302,13 @@ var socket;
 		if(dialog = seat.getObjectByName('join_'+id)){
 			seat.remove(dialog);
 		}
+
+		if(id === playerInfo.id){
+			joinBlocked = true;
+			setTimeout(function(){
+	        	joinBlocked = false;
+	    	}, 5000);
+		}
 	}
 
 	function playerLeave(id, displayName, newTurnOrder)
@@ -288,6 +318,8 @@ var socket;
 
 		if(id === playerInfo.id)
 		{
+			ga('send', 'event', 'Player', 'leave');
+
 			gameObjects.box.removeEventListener('cursorup');
 			gameObjects.box.addEventListener('cursorup', emitPlayerJoinRequest);
 
@@ -383,6 +415,9 @@ var socket;
 
 	function updatePlayerHand(newHand, newCzarId)
 	{
+		// track player-rounds to google analytics
+		ga('send', 'event', 'PlayerRound', 'start');
+
 		// set hand
 		hand = newHand;
 
@@ -394,9 +429,13 @@ var socket;
 		for(var temp=0; temp<12; temp++)
 		{
 			var cardRoot = seat.getObjectByName('card'+temp);
-			if(cardRoot.children.length > 0){
-				var child = cardRoot.children[0];
-				curCards[child.userData.index] = child;
+			for(var x=0; x<cardRoot.children.length; x++)
+			{
+				var child = cardRoot.children[x];
+				if(hand.indexOf(child.userData.index) >= 0)
+					curCards[child.userData.index] = child;
+				else
+					cardRoot.remove(child);
 			}
 
 			cardRoots.push(cardRoot);
@@ -709,6 +748,13 @@ var socket;
 		var displayList = [];
 		for(var user in selections)
 		{
+			// track played event
+			if(czarId === playerInfo.id && selections[user].length === 1)
+			{
+				var text = selections[user][0].text.replace('\n', ' ');
+				ga('send', 'event', 'CardTracking', 'playedCard', text);
+			}
+
 			// generate card models from descriptions
 			for(var i=0; i<selections[user].length; i++){
 				selections[user][i] = Utils.generateCard(selections[user][i], 'white');
@@ -867,6 +913,14 @@ var socket;
 	function winnerSelection(playerId)
 	{
 		gameState = 'roundFinished';
+
+		// track winner event
+		if(czarId === playerInfo.id && submissionMap[playerId].length === 1)
+		{
+			var text = submissionMap[playerId][0].userData.text.replace('\n', ' ');
+			ga('send', 'event', 'CardTracking', 'winningCard', text);
+		}
+
 		if(root.getObjectByName(playerInfo.id)){
 			gameObjects.box.addEventListener('cursorup', function(){
 				socket.emit('dealCards');
@@ -901,15 +955,22 @@ var socket;
 		var temp = root.getObjectByName('czarStack');
 		root.remove(temp);
 
+		// for player
 		var seat = root.getObjectByName(playerInfo.id);
-		for(var i=0; i<12; i++){
-			var spot = seat.getObjectByName('card'+i);
-			spot.removeEventListener('cursorup');
-		}
+		if(seat)
+		{
+			// disable card selection
+			for(var i=0; i<12; i++){
+				var spot = seat.getObjectByName('card'+i);
+				spot.removeEventListener('cursorup');
+			}
 
-		var yes = seat.getObjectByName('yes'), no = seat.getObjectByName('no');
-		if(yes || no){
+			// remove any yes/no boxes
+			var yes = seat.getObjectByName('yes'), no = seat.getObjectByName('no');
 			seat.remove(yes, no);
+
+			// track round completion
+			ga('send', 'event', 'PlayerRound', 'end');
 		}
 	}
 

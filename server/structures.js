@@ -51,6 +51,7 @@ Deck.loadCards = function()
 						var data = JSON.parse(data);
 					}
 					catch(e){
+						data = null;
 						console.error('Error parsing', name);
 						console.error(e);
 					}
@@ -80,6 +81,7 @@ Deck.prototype.dealWhiteCards = function(count)
 	for(var i=0; i<count; i++)
 	{
 		if(this.whiteDeck.length == 0){
+			console.log('Shuffling white deck');
 			this.whiteDeck = Deck.shuffleList(this.whiteDiscard);
 			this.whiteDiscard = [];
 		}
@@ -94,6 +96,7 @@ Deck.prototype.dealWhiteCards = function(count)
 Deck.prototype.dealBlackCard = function()
 {
 	if(this.blackDeck.length == 0){
+		console.log('Shuffling black deck');
 		this.blackDeck = Deck.shuffleList(this.blackDiscard);
 		this.blackDiscard = [];
 	}
