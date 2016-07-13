@@ -7,7 +7,6 @@
 {
 	// card positions
 	var cardPosition = [
-		[], // dummy entry for the head sphere
 		[-1.6, 3.9443045848797766e-32, -1.9594349641362686e-16, 0, -1.9594349641362686e-16, -3.55271373174006e-16, 1.6, 0, 0, 1.6, 3.55271373174006e-16, 0, 0, 0.125, 0.175, 1],
 		[-0.9729368090629578, 0.5315178036689758, 0.45922014117240906, 0, 0.4030035734176636, -0.22016185522079468, 1.1086554527282715, 0, 0.5753107070922852, 1.0530991554260254, 3.3009173172615647e-9, 0, 0.07848304510116577, 0.10530146211385727, 0.15576119720935822, 1],
 		[-0.9729368090629578, -0.531517744064331, -0.45922020077705383, 0, -0.40300360321998596, -0.22016192972660065, 1.1086554527282715, 0, -0.5753106474876404, 1.0530991554260254, 6.713475642072808e-8, 0, -0.07848304510116577, 0.10530146211385727, 0.15576119720935822, 1],
@@ -22,26 +21,23 @@
 		THREE.Object3D.call(this);
 
 		this.name = 'crown_'+owner;
-		this.scale.multiplyScalar(root.scale.x);
-		this.updateMatrix();
 
 		this.root = new THREE.Object3D();
 		this.root.rotation.set(-Math.PI/2, 0, Math.PI);
-		this.root.scale.multiplyScalar(1.4)
+		this.root.scale.multiplyScalar(1.4);
 
 		this.add(this.root);
 		this.addBehavior(new Behaviors.Object3DSync(socket, owner));
 
-		this.addCard( Models.blankCard.clone() );
-		this.addCard( Models.blankCard.clone() );
-		this.addCard( Models.blankCard.clone() );
-
 		// add head model (temp)
-		var head = new THREE.Mesh(
+		/*var head = new THREE.Mesh(
 			new THREE.SphereGeometry(0.10, 16,16),
 			new THREE.MeshBasicMaterial({color: 0x00ffff})
 		);
-		this.add(head);
+		this.add(head);*/
+
+		for(var i=0; i<7; i++)
+			this.addCard( Models.blankCard.clone() );
 	}
 
 	Crown.prototype = new THREE.Object3D();
@@ -56,6 +52,7 @@
 		}
 
 		card.matrix.fromArray(cardPosition[index]);
+		card.matrix.decompose(card.position, card.quaternion, card.scale);
 		this.root.add(card);
 	}
 

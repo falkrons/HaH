@@ -238,8 +238,8 @@ function render(timestamp)
 			}
 
 			var angle = timestamp/20000 * 2*Math.PI;
-			camera.position.x = 6*tableRadius * Math.sin(angle);
-			camera.position.y = 6*tableRadius * Math.cos(angle);
+			camera.position.x = 3*tableRadius * Math.sin(angle);
+			camera.position.y = 3*tableRadius * Math.cos(angle);
 			camera.position.z = 1.5;
 			camera.lookAt( new THREE.Vector3(0, 0, 1.5) );
 		}

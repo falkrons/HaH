@@ -243,7 +243,7 @@ var socket;
 
 		// add crown
 		var crown = new Utils.Crown(id);
-		scene.add(crown);
+		root.add(crown);
 		console.log(crown);
 
 		if(id === playerInfo.id)
@@ -281,6 +281,8 @@ var socket;
 					scene.add(skel);
 					var head = skel.getJoint('Head');
 					head.add(crown);
+					crown.scale.multiplyScalar(root.scale.x);
+					crown.updateMatrix();
 				});
 			}
 			else
