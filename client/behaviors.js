@@ -251,7 +251,10 @@
 
 			if(matrixChanged)
 			{
-				console.log('broadcasting position');
+				var pos = new THREE.Vector3(), quat = new THREE.Quaternion(), scale = new THREE.Vector3();
+				this.target.matrixWorld.decompose(pos, quat, scale);
+				console.log('broadcasting position', pos, quat, scale);
+
 				this.lastMatrix = Array.prototype.slice.call(this.target.matrixWorld.elements);
 				this.socket.emit('objectUpdate', this.target.name,
 					Array.prototype.slice.call(this.target.matrixWorld.elements));
@@ -262,8 +265,11 @@
 	Object3DSync.prototype.updateHandler = function(objName, matrix)
 	{
 		if(objName === this.target.name){
-			console.log('syncing position');
 			this.target.matrix.fromArray(matrix);
+			var pos = new THREE.Vector3(), quat = new THREE.Quaternion(), scale = new THREE.Vector3();
+			this.target.matrix.decompose(pos, quat, scale);
+			console.log('syncing position', pos, quat, scale);
+
 			this.target.matrixWorldNeedsUpdate = true;
 		}
 	}
