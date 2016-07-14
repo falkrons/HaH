@@ -11,6 +11,7 @@ var structures = require('./structures.js'),
 	players = require('./players.js'),
 	game = require('./game.js'),
 	feedback = require('./feedback.js'),
+	objectSync = require('./objectSync.js'),
 	config = require('../config.json');
 
 var activeGames = structures.activeGames;
@@ -132,10 +133,11 @@ function registerGameListeners(socket)
 	socket.on('winnerSelection', game.winnerSelection);
 
 	// register object sync events
-	socket.on('objectUpdate', function(objName, matrix){
+	socket.on('objectUpdate', objectSync.updateTransform);
+	/*socket.on('objectUpdate', function(objName, matrix){
 		//console.log('objectUpdate', objName, matrix);
 		this.to(this.gameId+'_clients').emit('objectUpdate', objName, matrix);
-	});
+	});*/
 }
 
 

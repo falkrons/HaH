@@ -217,13 +217,7 @@
 	{
 		this.socket = socket;
 		this.owner = owner;
-		this.updateInterval = 500;
-		this.lastUpdate = 0;
 		this.lastMatrix = [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
-
-		if(Game.playerInfo.id !== owner){
-			socket.on('objectUpdate', this.updateHandler.bind(this));
-		}
 	}
 
 	Object3DSync.prototype.constructor = Object3DSync;
@@ -236,15 +230,12 @@
 
 	Object3DSync.prototype.update = function(deltaT)
 	{
-		this.lastUpdate += deltaT;
-
-		if(Game.playerInfo.id === this.owner && this.lastUpdate > this.updateInterval)
+		if(Game.playerInfo.id === this.owner)
 		{
-			this.lastUpdate -= this.updateInterval;
 			this.target.updateMatrixWorld();
 
 			var rootMat = new THREE.Matrix4().getInverse(root.matrixWorld);
-			rootMat = rootMat.multiplyMatrices(rootMat, this.target.matrixWorld);
+			rootMat = rootMat.multiply(this.target.matrixWorld);
 
 			var matrixChanged = false, i = 0;
 			while(!matrixChanged && i < 16){
@@ -258,12 +249,8 @@
 				this.socket.emit('objectUpdate', this.target.name, this.lastMatrix);
 			}
 		}
-	}
-
-	Object3DSync.prototype.updateHandler = function(objName, matrix)
-	{
-		if(this.target && objName === this.target.name){
-			this.target.matrix.fromArray(matrix);
+		else if(this.target && window._syncStates && window._syncStates[this.target.name]){
+			this.target.matrix.fromArray(window._syncStates[this.target.name]);
 		}
 	}
 

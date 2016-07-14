@@ -60,6 +60,9 @@ var socket;
 		socket.on('error', function(msg){
 			console.error(msg);
 		});
+		socket.on('objectUpdate', function(states){
+			window._syncStates = states;
+		});
 
 		socket.on('init', init);
 		socket.on('roundReset', roundReset);
