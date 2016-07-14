@@ -149,7 +149,7 @@ function init()
 	root.addEventListener('cursorleave', Utils.idleCheck );
 
 	// add suggestion box
-	var suggest = new THREE.Mesh(
+	/*var suggest = new THREE.Mesh(
 		new THREE.BoxGeometry(0.3, 0.3, 0.3),
 		new THREE.MeshBasicMaterial({map: window.suggestionTexture})
 	);
@@ -161,6 +161,7 @@ function init()
 	root.add(suggest);
 	suggest.addEventListener('cursorup', toggleSuggestionForm);
 	suggest.addBehavior( new Behaviors.CursorFeedback() );
+	*/
 
 	// add table surface
 	var table = new THREE.Mesh(
