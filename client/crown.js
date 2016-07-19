@@ -16,7 +16,7 @@
 		[7.59392548843607e-9, 4.356159044593966e-10, 1, 0, -0.11435118317604065, 0.9934403896331787, 4.356159044593966e-10, 0, -0.9934403896331787, -0.11435118317604065, 7.59392548843607e-9, 0, -0.12503184378147125, -0.02170942910015583, 0.11999999731779099, 1]
 	];
 
-	function Crown(owner)
+	function Crown(owner, wins)
 	{
 		THREE.Object3D.call(this);
 
@@ -36,8 +36,9 @@
 		);
 		this.add(head);*/
 
-		for(var i=0; i<7; i++)
-			this.addCard( Models.blankCard.clone() );
+		wins = wins || [];
+		for(var i=0; i<wins.length; i++)
+			this.addCard( Utils.generateCard(wins[i], 'black') );
 	}
 
 	Crown.prototype = new THREE.Object3D();
@@ -48,6 +49,8 @@
 		var index = this.root.children.length;
 		if(index >= cardPosition.length){
 			console.log('card overflow', index);
+			if(card && card.parent)
+				card.parent.remove(card);
 			return;
 		}
 
