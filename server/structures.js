@@ -160,6 +160,7 @@ function Player(playerId, displayName, socket)
 
 	this.hand = [];
 	this.selection = null;
+	this.wins = [];
 }
 
 
@@ -258,8 +259,10 @@ Game.prototype.kickVoteForId = function(id)
 
 Game.prototype.getCleanTurnOrder = function()
 {
+	var self = this;
 	return this.turnOrder.map(function(cur){
-		return {id: cur.id, displayName: cur.displayName, hand: cur.hand};
+		var winCards = cur.wins.map(x => Deck.blackCardList[x]);
+		return {id: cur.id, displayName: cur.displayName, handLength: cur.handLength, wins: winCards};
 	});
 }
 

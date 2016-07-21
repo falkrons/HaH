@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script src='three.min.js'></script>
+		<script src='ColladaLoader.js'></script>
+		<script src='http://sdk.altvr.com/libs/altspace.js/0.12.0/altspace.min.js'></script>
+		<script src='util.js'></script>
+		<script src='crown.js'></script>
+		<script src='behaviors.js'></script>
+	</head>
+	<body>
+		<script>
+
+			var scene = new THREE.Scene();
+			var root = new THREE.Object3D();
+			scene.add(root);
+			var skeleton;
+
+			var crown = new Utils.Crown();
+			root.add(crown);
+
+			if(altspace.inClient)
+			{
+				var renderer = altspace.getThreeJSRenderer();
+				altspace.getEnclosure().then(function(enc)
+				{
+					// reset coordinate space
+					root.scale.set(enc.pixelsPerMeter, enc.pixelsPerMeter, enc.pixelsPerMeter);
+					crown.scale.multiplyScalar(enc.pixelsPerMeter);
+				});
+				altspace.getThreeJSTrackingSkeleton().then(function(skel)
+				{
+					skeleton = skel;
+					scene.add(skel);
+					var head = skel.getJoint('Head');
+					console.log('adding crown to head');
+					head.add(crown);
+				});
+			}
+			else {
+				renderer = new THREE.WebGLRenderer();
+				renderer.setSize(1280, 720);
+				renderer.setClearColor( 0x888888 );
+
+				var arm = new THREE.Object3D();
+				root.add(arm);
+				arm.addBehavior( new Behaviors.Rotate(0,0.5,0) );
+				var camera = new THREE.PerspectiveCamera(45, 1280/720, 0.1, 10);
+				camera.position.set(0, 0.2, 0.7);
+				camera.lookAt(new THREE.Vector3(0,0.15,0));
+				arm.add(camera);
+
+				document.body.appendChild(renderer.domElement);
+			}
+
+			var loader = new THREE.ColladaLoader();
+			loader.load('/static/models/card.dae', function(result){
+				Models.card = result.scene.children[0].children[0];
+				Models.card.scale.set(2,2,2);
+				Models.blankCard = Utils.generateCard({text:''});
+				init();
+			});
+
+			function init()
+			{
+				window.card1 = Utils.generateCard({text: 'What\'s that smell?'}, 'black');
+				crown.addCard(card1);
+
+				window.card2 = Utils.generateCard({text: 'How does\nPresident Obama\nunwind?'}, 'black');
+				crown.addCard(card2);
+
+				window.card3 = Utils.generateCard({text: 'How does\nPresident Obama\nunwind?'}, 'black');
+				crown.addCard(card3);
+
+				window.card4 = Utils.generateCard({text: 'How does\nPresident Obama\nunwind?'}, 'black');
+				crown.addCard(card4);
+
+				window.card5 = Utils.generateCard({text: 'How does\nPresident Obama\nunwind?'}, 'black');
+				crown.addCard(card5);
+
+				window.card6 = Utils.generateCard({text: 'How does\nPresident Obama\nunwind?'}, 'black');
+				crown.addCard(card6);
+
+				window.card7 = Utils.generateCard({text: 'How does\nPresident Obama\nunwind?'}, 'black');
+				crown.addCard(card7);
+			}
+
+			var lastT = Date.now();
+			window.requestAnimationFrame(function animate(timestamp)
+			{
+				window.requestAnimationFrame(animate);
+
+				var nowT = Date.now();
+				scene.updateAllBehaviors(nowT-lastT);
+				lastT = nowT;
+
+				renderer.render(scene, camera);
+			});
+
+		</script>
+	</body>
+</html>

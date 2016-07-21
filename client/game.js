@@ -1,9 +1,11 @@
 'use strict';
 
+var socket;
+var isInit = false;
+
 // don't pollute the global namespace
 (function(exports)
 {
-	var socket;
 	var turnOrder = [];
 	var playerInfo = {};
 	var hand = [];
@@ -42,7 +44,7 @@
 		}
 
 		// initialize the socket connection
-		Game.socket = socket = io('/?gameId='+gameId);
+		socket = io('/?gameId='+gameId);
 
 		// debug listener
 		var onevent = socket.onevent;
@@ -58,6 +60,9 @@
 
 		socket.on('error', function(msg){
 			console.error(msg);
+		});
+		socket.on('objectUpdate', function(states){
+			window._syncStates = states;
 		});
 
 		socket.on('init', init);
@@ -92,13 +97,15 @@
 
 	function init(newTurnOrder, newGameState, blackCard, czarId, submissions)
 	{
-		if(turnOrder.length > 0){
+		if(isInit){
 			var cacheBuster = /[&?]cacheBuster=([^&]+)/.exec(window.location.search);
 			if(cacheBuster)
 				window.location.replace( window.location.search.replace(cacheBuster[0], '&cacheBuster='+cacheBuster[1]+'1') );
 			else
 				window.location.replace( window.location.search + '&cacheBuster=1' );
 		}
+		else
+			isInit = true;
 
 		if(newTurnOrder.length === 0){
 			gameObjects.box.rotation.set(Math.PI, 0, 0);
@@ -120,6 +127,11 @@
 		// save turn order (without reassigning obj)
 		turnOrder.splice(0); turnOrder.push.apply(turnOrder, newTurnOrder);
 
+		newTurnOrder.forEach(function(p){
+			var crown = new Utils.Crown(p.id, p.wins);
+			root.add(crown);
+		});
+
 		// hook up click-to-join handler
 		gameObjects.box.removeEventListener('cursorup');
 		gameObjects.box.addEventListener('cursorup', emitPlayerJoinRequest);
@@ -130,7 +142,7 @@
 		var states = ['roundFinished', 'roundStarted', 'playerSelectionPending', 'czarSelectionPending'];
 		// deal placeholder cards to all players
 		if(states.indexOf(gameState) >= 1)
-			dealCards(turnOrder.length > 0 ? turnOrder[0].hand.length : 0, blackCard, czarId);
+			dealCards(turnOrder.length > 0 ? turnOrder[0].handLength : 0, blackCard, czarId);
 		if(states.indexOf(gameState) >= 2)
 			roundStart();
 		if(states.indexOf(gameState) >= 3)
@@ -235,6 +247,11 @@
 		gameObjects.box.rotation.set(0, 0, 0);
 		gameObjects.titleCard.visible = false;
 
+		// add crown
+		var crown = new Utils.Crown(id);
+		root.add(crown);
+		console.log(crown);
+
 		if(id === playerInfo.id)
 		{
 			gameObjects.box.removeEventListener('cursorup');
@@ -256,9 +273,32 @@
 			}
 		}
 
+		if(id === playerInfo.id)
+		{
+			gameObjects.box.removeEventListener('cursorup');
+			if(gameState === 'roundFinished')
+				gameObjects.box.addEventListener('cursorup', function(){
+					socket.emit('dealCards');
+				});
+
+			if(altspace.inClient)
+			{
+				altspace.getThreeJSTrackingSkeleton().then(function(skel){
+					scene.add(skel);
+					var head = skel.getJoint('Head');
+					head.add(crown);
+					crown.scale.multiplyScalar(root.scale.x);
+					crown.updateMatrix();
+				});
+			}
+			else
+			{
+				camera.add(crown);
+			}
+		}
+
 		console.log('New player joined:', displayName);
 		//Utils.idleCheck();
-
 
 	}
 
@@ -296,6 +336,11 @@
 					model.removeEventListener('cursorup');
 				}
 			});
+		}
+
+		var crown = scene.getObjectByName('crown_'+id);
+		if(crown){
+			scene.remove(crown);
 		}
 
 		// hide request dialog if present
@@ -342,9 +387,6 @@
 		if( newBlackCard && (!blackCard || newBlackCard.index !== blackCard.userData.index) )
 		{
 			// clean up from previous round
-			if(blackCard && blackCard.parent){
-				blackCard.parent.remove(blackCard);
-			}
 			for(var i=0; i<submissionList.length; i++){
 				for(var j=0; j<submissionList[i].length; j++)
 				{
@@ -900,6 +942,10 @@
 		Sounds.playSound('fanfare');
 
 		// award black card
+		var winnerCrown = scene.getObjectByName('crown_'+playerId);
+		if(winnerCrown){
+			winnerCrown.addCard(blackCard)
+		}
 
 		// clean up from round
 		/*for(var i=0; i<submissionList.length; i++){

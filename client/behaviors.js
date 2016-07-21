@@ -210,9 +210,55 @@
 	CursorFeedback.prototype.update = function(deltaT){};
 
 
+	/*
+	 * Synchronize Object3D's transform over the socket
+	 */
+	function Object3DSync(socket, owner)
+	{
+		this.socket = socket;
+		this.owner = owner;
+		this.lastMatrix = [1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1];
+	}
+
+	Object3DSync.prototype.constructor = Object3DSync;
+
+	Object3DSync.prototype.awake = function(obj)
+	{
+		this.target = obj;
+		obj.matrixAutoUpdate = false;
+	}
+
+	Object3DSync.prototype.update = function(deltaT)
+	{
+		if(Game.playerInfo.id === this.owner)
+		{
+			this.target.updateMatrixWorld();
+
+			var rootMat = new THREE.Matrix4().getInverse(root.matrixWorld);
+			rootMat = rootMat.multiply(this.target.matrixWorld);
+
+			var matrixChanged = false, i = 0;
+			while(!matrixChanged && i < 16){
+				matrixChanged = matrixChanged || rootMat.elements[i] !== this.lastMatrix[i];
+				i++;
+			}
+
+			if(matrixChanged)
+			{
+				this.lastMatrix = rootMat.toArray();
+				this.socket.emit('objectUpdate', this.target.name, this.lastMatrix);
+			}
+		}
+		else if(this.target && window._syncStates && window._syncStates[this.target.name]){
+			this.target.matrix.fromArray(window._syncStates[this.target.name]);
+		}
+	}
+
+
 	exports.Rotate = Rotate;
 	exports.Animate = Animate;
 	exports.CursorFeedback = CursorFeedback;
+	exports.Object3DSync = Object3DSync;
 
 })(window.Behaviors = window.Behaviors || {});
 

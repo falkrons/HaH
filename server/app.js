@@ -11,6 +11,7 @@ var structures = require('./structures.js'),
 	players = require('./players.js'),
 	game = require('./game.js'),
 	feedback = require('./feedback.js'),
+	objectSync = require('./objectSync.js'),
 	config = require('../config.json');
 
 var activeGames = structures.activeGames;
@@ -40,9 +41,11 @@ app.get('/play', function(req,res,next)
 {
 	if(!req.query.gameId){
 		const ab = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijlkmnopqrstuvwxyz0123456789';
-		var id = '';
-		for(var i=0; i<16; i++)
-			id += ab[ Math.floor(Math.random()*ab.length) ];
+		do {
+			var id = '';
+			for(var i=0; i<16; i++)
+				id += ab[ Math.floor(Math.random()*ab.length) ];
+		} while(activeGames[id]);
 		res.redirect('?gameId='+id);
 	}
 	else {
@@ -122,11 +125,19 @@ function registerGameListeners(socket)
 	socket.on('playerKickRequest', players.kickRequest);
 	socket.on('playerKickResponse', players.kickResponse);
 
+	// register game events
 	socket.on('dealCards', game.dealCards);
 	socket.on('roundStart', game.roundStart);
 	socket.on('cardSelection', game.cardSelection);
 	socket.on('presentSubmission', game.presentSubmission);
 	socket.on('winnerSelection', game.winnerSelection);
+
+	// register object sync events
+	socket.on('objectUpdate', objectSync.updateTransform);
+	/*socket.on('objectUpdate', function(objName, matrix){
+		//console.log('objectUpdate', objName, matrix);
+		this.to(this.gameId+'_clients').emit('objectUpdate', objName, matrix);
+	});*/
 }
 
 
