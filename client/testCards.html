@@ -34,14 +34,14 @@
 					var texture = card.material.map.image;
 					
 					// draw debug pattern
-					var g = texture.getContext('2d');
+					/*var g = texture.getContext('2d');
 					g.strokeStyle = type === 'black' ? 'white' : 'black';
 					g.lineWidth = 1;
 					for(var i=0; i<256; i+=16){
 						g.moveTo(i,0);
 						g.lineTo(i,100);
 					}
-					g.stroke();
+					g.stroke();*/
 					
 					document.getElementById('canvasContainer').appendChild(texture);
 				});
