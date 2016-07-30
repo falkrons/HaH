@@ -15,36 +15,22 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		function loadTextures(cb)
 		{
 			var textureLoader = new THREE.TextureLoader();
-			var texturesToGo = 6;
+			var textureInfo = [
+				{name: 'box', url: '/static/models/box.png'},
+				{name: 'confettiLeftAO', url: '/static/models/leftao.png'},
+				{name: 'confettiRightAO', url: '/static/models/rightao.png'},
+				{name: 'check', url: '/static/check.png'},
+				{name: 'cross', url: '/static/cross.png'},
+				{name: 'suggestionTexture', url: '/static/suggestion.png'},
+				{name: 'startSign', url: '/static/images/startSign.png'},
+			];
+			var texturesToGo = textureInfo.length;
 
-			textureLoader.load('/static/models/box.png', function(tex){
-				textures.box = tex;
-				if(--texturesToGo === 0) cb();
-			});
-
-			textureLoader.load('/static/models/leftao.png', function(tex){
-				textures.confettiLeftAO = tex;
-				if(--texturesToGo === 0) cb();
-			});
-
-			textureLoader.load('/static/models/rightao.png', function(tex){
-				textures.confettiRightAO = tex;
-				if(--texturesToGo === 0) cb();
-			});
-
-			textureLoader.load('/static/check.png', function(tex){
-				textures.check = tex;
-				if(--texturesToGo === 0) cb();
-			});
-
-			textureLoader.load('/static/cross.png', function(tex){
-				textures.cross = tex;
-				if(--texturesToGo === 0) cb();
-			});
-
-			textureLoader.load('/static/suggestion.png', function(tex){
-				window.suggestionTexture = tex;
-				if(--texturesToGo === 0) cb();
+			textureInfo.forEach(function (texture) {
+				textureLoader.load(texture.url, function(tex){
+					textures[texture.name] = tex;
+					if(--texturesToGo === 0) cb();
+				});
 			});
 		}
 
@@ -75,9 +61,22 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
 			modelLoader.load('/static/models/box.dae', function(result)
 			{
-				models.box = result.scene.children[0].children[0];
-				models.box.scale.set(2,2,2);
-				models.box.material = new THREE.MeshBasicMaterial({map: textures.box});
+				models.box = new THREE.Group();
+
+				var _box = result.scene.children[0].children[0].clone();
+				_box.scale.set(2,2,2);
+				_box.material = new THREE.MeshBasicMaterial({map: textures.box});
+				models.box.add(_box);
+
+				var startSign = new THREE.Mesh(
+					new THREE.PlaneGeometry(1, 1),
+					new THREE.MeshBasicMaterial({map: textures.startSign, side: THREE.DoubleSide, transparent: true})
+				);
+				startSign.rotation.x = -Math.PI / 2;
+				startSign.scale.set(4, 1, 1);
+				startSign.scale.multiplyScalar(0.1);
+				startSign.position.z = -0.2;
+				models.box.add(startSign);
 
 				if(--modelsToGo === 0) cb();
 			});
@@ -171,13 +170,13 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 			});
 		}
 	}
-	
+
 	sounds.playSound = function(soundName)
 	{
 		var source = sounds.ctx.createBufferSource();
 		source.buffer = sounds[soundName];
 		source.connect( sounds[soundName+'Vol'] );
-		
+
 		if(soundName === 'fanfare')
 			source.start(0, 1.4);
 		else
@@ -474,7 +473,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		seat.add(model);
 
 		sounds.playSound('ding');
-		
+
 		return model;
 	}
 
