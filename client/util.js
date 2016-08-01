@@ -22,7 +22,6 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 				{name: 'check', url: '/static/check.png'},
 				{name: 'cross', url: '/static/cross.png'},
 				{name: 'suggestionTexture', url: '/static/suggestion.png'},
-				{name: 'startSign', url: '/static/images/startSign.png'},
 			];
 			var texturesToGo = textureInfo.length;
 
@@ -68,9 +67,14 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 				_box.material = new THREE.MeshBasicMaterial({map: textures.box});
 				models.box.add(_box);
 
+				var startSignMat = generateTextMaterial('Open To Start', {
+					backgroundColor: 'transparent', height: 50, single: true, fontScale: 1, textBaseline: 'middle'
+				});
+				startSignMat.transparent = true;
+				startSignMat.side = THREE.DoubleSide;
 				var startSign = new THREE.Mesh(
 					new THREE.PlaneGeometry(1, 1),
-					new THREE.MeshBasicMaterial({map: textures.startSign, side: THREE.DoubleSide, transparent: true})
+					startSignMat
 				);
 				startSign.rotation.x = -Math.PI / 2;
 				startSign.scale.set(4, 1, 1);
@@ -376,36 +380,52 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		return model;
 	}
 
-	function generateNameplate(name)
+	function generateTextMaterial(text, options)
 	{
-		// card face texture resolution
 		var texWidth = 256;
-		var model = models.nameplate.clone();
 		var fontStack = '"Helvetica Neue", Helvetica, Arial, Sans-Serif';
 
 		// set up canvas
 		var bmp = document.createElement('canvas');
-		var g = bmp.getContext('2d');
+		var ctx = bmp.getContext('2d');
 		bmp.width = texWidth;
-		bmp.height = texWidth;
+		bmp.height = options.height || texWidth;
 
-		if(name === Game.playerInfo.displayName)
-			g.fillStyle = '#541E1E'; // brick red
-		else
-			g.fillStyle = '#38281C'; // neutral brown
-		g.fillRect(0, 0, texWidth, texWidth);
+		ctx.fillStyle = options.backgroundColor;
+		ctx.fillRect(0, 0, texWidth, options.height || texWidth);
 
-		g.font = 'bold '+(0.1*texWidth*fontScale)+'px '+fontStack;
-		makeSafeFont(g, [name], 0.9*texWidth);
-		g.textAlign = 'center';
-		g.fillStyle = 'white';
-		g.fillText(name, texWidth/2, 35);
-		g.fillText(name, texWidth/2, 86);
+		// TODO: We can simplify this code if the nameplates had a sane UV mapping
+		ctx.font = 'bold '+((options.fontScale || 0.1)*bmp.height*fontScale)+'px '+fontStack;
+		makeSafeFont(ctx, [text], 0.9*texWidth);
+		ctx.textAlign = 'center';
+		if (options.textBaseline) {
+			ctx.textBaseline = options.textBaseline;
+		}
+		ctx.fillStyle = 'white';
+		if (options.single) {
+			ctx.fillText(text, texWidth/2, bmp.height / 2);
+		}
+		else {
+			ctx.fillText(text, texWidth/2, 35);
+			ctx.fillText(text, texWidth/2, 86);
+		}
 
-		// assign texture
-		model.material = new THREE.MeshBasicMaterial({
+		return new THREE.MeshBasicMaterial({
 			map: new THREE.CanvasTexture(bmp)
 		});
+	}
+
+	function generateNameplate(name)
+	{
+		var model = models.nameplate.clone();
+		var backgroundColor;
+		if(name === Game.playerInfo.displayName)
+			backgroundColor = '#541E1E'; // brick red
+		else
+			backgroundColor = '#38281C'; // neutral brown
+
+		// assign texture
+		model.material = generateTextMaterial(name, {backgroundColor: backgroundColor});
 
 		return model;
 	}
