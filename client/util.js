@@ -67,14 +67,9 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 				_box.material = new THREE.MeshBasicMaterial({map: textures.box});
 				models.box.add(_box);
 
-				var startSignMat = generateTextMaterial('Open To Start', {
-					backgroundColor: 'transparent', height: 50, single: true, fontScale: 1, textBaseline: 'middle'
-				});
-				startSignMat.transparent = true;
-				startSignMat.side = THREE.DoubleSide;
 				var startSign = new THREE.Mesh(
 					new THREE.PlaneGeometry(1, 1),
-					startSignMat
+					generateStatusTextMaterial('Open To Start')
 				);
 				startSign.rotation.x = -Math.PI / 2;
 				startSign.scale.set(4, 1, 1);
@@ -415,6 +410,15 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		});
 	}
 
+	function generateStatusTextMaterial(text) {
+		var statusMat = generateTextMaterial(text, {
+			backgroundColor: 'transparent', height: 50, single: true, fontScale: 1, textBaseline: 'middle'
+		});
+		statusMat.transparent = true;
+		statusMat.side = THREE.DoubleSide;
+		return statusMat;
+	}
+
 	function generateNameplate(name)
 	{
 		var model = models.nameplate.clone();
@@ -695,6 +699,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 	exports.preloadAssets = preloadAssets;
 	exports.generateCard = generateCard;
 	exports.generateTitleCard = generateTitleCard;
+	exports.generateStatusTextMaterial = generateStatusTextMaterial;
 	exports.generateNameplate = generateNameplate;
 	exports.generateDialog = generateDialog;
 	exports.sphericalToMatrix = sphericalToMatrix;

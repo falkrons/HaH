@@ -18,6 +18,7 @@ var isInit = false;
 	var blackCard = null;
 	var czarId = '';
 	var joinBlocked = false;
+	var minPlayers = 3;
 
 	function connectToGame(gameId)
 	{
@@ -55,7 +56,8 @@ var isInit = false;
 			onevent.call(this, packet);
 		};
 		socket.on('*', function(){
-			console.log(arguments);
+			// TODO: Figure out why we're spewing objectUpdates
+			//console.log(arguments);
 		});
 
 		socket.on('error', function(msg){
@@ -107,15 +109,6 @@ var isInit = false;
 		else
 			isInit = true;
 
-		if(newTurnOrder.length === 0){
-			gameObjects.box.rotation.set(Math.PI, 0, 0);
-			gameObjects.titleCard.visible = true;
-		}
-		else {
-			gameObjects.box.rotation.set(0, 0, 0);
-			gameObjects.titleCard.visible = false;
-		}
-
 		var card = gameObjects.presentation.getObjectByName('blackCard');
 		if(card){
 			gameObjects.presentation.remove(card);
@@ -126,6 +119,8 @@ var isInit = false;
 
 		// save turn order (without reassigning obj)
 		turnOrder.splice(0); turnOrder.push.apply(turnOrder, newTurnOrder);
+
+		updateCenterPieceState();
 
 		newTurnOrder.forEach(function(p){
 			var crown = new Utils.Crown(p.id, p.wins);
@@ -145,10 +140,14 @@ var isInit = false;
 			dealCards(turnOrder.length > 0 ? turnOrder[0].handLength : 0, blackCard, czarId);
 		if(states.indexOf(gameState) >= 2)
 			roundStart();
-		if(states.indexOf(gameState) >= 3)
+		if(states.indexOf(gameState) >= minPlayers)
 			cardSelectionComplete(submissions);
 
 
+	}
+
+	function getSeat(playerId) {
+		return root.getObjectByName(playerId || playerInfo.id);
 	}
 
 	// something screwed up the turn order, so restart round
@@ -166,7 +165,7 @@ var isInit = false;
 		gameState = 'roundFinished';
 
 		// if playing
-		var seat = root.getObjectByName(playerInfo.id);
+		var seat = getSeat();
 		if(seat)
 		{
 			// return any selected cards to the hand
@@ -238,14 +237,50 @@ var isInit = false;
 		}
 	}
 
+	function updateCenterPieceState()
+	{
+		var numPlayers = turnOrder.length;
+		var hasStarted = numPlayers !== 0;
+
+		gameObjects.box.rotation.set(hasStarted ? 0 : Math.PI, 0, 0);
+
+		var statusSign = gameObjects.box.children[1];
+		statusSign.position.z = hasStarted ? 0.2 : -0.2;
+		statusSign.rotation.x = hasStarted ? Math.PI / 2 : -Math.PI / 2;
+
+		gameObjects.titleCard.visible = !hasStarted;
+
+		var hasSeat = !!getSeat();
+		var haveEnoughPlayers = numPlayers >= minPlayers;
+		var statusText;
+		if (!hasStarted) {
+			statusText = 'Open To Start';
+		}
+		else if (gameState === 'roundStarted') {
+			statusText = '';
+		}
+		else if (hasSeat) {
+			if (haveEnoughPlayers) {
+				statusText = 'Click To Deal';
+			}
+			else {
+				var neededPlayers = minPlayers - numPlayers;
+				statusText = 'Need ' + neededPlayers + ' More Player' + (neededPlayers > 1 ? 's' : '');
+			}
+		}
+		else if (!hasSeat) {
+			statusText = 'Click To Join'
+		}
+		statusSign.material = Utils.generateStatusTextMaterial(statusText);
+	}
+
 	function playerJoin(id, displayName, newTurnOrder)
 	{
 
 		Utils.rebalanceTable(newTurnOrder, turnOrder, id);
 		turnOrder.splice(0); turnOrder.push.apply(turnOrder, newTurnOrder);
 
-		gameObjects.box.rotation.set(0, 0, 0);
-		gameObjects.titleCard.visible = false;
+		updateCenterPieceState();
 
 		// add crown
 		var crown = new Utils.Crown(id);
@@ -264,7 +299,7 @@ var isInit = false;
 		}
 
 		// hide request dialog if present
-		var seat = root.getObjectByName(playerInfo.id);
+		var seat = getSeat();
 		if(seat)
 		{
 			var dialog;
@@ -305,7 +340,7 @@ var isInit = false;
 	function playerJoinDenied(id, displayName)
 	{
 		// hide request dialog if present
-		var seat = root.getObjectByName(playerInfo.id);
+		var seat = getSeat();
 		var dialog;
 		if(dialog = seat.getObjectByName('join_'+id)){
 			seat.remove(dialog);
@@ -344,7 +379,7 @@ var isInit = false;
 		}
 
 		// hide request dialog if present
-		var seat = root.getObjectByName(playerInfo.id);
+		var seat = getSeat();
 		if(seat)
 		{
 			var dialog;
@@ -353,10 +388,7 @@ var isInit = false;
 			}
 		}
 
-		if(newTurnOrder.length === 0){
-			gameObjects.box.rotation.set(Math.PI, 0, 0);
-			gameObjects.titleCard.visible = true;
-		}
+		updateCenterPieceState();
 
 		console.log('Player', displayName, 'has left the game.');
 	}
@@ -380,9 +412,11 @@ var isInit = false;
 	function dealCards(newHand, newBlackCard, newCzarId)
 	{
 		gameState = 'roundStarted';
-		if(root.getObjectByName(playerInfo.id)){
+		if(getSeat()){
 			gameObjects.box.removeEventListener('cursorup');
 		}
+
+		updateCenterPieceState();
 
 		if( newBlackCard && (!blackCard || newBlackCard.index !== blackCard.userData.index) )
 		{
@@ -426,7 +460,7 @@ var isInit = false;
 		// set hand
 		hand = newHand;
 
-		var seat = root.getObjectByName(playerInfo.id);
+		var seat = getSeat();
 
 		// build a list of card positions and their contents
 		var cardRoots = [];
@@ -512,7 +546,7 @@ var isInit = false;
 			if(player.id === playerInfo.id)
 				continue;
 
-			var seat = root.getObjectByName(player.id);
+			var seat = getSeat(player.id);
 
 			var cardRoots = [];
 			for(var temp=0; temp<12; temp++){
@@ -576,7 +610,7 @@ var isInit = false;
 		gameState = 'playerSelectionPending';
 
 		// identify pres area
-		var seat = root.getObjectByName(playerInfo.id);
+		var seat = getSeat();
 		if(seat)
 			var center = seat.getObjectByName('presentation');
 		else
@@ -604,7 +638,7 @@ var isInit = false;
 
 	function handleCardSelection(handIndex)
 	{
-		var seat = root.getObjectByName(playerInfo.id);
+		var seat = getSeat();
 		var cardRoot = seat.getObjectByName('card'+handIndex);
 
 		// don't add any more cards after the necessary amount
@@ -699,7 +733,7 @@ var isInit = false;
 
 	function animateSelection(handIndexes, playerId)
 	{
-		var seat = root.getObjectByName(playerId);
+		var seat = getSeat(playerId);
 
 		// kill confirmation boxes if necessary
 		var yes = seat.getObjectByName('yes');
@@ -715,7 +749,7 @@ var isInit = false;
 		}
 
 		// find where selected cards should go
-		var czarSeat = root.getObjectByName(czarId);
+		var czarSeat = getSeat(czarId);
 		var finalPos = new THREE.Vector3(czarSeat.position.x/2, czarSeat.position.y/2, 0.825);
 		var finalRot = new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI, 0, czarSeat.rotation.z));
 
@@ -786,7 +820,7 @@ var isInit = false;
 			}
 		}
 
-		var czarSeat = root.getObjectByName(czarId);
+		var czarSeat = getSeat(czarId);
 		var finalPos = new THREE.Vector3(czarSeat.position.x/2, czarSeat.position.y/2, 0.825);
 		var finalRot = new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI, 0, czarSeat.rotation.z));
 
@@ -822,7 +856,7 @@ var isInit = false;
 
 	function handleCzarSelection(submissionIndex)
 	{
-		var seat = root.getObjectByName(czarId);
+		var seat = getSeat(czarId);
 		var submission = submissionList[submissionIndex];
 
 		// present the submission
@@ -861,7 +895,7 @@ var isInit = false;
 	function presentSubmission(playerId)
 	{
 		// where should the cards be placed?
-		var seat = root.getObjectByName(playerInfo.id);
+		var seat = getSeat();
 		if(seat)
 			var center = seat.getObjectByName('presentation');
 		else
@@ -873,7 +907,7 @@ var isInit = false;
 		// put previous selection back
 		if( czarSelectionPlayer && czarSelectionPlayer !== playerId)
 		{
-			var czarSeat = root.getObjectByName(czarId);
+			var czarSeat = getSeat(czarId);
 			var czarSelectionIndex = submissionList.indexOf(submissionMap[czarSelectionPlayer]);
 			var spot = czarSeat.getObjectByName('card'+czarSelectionIndex);
 			for(var i=0; i<submissionList[czarSelectionIndex].length; i++)
@@ -905,7 +939,7 @@ var isInit = false;
 			));
 		}
 
-		if(submission.length === 3){
+		if(submission.length === minPlayers){
 			center.scale.set(5,5,5);
 		}
 		else {
@@ -926,14 +960,14 @@ var isInit = false;
 			ga('send', 'event', 'CardTracking', 'winningCard', text);
 		}
 
-		if(root.getObjectByName(playerInfo.id)){
+		if(getSeat()){
 			gameObjects.box.addEventListener('cursorup', function(){
 				socket.emit('dealCards');
 			});
 		}
 
 		// congratulate winner
-		var winnerSeat = root.getObjectByName(playerId);
+		var winnerSeat = getSeat(playerId);
 		var confetti = new Utils.Confetti({delay: 1000});
 		confetti.position.copy(winnerSeat.position);
 		confetti.position.setZ( confetti.position.z + 1.1 );
@@ -965,7 +999,7 @@ var isInit = false;
 		root.remove(temp);
 
 		// for player
-		var seat = root.getObjectByName(playerInfo.id);
+		var seat = getSeat();
 		if(seat)
 		{
 			// disable card selection
@@ -981,6 +1015,8 @@ var isInit = false;
 			// track round completion
 			ga('send', 'event', 'PlayerRound', 'end');
 		}
+
+		updateCenterPieceState();
 	}
 
 	// export objects from scope
