@@ -535,7 +535,7 @@ var isInit = false;
 				socket.emit('roundStart');
 			});
 
-			playerIndicator.material.color.setStyle('red')
+			playerIndicator.material.color.setStyle('#f44336') // red
 		}
 		else
 		{
@@ -545,7 +545,7 @@ var isInit = false;
 					o.visible = true;
 			});
 
-			playerIndicator.material.color.setStyle('blue');
+			playerIndicator.material.color.setStyle('#3F51B5'); // indigo
 		}
 
 		Sounds.playSound('card');
@@ -610,7 +610,7 @@ var isInit = false;
 				// show black card
 				seat.add(blackCard);
 
-				playerIndicator.material.color.setStyle('red');
+				playerIndicator.material.color.setStyle('#f44336'); // red
 			}
 			else
 			{
@@ -620,7 +620,7 @@ var isInit = false;
 						o.visible = true;
 				});
 
-				playerIndicator.material.color.setStyle('blue');
+				playerIndicator.material.color.setStyle('#3F51B5'); // indigo
 			}
 
 		}

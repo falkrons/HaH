@@ -424,9 +424,9 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		var model = models.nameplate.clone();
 		var backgroundColor;
 		if(name === Game.playerInfo.displayName)
-			backgroundColor = '#541E1E'; // brick red
+			backgroundColor = '#BF360C'; // deep orange
 		else
-			backgroundColor = '#38281C'; // neutral brown
+			backgroundColor = '#3E2723'; // brown
 
 		// assign texture
 		model.material = generateTextMaterial(name, {backgroundColor: backgroundColor});
@@ -450,9 +450,9 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		// draw background
 		g.fillStyle = 'whitesmoke';
 		g.fillRect(0, 0, texWidth, texWidth-160);
-		g.fillStyle = 'red';
+		g.fillStyle = '#f44336'; // red
 		g.fillRect(0, texWidth-166, texWidth/2, 160);
-		g.fillStyle = 'green';
+		g.fillStyle = '#4CAF50'; // green
 		g.fillRect(texWidth/2, texWidth-160, texWidth/2, 160);
 
 		// set up text
@@ -541,7 +541,10 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		    new THREE.Vector3(-playerIndicatorWidth, -playerIndicatorLength, 0)
 	    );
 	    playerIndicatorGeo.faces.push(new THREE.Face3(0, 1, 2));
-	    var playerIndicator = new THREE.Mesh(playerIndicatorGeo, new THREE.MeshBasicMaterial({color: 'yellow'}));
+	    var playerIndicator = new THREE.Mesh(
+		playerIndicatorGeo,
+		new THREE.MeshBasicMaterial({color: '#FFC107'}) // amber
+	    );
 	    playerIndicator.name = 'playerIndicator';
 	    playerIndicator.position.z = -0.67;
 	    playerIndicator.position.y = 0.9;
