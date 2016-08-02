@@ -436,6 +436,8 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
 	function generateDialog(text, acceptCb, declineCb, finallyCb, options)
 	{
+		options = options || {};
+
 		// card face texture resolution
 		var texWidth = 512;
 		var model = models.dialog.clone();
