@@ -280,26 +280,16 @@ var isInit = false;
 		Utils.rebalanceTable(newTurnOrder, turnOrder, id);
 		turnOrder.splice(0); turnOrder.push.apply(turnOrder, newTurnOrder);
 
+		// Announce new game
 		if (turnOrder.length === 1) {
 			Sounds.playSound('ding');
 		}
+
 		updateCenterPieceState();
 
 		// add crown
 		var crown = new Utils.Crown(id);
 		root.add(crown);
-		console.log(crown);
-
-		if(id === playerInfo.id)
-		{
-			gameObjects.box.removeEventListener('cursorup');
-			if(gameState === 'roundFinished')
-				gameObjects.box.addEventListener('cursorup', function(){
-					socket.emit('dealCards');
-				});
-
-			ga('send', 'event', 'Player', 'join');
-		}
 
 		// hide request dialog if present
 		var seat = getSeat();
@@ -315,9 +305,19 @@ var isInit = false;
 		{
 			gameObjects.box.removeEventListener('cursorup');
 			if(gameState === 'roundFinished')
+			{
 				gameObjects.box.addEventListener('cursorup', function(){
 					socket.emit('dealCards');
 				});
+			}
+			else
+			{
+				var dialog = Utils.generateDialog('Sit tight, you\'ll be\ndealt into the next round.', function () {
+					seat.remove(dialog);
+				}, null, null, {acceptLabel: 'Ok', showDecline: false});
+			}
+
+			ga('send', 'event', 'Player', 'join');
 
 			if(altspace.inClient)
 			{

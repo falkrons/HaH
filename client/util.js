@@ -434,7 +434,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		return model;
 	}
 
-	function generateDialog(text, acceptCb, declineCb, finallyCb)
+	function generateDialog(text, acceptCb, declineCb, finallyCb, options)
 	{
 		// card face texture resolution
 		var texWidth = 512;
@@ -468,7 +468,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		// draw answers
 		g.font = 'bold 45px '+fontStack;
 		g.fillText('No', 0.25*texWidth, texWidth-70);
-		g.fillText('Yes', 0.75*texWidth, texWidth-70);
+		g.fillText(options.acceptLabel || 'Yes', 0.75*texWidth, texWidth-70);
 
 		// assign texture
 		var dMaterial = new THREE.MeshBasicMaterial({
@@ -477,6 +477,10 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		model.traverse(function(mesh){
 			mesh.material = dMaterial;
 		});
+
+		if (options.showDecline !== undefined && !options.showDecline) {
+		    model.getObjectByName('Decline').visible = false;
+		}
 
 		// assign callbacks
 		model.getObjectByName('Accept').addEventListener('cursorup', function(){
