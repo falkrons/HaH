@@ -280,6 +280,9 @@ var isInit = false;
 		Utils.rebalanceTable(newTurnOrder, turnOrder, id);
 		turnOrder.splice(0); turnOrder.push.apply(turnOrder, newTurnOrder);
 
+		if (turnOrder.length === 1) {
+			Sounds.playSound('ding');
+		}
 		updateCenterPieceState();
 
 		// add crown
