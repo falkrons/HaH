@@ -399,7 +399,7 @@ var isInit = false;
 	function playerKickRequest(id, displayName)
 	{
 		if(id !== playerInfo.id){
-			var dialog = Utils.generateDialog('Do you want to kick\n'+displayName+'?',
+			var dialog = Utils.generateDialog('Group Vote:\nDo you want to kick\n'+displayName+'?',
 				function(){
 					socket.emit('playerKickResponse', id, displayName, true);
 				},
