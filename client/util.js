@@ -705,22 +705,22 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 	var kickTimeout = {};
 	var idleCheck = function (){
 		idleTimeout = setTimeout(function(){
-        	clearTimeout(idleTimeout);
-        	generateDialog('AFK WARNING\nAre you there?', idleClear , function(){
+			clearTimeout(idleTimeout);
+			generateDialog('AFK WARNING\nAre you there?', idleClear , function(){
 				socket.emit('playerLeave', Game.playerInfo.id, Game.playerInfo.displayName,
 				Game.playerInfo.displayName+' has left the game.');
 			});
-        	kickTimeout = setTimeout(function(){
-        		clearTimeout(kickTimeout);
-        		Game.emitPlayerLeave();
-        		console.log("you have been kicked from the game due to inactivity.");
-    		}, 60000);
-    	}, 300000);
-    }
-    var idleClear = function (){
-    	clearTimeout(kickTimeout);
-    	clearTimeout(idleTimeout);
-    }
+			kickTimeout = setTimeout(function(){
+				clearTimeout(kickTimeout);
+				Game.emitPlayerLeave();
+				console.log("you have been kicked from the game due to inactivity.");
+			}, 60000);
+		}, 300000);
+	}
+	var idleClear = function (){
+		clearTimeout(kickTimeout);
+		clearTimeout(idleTimeout);
+	}
 
 
 	exports.preloadAssets = preloadAssets;
