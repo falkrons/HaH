@@ -83,6 +83,11 @@ var isInit = false;
 		socket.on('cardSelectionComplete', cardSelectionComplete);
 		socket.on('presentSubmission', presentSubmission);
 		socket.on('winnerSelection', winnerSelection);
+
+		socket.on('reload', function () {
+			console.log('reloading');
+			location.reload();
+		});
 	}
 
 

@@ -138,6 +138,11 @@ function registerGameListeners(socket)
 		//console.log('objectUpdate', objName, matrix);
 		this.to(this.gameId+'_clients').emit('objectUpdate', objName, matrix);
 	});*/
+
+	socket.on('reload', function () {
+		console.log('reloading all players', this.gameId);
+		this.server.to(this.gameId+'_clients').emit('reload');
+	});
 }
 
 
