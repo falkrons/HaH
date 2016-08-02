@@ -195,7 +195,7 @@ function init()
 
 function render(timestamp)
 {
-	// update camera if necessary	
+	// update camera if necessary
 	if(camera)
 	{
 		// get client table position
@@ -204,7 +204,7 @@ function render(timestamp)
 		{
 			camera.fov = 100;
 			camera.updateProjectionMatrix();
-			camera.position.set(0,-0.1,-0.2);
+			camera.position.set(0,-0.3, 0.1);
 			camera.rotation.set(1.5, 0, 0);
 			seat.add(camera);
 		}

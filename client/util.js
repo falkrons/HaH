@@ -526,6 +526,24 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		return mat;
 	}
 
+	function addPlayerIndicatorToSeat(seat)
+	{
+	    var playerIndicatorGeo = new THREE.Geometry();
+	    var playerIndicatorLength = 0.7;
+	    var playerIndicatorWidth = 0.4;
+	    playerIndicatorGeo.vertices.push(
+		    new THREE.Vector3(playerIndicatorWidth, -playerIndicatorLength, 0),
+		    new THREE.Vector3(0, playerIndicatorLength, 0),
+		    new THREE.Vector3(-playerIndicatorWidth, -playerIndicatorLength, 0)
+	    );
+	    playerIndicatorGeo.faces.push(new THREE.Face3(0, 1, 2));
+	    var playerIndicator = new THREE.Mesh(playerIndicatorGeo, new THREE.MeshBasicMaterial({color: 'yellow'}));
+	    playerIndicator.name = 'playerIndicator';
+	    playerIndicator.position.z = -0.67;
+	    playerIndicator.position.y = 0.9;
+	    seat.add(playerIndicator);
+	}
+
 	function rebalanceTable(newTurnOrder, oldTurnOrder, newPlayerId)
 	{
 		newTurnOrder = newTurnOrder || [];
@@ -651,6 +669,8 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 						card.addBehavior( new Behaviors.CursorFeedback() );
 				}
 
+				addPlayerIndicatorToSeat(seat);
+
 				// add seat to the table
 				root.add(seat);
 			}
@@ -669,8 +689,6 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 				root.remove(seat);
 			}
 		}
-
-
 	}
 
 	//add Idle "are you still there "timeout

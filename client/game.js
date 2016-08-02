@@ -515,6 +515,9 @@ var isInit = false;
 				card.visible = false;
 		}
 
+		var playerIndicator = seat.getObjectByName('playerIndicator');
+		playerIndicator.visible = true;
+
 		// now hide hand if you're actually the czar this round
 		if(playerInfo.id === newCzarId)
 		{
@@ -526,6 +529,8 @@ var isInit = false;
 				blackCard.scale.set(2,2,2);
 				socket.emit('roundStart');
 			});
+
+			playerIndicator.material.color.setStyle('red')
 		}
 		else
 		{
@@ -534,6 +539,8 @@ var isInit = false;
 				if( /^card/.test(o.parent.name) )
 					o.visible = true;
 			});
+
+			playerIndicator.material.color.setStyle('blue');
 		}
 
 		Sounds.playSound('card');
@@ -590,10 +597,15 @@ var isInit = false;
 				}
 			}
 
+			var playerIndicator = seat.getObjectByName('playerIndicator');
+			playerIndicator.visible = true;
+
 			if(blackCard && player.id === newCzarId)
 			{
 				// show black card
 				seat.add(blackCard);
+
+				playerIndicator.material.color.setStyle('red');
 			}
 			else
 			{
@@ -602,6 +614,8 @@ var isInit = false;
 					if( /^card/.test(o.parent.name) )
 						o.visible = true;
 				});
+
+				playerIndicator.material.color.setStyle('blue');
 			}
 
 		}
@@ -737,6 +751,7 @@ var isInit = false;
 	function animateSelection(handIndexes, playerId)
 	{
 		var seat = getSeat(playerId);
+		seat.getObjectByName('playerIndicator').visible = false;
 
 		// kill confirmation boxes if necessary
 		var yes = seat.getObjectByName('yes');
