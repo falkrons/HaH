@@ -11,23 +11,10 @@ var structures = require('./structures.js'),
 	players = require('./players.js'),
 	game = require('./game.js'),
 	feedback = require('./feedback.js'),
-	objectSync = require('./objectSync.js');
-
-var config;
-try {
-	config = require('../config.json');
-}
-catch (e) {
-	console.log('Could not load config file');
-}
+	objectSync = require('./objectSync.js'),
+	config = require('./config.js');
 
 var activeGames = structures.activeGames;
-
-
-// set defaults for config
-config.port = config.port || process.env.PORT || 7878;
-config.minPlayers = config.minPlayers || 4;
-config.maxPlayers = config.maxPlayers || 12;
 
 // initialize http router
 var app = express();

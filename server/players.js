@@ -1,5 +1,5 @@
 'use strict';
-var config = require('../config.json'),
+var config = require('./config.js'),
 	structs = require('./structures.js'),
 	libgame = require('./game.js');
 
