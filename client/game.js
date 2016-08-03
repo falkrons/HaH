@@ -891,7 +891,19 @@ var isInit = false;
 		seat.remove(yes,no);
 
 		// spawn confirmation boxes
-		yes = Models.yesBox.clone();
+		var yesBox = Models.yesBox.clone();
+		yes = new THREE.Object3D();
+		yes.add(yesBox);
+		var winnerText = new THREE.Mesh(
+			new THREE.PlaneGeometry(1, 1),
+			Utils.generateStatusTextMaterial('Winner')
+		);
+		winnerText.rotation.y = Math.PI / 2;
+		winnerText.scale.set(0.5, 0.1, 1);
+		winnerText.position.set(0, 0, -0.25);
+
+
+		yes.add(winnerText);
 		no = Models.noBox.clone();
 
 		// place confirmation boxes

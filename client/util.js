@@ -403,6 +403,8 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		}
 		ctx.fillStyle = 'white';
 		if (options.single) {
+			ctx.lineWidth = 5;
+			ctx.strokeText(text, texWidth/2, bmp.height / 2);
 			ctx.fillText(text, texWidth/2, bmp.height / 2);
 		}
 		else {
