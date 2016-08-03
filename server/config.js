@@ -4,6 +4,7 @@ try {
 }
 catch (e) {
 	console.log('Could not load config.json');
+	jsonConfig = {};
 }
 // defaults for config
 module.exports = {
