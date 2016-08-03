@@ -126,7 +126,7 @@ function join(id, displayName)
 /*
  * Leave game, voluntarily or otherwise
  */
-function leave(id, displayName, message)
+function leave(id, displayName, message, reason)
 {
 	var game = activeGames[this.gameId];
 
@@ -162,7 +162,7 @@ function leave(id, displayName, message)
 
 	// inform other clients of player's departure
 	this.server.to(game.id+'_clients').emit('playerLeave',
-		player.id, player.displayName, game.getCleanTurnOrder(), message);
+		player.id, player.displayName, game.getCleanTurnOrder(), message, reason);
 
 	console.log('Player', player.displayName, 'has left the game.');
 
@@ -268,7 +268,7 @@ function kickResponse(id, displayName, response)
 		// vote passes
 		console.log('Vote to kick', vote.player.displayName, 'passes');
 		leave.call(this, vote.player.id, vote.player.displayName,
-			vote.player.displayName+' was kicked from the game.');
+			vote.player.displayName+' was kicked from the game.', 'vote-kicked');
 
 		// clear pending vote
 		var index = game.pendingKickVotes.indexOf(vote);
