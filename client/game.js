@@ -152,7 +152,7 @@ var isInit = false;
 	}
 
 	function getSeat(playerId) {
-		return root.getObjectByName(playerId || playerInfo.id);
+		return root.getObjectByName('seat_' + (playerId || playerInfo.id));
 	}
 
 	// something screwed up the turn order, so restart round
@@ -1003,6 +1003,7 @@ var isInit = false;
 		if(winnerCrown){
 			winnerCrown.addCard(blackCard)
 		}
+		winnerSeat.addPoint();
 
 		// clean up from round
 		/*for(var i=0; i<submissionList.length; i++){

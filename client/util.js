@@ -114,6 +114,11 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 					map: textures.cross
 				})
 			);
+
+			models.pointModel = new THREE.Mesh(
+				new THREE.CylinderGeometry(1, 1, 2, 6),
+				new THREE.MeshBasicMaterial({color: '#FFEB3B'}) // yellow
+			);
 		}
 
 		function loadSound(url, cb)
@@ -498,7 +503,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
 
 		// point dialog at player
-		var seat = root.getObjectByName(Game.playerInfo.id);
+		var seat = root.getObjectByName('seat_'+Game.playerInfo.id);
 		model.applyMatrix( sphericalToMatrix(0, Math.PI/8, 1.05*tableRadius, 'yzx') );
 		seat.add(model);
 
@@ -565,7 +570,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		for(var i=0; i<newTurnOrder.length; i++)
 		{
 			// attempt to get seat at index
-			var seat = root.getObjectByName(newTurnOrder[i].id);
+			var seat = root.getObjectByName('seat_'+newTurnOrder[i].id);
 			if(seat)
 			{
 				// player is already in the game, move them to position
@@ -592,9 +597,9 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 			}
 			else
 			{
+				// TODO Move most of this to seat.js
 				// create new seat for player
-				seat = new THREE.Object3D();
-				seat.name = newTurnOrder[i].id;
+				seat = new Utils.Seat(newTurnOrder[i].id, models.pointModel);
 				seat.position.set(-1.05*tableRadius*Math.sin(i*angle), -1.05*tableRadius*Math.cos(i*angle), 1.5);
 				seat.rotation.set(0, 0, -angle*i);
 
@@ -694,7 +699,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 			}
 
 			if(!playerIn){
-				var seat = root.getObjectByName(oldTurnOrder[i].id);
+				var seat = root.getObjectByName('seat_'+oldTurnOrder[i].id);
 				root.remove(seat);
 			}
 		}

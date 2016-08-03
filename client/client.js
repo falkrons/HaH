@@ -199,7 +199,7 @@ function render(timestamp)
 	if(camera)
 	{
 		// get client table position
-		var seat = root.getObjectByName(Game.playerInfo.id);
+		var seat = root.getObjectByName('seat_'+Game.playerInfo.id);
 		if(seat && camera.fov !== 90)
 		{
 			camera.fov = 100;
