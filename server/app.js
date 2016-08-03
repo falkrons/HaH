@@ -17,7 +17,7 @@ var config;
 try {
 	config = require('../config.json');
 }
-catch () {
+catch (e) {
 	console.log('Could not load config file');
 }
 
