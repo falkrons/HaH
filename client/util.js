@@ -552,7 +552,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 	    playerIndicatorGeo.faces.push(new THREE.Face3(0, 1, 2));
 	    var playerIndicator = new THREE.Mesh(
 		playerIndicatorGeo,
-		new THREE.MeshBasicMaterial({color: '#FFC107'}) // amber
+		new THREE.MeshBasicMaterial({color: '#33691E'}) // dark green
 	    );
 	    playerIndicator.name = 'playerIndicator';
 	    playerIndicator.position.z = -0.67;
