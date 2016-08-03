@@ -4,7 +4,7 @@
   "description": "A game for terrible Altspacers.",
   "main": "server/app.js",
   "scripts": {
-    "start": "node ./server/app.js",
+    "start": "node ./server/app",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
