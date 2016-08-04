@@ -214,6 +214,21 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		}
 	}
 
+	function wrapText(text)
+	{
+		var words = text.split(' ');
+		var size = 0;
+		return words.reduce(function (acc, word) {
+			if (size + word.length > 15) {
+				acc.push('');
+				size = 0;
+			}
+			acc[acc.length - 1] += ' ' + word;
+			size += word.length;
+			return acc;
+		}, ['']);
+	}
+
 	function generateCard(card, color)
 	{
 		if(color === 'black'){
@@ -242,7 +257,14 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		// write text
 		g.textAlign = 'left';
 		g.font = 'bold '+(0.09*cardWidth*fontScale)+'px '+fontStack;
-		var text = card.text.split('\n');
+		var text = card.text;
+		if (text.indexOf('\n') === -1) {
+			text = wrapText(card.text);
+		}
+		else {
+			text = text.split('\n');
+		}
+
 		makeSafeFont(g, text, 0.84*cardWidth);
 		for(var i=0; i<text.length; i++){
 			g.fillText(text[i], 0.08*cardWidth, (0.15+0.12*i)*cardWidth);
