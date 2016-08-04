@@ -26,6 +26,7 @@
     "socket.io": "^1.4.5"
   },
   "devDependencies": {
-    "simple-git": "^1.32.1"
+    "simple-git": "^1.32.1",
+    "csv-parse": "^1.1.7"
   }
 }
