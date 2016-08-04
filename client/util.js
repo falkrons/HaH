@@ -219,7 +219,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		var words = text.split(' ');
 		var size = 0;
 		return words.reduce(function (acc, word) {
-			if (size + word.length > 15) {
+			if (size + word.length > 17) {
 				acc.push('');
 				size = 0;
 			}

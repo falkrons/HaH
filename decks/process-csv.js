@@ -36,7 +36,7 @@ var processedBlack = forEachLine(blackCsv, function (line, i) {
 	if (i === 0) { return; }
 	card = {
 		text: line[0],
-		numResponses: parseInt(line[1], 10)
+		numResponses: parseInt(line[1], 10) || 1
 	};
 	if (card.numResponses === 3) {
 		card.numDraws = 2;
