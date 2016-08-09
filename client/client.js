@@ -126,21 +126,6 @@ function init()
 	root.addEventListener('cursorenter', Utils.idleClear );
 	root.addEventListener('cursorleave', Utils.idleCheck );
 
-	// add suggestion box
-	/*var suggest = new THREE.Mesh(
-		new THREE.BoxGeometry(0.3, 0.3, 0.3),
-		new THREE.MeshBasicMaterial({map: window.suggestionTexture})
-	);
-	var x = root.userData.innerWidth/2 / root.userData.pixelsPerMeter - 0.15,
-		y = root.userData.innerDepth/2 / root.userData.pixelsPerMeter - 0.15,
-		z = root.userData.innerHeight / root.userData.pixelsPerMeter - 0.15;
-	suggest.position.set(x,y,z);
-	suggest.rotateX(Math.PI/2);
-	root.add(suggest);
-	suggest.addEventListener('cursorup', toggleSuggestionForm);
-	suggest.addBehavior( new Behaviors.CursorFeedback() );
-	*/
-
 	// add table surface
 	var table = new THREE.Mesh(
 		new THREE.CylinderGeometry(tableRadius, tableRadius, 0.05, 36, 1),

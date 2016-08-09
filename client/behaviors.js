@@ -126,28 +126,6 @@
 		}
 	};
 
-	/*Animate.prototype.finishNow = function()
-	{
-		if( this.finalPos ){
-			this.target.position.copy(this.finalPos);
-		}
-
-		if( this.finalQuat ){
-			this.target.quaternion.copy(this.finalQuat);
-		}
-
-		if( this.finalScale ){
-			this.target.scale.copy(this.finalScale);
-		}
-
-		if(this.target)
-			this.target.removeBehavior(this);
-
-		if(this.callback)
-			this.callback(this.target);
-	};*/
-
-
 	/*
 	 * Grow object on hover
 	 */

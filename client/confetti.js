@@ -38,10 +38,6 @@
 		}
 
 		// generate sphere
-		/*this.sphere = new THREE.Mesh(
-			new THREE.SphereGeometry(0.4, 16, 16),
-			new THREE.MeshBasicMaterial({color: 0xe2cc77})
-		);*/
 		this.sphere = Models.confettiBall.clone();
 		this.add(this.sphere);
 

@@ -131,10 +131,6 @@ function registerGameListeners(socket)
 
 	// register object sync events
 	socket.on('objectUpdate', objectSync.updateTransform);
-	/*socket.on('objectUpdate', function(objName, matrix){
-		//console.log('objectUpdate', objName, matrix);
-		this.to(this.gameId+'_clients').emit('objectUpdate', objName, matrix);
-	});*/
 
 	socket.on('reload', function () {
 		console.log('reloading all players', this.gameId);

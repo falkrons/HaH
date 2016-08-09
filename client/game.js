@@ -713,14 +713,6 @@ var isInit = false;
 
 		if(selection.length === (blackCard.userData.numResponses || 1))
 		{
-			// clear click handlers from cards
-			/*[0,1,2,3,4,5,6,7,8,9,10,11].forEach(function(i)
-			{
-				var card = seat.getObjectByName('card'+i);
-				card.removeEventListener('cursorup');
-			});*/
-
-
 			// spawn confirmation boxes
 			var yes = Models.yesBox.clone();
 			var no = Models.noBox.clone();
@@ -753,10 +745,6 @@ var isInit = false;
 					card.scale.set(2,2,2);
 					card.name = '';
 
-					// add back click handlers
-					/*card.addEventListener('cursorup', function(evt){
-						handleCardSelection(handIndex);
-					});*/
 					spot.add(card);
 				});
 
@@ -1033,16 +1021,6 @@ var isInit = false;
 		}
 		winnerSeat.addPoint();
 
-		// clean up from round
-		/*for(var i=0; i<submissionList.length; i++){
-			for(var j=0; j<submissionList[i].length; j++)
-			{
-				var card = submissionList[i][j];
-				if(card.parent)
-					card.parent.remove(card);
-			}
-		}*/
-		//submissionList = [];
 		submissionMap = {};
 		selection = [];
 		czarSelectionPlayer = '';
