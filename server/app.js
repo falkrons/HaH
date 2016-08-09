@@ -31,7 +31,7 @@ app.get('/', require('./status.js'));
 app.post('/feedback', bodyParser.json(), feedback.feedbackRequest);
 
 // bootstrap the game page
-app.get('/play', function(req,res,next)
+app.get('/play', function(req,res)
 {
 	if(!req.query.gameId){
 		const ab = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijlkmnopqrstuvwxyz0123456789';
@@ -48,7 +48,7 @@ app.get('/play', function(req,res,next)
 });
 
 // return 404 on all other requests
-app.use(function(req,res,next)
+app.use(function(req,res)
 {
 	res.status(404).send('404 File Not Found');
 });

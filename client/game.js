@@ -1,3 +1,7 @@
+/* global
+	ga, THREE, altspace, io,
+	Utils, Models, Sounds, Behaviors,
+	gameObjects, root, scene, camera */
 'use strict';
 
 var socket;
@@ -91,12 +95,12 @@ var isInit = false;
 	}
 
 
-	function emitPlayerJoinRequest(evt){
+	function emitPlayerJoinRequest(){
 		if(playerInfo.id)
 			socket.emit('playerJoinRequest', playerInfo.id, playerInfo.displayName);
 	}
 
-	function emitPlayerLeave(evt){
+	function emitPlayerLeave(){
 		socket.emit('playerLeave', playerInfo.id, playerInfo.displayName,
 			playerInfo.displayName+' has left the game.', 'idle-kicked'
 		);
@@ -213,9 +217,9 @@ var isInit = false;
 
 		// kill submissions if present
 		for(var player in submissionMap){
-			for(var i=0; i<submissionMap[player].length; i++){
-				if(submissionMap[player][i].parent)
-					submissionMap[player][i].parent.remove(submissionMap[player][i]);
+			for(var j=0; j<submissionMap[player].length; j++){
+				if(submissionMap[player][j].parent)
+					submissionMap[player][j].parent.remove(submissionMap[player][j]);
 			}
 		}
 
@@ -301,12 +305,14 @@ var isInit = false;
 		var crown = new Utils.Crown(id);
 		root.add(crown);
 
+		var dialog;
+
 		// hide request dialog if present
 		var seat = getSeat();
 		if(seat)
 		{
-			var dialog;
-			if(dialog = seat.getObjectByName('join_'+id)){
+			dialog = seat.getObjectByName('join_'+id);
+			if(dialog){
 				seat.remove(dialog);
 			}
 		}
@@ -322,7 +328,7 @@ var isInit = false;
 			}
 			else
 			{
-				var dialog = Utils.generateDialog('Sit tight, you\'ll be\ndealt into the next round.', function () {
+				dialog = Utils.generateDialog('Sit tight, you\'ll be\ndealt into the next round.', function () {
 					seat.remove(dialog);
 				}, null, null, {acceptLabel: 'Ok', showDecline: false});
 			}
@@ -350,20 +356,20 @@ var isInit = false;
 
 	}
 
-	function playerJoinDenied(id, displayName)
+	function playerJoinDenied(id)
 	{
 		// hide request dialog if present
 		var seat = getSeat();
-		var dialog;
-		if(dialog = seat.getObjectByName('join_'+id)){
+		var dialog = seat.getObjectByName('join_'+id);
+		if(dialog){
 			seat.remove(dialog);
 		}
 
 		if(id === playerInfo.id){
 			joinBlocked = true;
 			setTimeout(function(){
-	        	joinBlocked = false;
-	    	}, 5000);
+				joinBlocked = false;
+			}, 5000);
 		}
 	}
 
@@ -395,8 +401,8 @@ var isInit = false;
 		var seat = getSeat();
 		if(seat)
 		{
-			var dialog;
-			if(dialog = seat.getObjectByName('kick_'+id)){
+			var dialog = seat.getObjectByName('kick_'+id);
+			if(dialog){
 				seat.remove(dialog);
 			}
 		}
@@ -539,7 +545,7 @@ var isInit = false;
 			// show black card
 			seat.add(blackCard);
 			blackCard.addBehavior( new Behaviors.CursorFeedback() );
-			blackCard.addEventListener('cursorup', function(evt){
+			blackCard.addEventListener('cursorup', function(){
 				blackCard.removeAllBehaviors();
 				blackCard.scale.set(2,2,2);
 				socket.emit('roundStart');
@@ -660,7 +666,7 @@ var isInit = false;
 			[0,1,2,3,4,5,6,7,8,9,10,11].forEach(function(i)
 			{
 				var card = seat.getObjectByName('card'+i);
-				card.addEventListener('cursorup', function(evt){
+				card.addEventListener('cursorup', function(){
 					handleCardSelection(i);
 				});
 			});
@@ -730,12 +736,12 @@ var isInit = false;
 			no.applyMatrix( Utils.sphericalToMatrix(-0.6, 0, 0.5, 'xyz') );
 			seat.add(no);
 
-			yes.addEventListener('cursorup', exports.confirmSelection = function(evt){
+			yes.addEventListener('cursorup', exports.confirmSelection = function(){
 				socket.emit('cardSelection', selection);
 				seat.remove(yes, no);
 			});
 
-			no.addEventListener('cursorup', function(evt)
+			no.addEventListener('cursorup', function()
 			{
 				// put all the cards back
 				selection.forEach(function(handIndex, selectionIndex)
@@ -787,10 +793,10 @@ var isInit = false;
 		var finalRot = new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI, 0, czarSeat.rotation.z));
 
 		// animate to in front of czar
-		for(var i=0; i<handIndexes.length; i++)
+		for(var j=0; j<handIndexes.length; j++)
 		{
-			var tempCard = seat.getObjectByName('selection'+i)
-				|| seat.getObjectByName('card'+handIndexes[i]).children[0];
+			var tempCard = seat.getObjectByName('selection'+j)
+				|| seat.getObjectByName('card'+handIndexes[j]).children[0];
 			if(tempCard)
 			{
 				// animate, and remove all but one on completion
@@ -844,9 +850,9 @@ var isInit = false;
 		submissionList = displayList;
 
 		// replace placeholder stack with real cards
-		for(var i=0; i<root.children.length; i++)
+		for(var j=0; j<root.children.length; j++)
 		{
-			var temp = root.children[i];
+			var temp = root.children[j];
 			if(temp.name === 'czarStack' || temp.name === 'toCzarStack'){
 				temp.removeAllBehaviors();
 				root.remove(temp);
@@ -974,11 +980,11 @@ var isInit = false;
 		));
 
 		// position submission
-		for(var i=0; i<submission.length; i++)
+		for(var j=0; j<submission.length; j++)
 		{
-			var card = submission[i];
-			card.addBehavior( new Behaviors.Animate(center,
-				new THREE.Vector3(-separation*(i+1) + submission.length*separation/2, 0, 0),
+			var playerCard = submission[j];
+			playerCard.addBehavior( new Behaviors.Animate(center,
+				new THREE.Vector3(-separation*(j+1) + submission.length*separation/2, 0, 0),
 				new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI/2,0,Math.PI)),
 				new THREE.Vector3(2,2,2)
 			));

@@ -1,3 +1,4 @@
+/* global ga */
 'use strict';
 
 // do google analytics tracking
