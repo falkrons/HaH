@@ -1,3 +1,4 @@
+/* global THREE, Behaviors, Game, root */
 'use strict';
 
 (function(exports)
@@ -71,7 +72,7 @@
 
 		// remove any other animations in progress
 		var self = this;
-		obj.__behaviorList.forEach(function(subobj, i, arr){
+		obj.__behaviorList.forEach(function(subobj){
 			if( subobj instanceof Animate && subobj != self )
 			{
 				if(subobj.callback) subobj.callback(obj);
@@ -96,7 +97,7 @@
 		this.startTime = Date.now();
 	};
 
-	Animate.prototype.update = function(deltaT)
+	Animate.prototype.update = function()
 	{
 		// compute ease-out based on duration
 		var mix = (Date.now()-this.startTime) / this.duration;
@@ -155,7 +156,7 @@
 		var self = this;
 		var activeAnimation = null;
 
-		this._onCursorEnter = function(evt)
+		this._onCursorEnter = function()
 		{
 			if(self.target._listeners.cursorup && self.target._listeners.cursorup.length > 0)
 			{
@@ -172,7 +173,7 @@
 			}
 		};
 
-		this._onCursorLeave = function(evt)
+		this._onCursorLeave = function()
 		{
 			if(self.target._listeners.cursorup && self.target._listeners.cursorup.length > 0)
 			{
@@ -201,13 +202,13 @@
 		this.target.addEventListener('cursorleave', this._onCursorLeave);
 	};
 
-	CursorFeedback.prototype.dispose = function(obj)
+	CursorFeedback.prototype.dispose = function()
 	{
 		this.target.removeEventListener('cursorenter', this._onCursorEnter);
 		this.target.removeEventListener('cursorleave', this._onCursorLeave);
 	}
 
-	CursorFeedback.prototype.update = function(deltaT){};
+	CursorFeedback.prototype.update = function(){};
 
 
 	/*
@@ -228,7 +229,7 @@
 		obj.matrixAutoUpdate = false;
 	}
 
-	Object3DSync.prototype.update = function(deltaT)
+	Object3DSync.prototype.update = function()
 	{
 		if(Game.playerInfo.id === this.owner)
 		{

@@ -1,3 +1,7 @@
+/* global THREE, socket,
+	Utils, Behaviors,
+	Game, root, tableRadius
+*/
 'use strict';
 
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -136,7 +140,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 							cb(buffer, gainNode);
 						},
 						function(err){
-							console.error('Failed to decode', url);
+							console.error('Failed to decode audio', url, err);
 						}
 					);
 				}
@@ -510,7 +514,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		});
 
 		if (options.showDecline !== undefined && !options.showDecline) {
-		    model.getObjectByName('Decline').visible = false;
+			model.getObjectByName('Decline').visible = false;
 		}
 
 		// assign callbacks
@@ -563,23 +567,23 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
 	function addPlayerIndicatorToSeat(seat)
 	{
-	    var playerIndicatorGeo = new THREE.Geometry();
-	    var playerIndicatorLength = 0.7;
-	    var playerIndicatorWidth = 0.4;
-	    playerIndicatorGeo.vertices.push(
-		    new THREE.Vector3(playerIndicatorWidth, -playerIndicatorLength, 0),
-		    new THREE.Vector3(0, playerIndicatorLength, 0),
-		    new THREE.Vector3(-playerIndicatorWidth, -playerIndicatorLength, 0)
-	    );
-	    playerIndicatorGeo.faces.push(new THREE.Face3(0, 1, 2));
-	    var playerIndicator = new THREE.Mesh(
-		playerIndicatorGeo,
-		new THREE.MeshBasicMaterial({color: '#33691E'}) // dark green
-	    );
-	    playerIndicator.name = 'playerIndicator';
-	    playerIndicator.position.z = -0.67;
-	    playerIndicator.position.y = 0.9;
-	    seat.add(playerIndicator);
+		var playerIndicatorGeo = new THREE.Geometry();
+		var playerIndicatorLength = 0.7;
+		var playerIndicatorWidth = 0.4;
+		playerIndicatorGeo.vertices.push(
+			new THREE.Vector3(playerIndicatorWidth, -playerIndicatorLength, 0),
+			new THREE.Vector3(0, playerIndicatorLength, 0),
+			new THREE.Vector3(-playerIndicatorWidth, -playerIndicatorLength, 0)
+		);
+		playerIndicatorGeo.faces.push(new THREE.Face3(0, 1, 2));
+		var playerIndicator = new THREE.Mesh(
+			playerIndicatorGeo,
+			new THREE.MeshBasicMaterial({color: '#33691E'}) // dark green
+		);
+		playerIndicator.name = 'playerIndicator';
+		playerIndicator.position.z = -0.67;
+		playerIndicator.position.y = 0.9;
+		seat.add(playerIndicator);
 	}
 
 	function rebalanceTable(newTurnOrder, oldTurnOrder, newPlayerId)
@@ -609,7 +613,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 				{
 					// register "Kick" action
 					(function(nameplate, opponentInfo){
-						nameplate.addEventListener('cursorup', function(evt)
+						nameplate.addEventListener('cursorup', function()
 						{
 							generateDialog('Do you want to kick\n'+opponentInfo.displayName+'?', function(){
 								console.log('kicking');
@@ -647,7 +651,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 				if(newTurnOrder[i].id === Game.playerInfo.id)
 				{
 					// register "Leave" action
-					nameplate.addEventListener('cursorup', function(evt)
+					nameplate.addEventListener('cursorup', function()
 					{
 						generateDialog('Are you sure you want to\nleave the game?', function()
 						{
@@ -663,7 +667,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 				{
 					// register "Kick" action
 					(function(nameplate, opponentInfo){
-						nameplate.addEventListener('cursorup', function(evt)
+						nameplate.addEventListener('cursorup', function()
 						{
 							generateDialog('Do you want to kick\n'+opponentInfo.displayName+'?', function(){
 								console.log('kicking');
@@ -715,16 +719,16 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		}
 
 		// remove absent players
-		for(var i=0; i<oldTurnOrder.length; i++)
+		for(var k=0; k<oldTurnOrder.length; k++)
 		{
 			// determine if old player is in new turn order
-			for(var j=0, playerIn=false; j<newTurnOrder.length && !playerIn; j++){
-				playerIn = playerIn || newTurnOrder[j].id === oldTurnOrder[i].id;
+			for(var l=0, playerIn=false; l<newTurnOrder.length && !playerIn; l++){
+				playerIn = playerIn || newTurnOrder[l].id === oldTurnOrder[k].id;
 			}
 
 			if(!playerIn){
-				var seat = root.getObjectByName('seat_'+oldTurnOrder[i].id);
-				root.remove(seat);
+				var oldSeat = root.getObjectByName('seat_'+oldTurnOrder[k].id);
+				root.remove(oldSeat);
 			}
 		}
 	}

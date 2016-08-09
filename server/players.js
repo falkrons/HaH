@@ -51,7 +51,7 @@ function joinRequest(id, displayName)
 /*
  * Request to join has been denied
  */
-function joinDenied(id, displayName, message)
+function joinDenied(id)
 {
 	var game = activeGames[this.gameId];
 
@@ -262,6 +262,7 @@ function kickResponse(id, displayName, response)
 	vote[response ? 'yes' : 'no']++;
 	vote.voters.push(voter);
 
+	var index;
 	// check results
 	if(vote.yes >= vote.majority)
 	{
@@ -271,7 +272,7 @@ function kickResponse(id, displayName, response)
 			vote.player.displayName+' was kicked from the game.', 'vote-kicked');
 
 		// clear pending vote
-		var index = game.pendingKickVotes.indexOf(vote);
+		index = game.pendingKickVotes.indexOf(vote);
 		game.pendingKickVotes.splice(index, 1);
 	}
 	else if(vote.no >= vote.majority)
@@ -281,7 +282,7 @@ function kickResponse(id, displayName, response)
 		this.server.to(game.id+'_players').emit('kickVoteAborted', vote.player.id, vote.player.displayName);
 
 		// clear pending vote
-		var index = game.pendingKickVotes.indexOf(vote);
+		index = game.pendingKickVotes.indexOf(vote);
 		game.pendingKickVotes.splice(index, 1);
 	}
 	// else keep waiting for responses

@@ -1,3 +1,4 @@
+/* global THREE, Models, Behaviors */
 'use strict';
 
 /*

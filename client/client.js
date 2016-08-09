@@ -1,4 +1,4 @@
-/* global ga */
+/* global ga, THREE, altspace, Utils, Models, Behaviors, Game */
 'use strict';
 
 // do google analytics tracking

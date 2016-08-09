@@ -1,3 +1,4 @@
+/* global THREE */
 'use strict';
 
 
