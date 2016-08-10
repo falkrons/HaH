@@ -127,13 +127,7 @@ function init()
 	root.addEventListener('cursorleave', Utils.idleCheck );
 
 	// add table surface
-	var table = new THREE.Mesh(
-		new THREE.CylinderGeometry(tableRadius, tableRadius, 0.05, 36, 1),
-		new THREE.MeshBasicMaterial({color: 0x226022})
-	);
-	table.position.setZ(0.8);
-	table.rotation.set(Math.PI/2, 0, 0);
-	root.add(table);
+	root.add(Models.table);
 
 	// add game box
 	gameObjects.box = Models.box;
@@ -211,6 +205,8 @@ function render(timestamp)
 
 	// animate
 	scene.updateAllBehaviors();
+
+	TWEEN.update(timestamp);
 
 	// finally, render
 	renderer.render(scene, camera);

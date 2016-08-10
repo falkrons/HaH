@@ -1,6 +1,6 @@
-/* global THREE, socket,
+/* global THREE, altspace,
 	Utils, Behaviors,
-	Game, root, tableRadius
+	Game, socket, root, tableRadius
 */
 'use strict';
 
@@ -39,11 +39,12 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
 		function loadModels(cb)
 		{
-			var modelLoader = new THREE.ColladaLoader();
-			var modelsToGo = 5;
+			var colladaLoader = new THREE.ColladaLoader();
+			var objmtlLoader = new altspace.utilities.shims.OBJMTLLoader();
+			var modelsToGo = 7;
 
 			// pre-load card model
-			modelLoader.load('/static/models/card.dae', function(result)
+			colladaLoader.load('/static/models/card.dae', function(result)
 			{
 				models.card = result.scene.children[0].children[0];
 				models.card.scale.set(2,2,2);
@@ -54,7 +55,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 			});
 
 			// preload nameplate model
-			modelLoader.load('/static/models/nameplate.dae', function(result)
+			colladaLoader.load('/static/models/nameplate.dae', function(result)
 			{
 				models.nameplate = result.scene.children[0].children[0];
 				models.nameplate.scale.set(2,2,2);
@@ -62,7 +63,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 				if(--modelsToGo === 0) cb();
 			});
 
-			modelLoader.load('/static/models/box.dae', function(result)
+			colladaLoader.load('/static/models/box.dae', function(result)
 			{
 				models.box = new THREE.Group();
 
@@ -84,14 +85,14 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 				if(--modelsToGo === 0) cb();
 			});
 
-			modelLoader.load('/static/models/dialog.dae', function(result)
+			colladaLoader.load('/static/models/dialog.dae', function(result)
 			{
 				models.dialog = result.scene.children[0];
 
 				if(--modelsToGo === 0) cb();
 			});
 
-			modelLoader.load('/static/models/confettiball.dae', function(results)
+			colladaLoader.load('/static/models/confettiball.dae', function(results)
 			{
 				models.confettiBall = results.scene.children[0];
 				models.confettiBall.getObjectByName('left').children[0].material = new THREE.MeshBasicMaterial({
@@ -103,6 +104,36 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
 				if(--modelsToGo === 0) cb();
 			});
+
+			objmtlLoader.load(
+				'/static/models/table/HaH_TableMain.obj',
+				'/static/models/table/HaH_TableMain.mtl',
+				function (obj) {
+					obj.rotation.x = Math.PI / 2;
+					obj.scale.multiplyScalar(1 / root.scale.x);
+					obj.scale.addScalar(tableRadius / root.scale.x);
+					obj.position.z = -0.32;
+					models.table = obj;
+
+					if(--modelsToGo === 0) cb();
+				}
+			);
+
+			objmtlLoader.load(
+				'/static/models/playerIndicator/HaH_PlayerSlice.obj',
+				'/static/models/playerIndicator/HaH_PlayerSlice.mtl',
+				function (obj) {
+					obj.rotation.x = Math.PI / 2;
+					obj.rotation.y = Math.PI;
+					obj.scale.multiplyScalar(1 / root.scale.x);
+					obj.scale.addScalar(tableRadius / root.scale.x);
+					obj.position.z = -1.83
+					obj.position.y = 1.85
+					models.playerIndicator = obj;
+
+					if(--modelsToGo === 0) cb();
+				}
+			);
 
 			// generate models for confirmation boxes
 			models.yesBox = new THREE.Mesh(
@@ -565,27 +596,6 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		return mat;
 	}
 
-	function addPlayerIndicatorToSeat(seat)
-	{
-		var playerIndicatorGeo = new THREE.Geometry();
-		var playerIndicatorLength = 0.7;
-		var playerIndicatorWidth = 0.4;
-		playerIndicatorGeo.vertices.push(
-			new THREE.Vector3(playerIndicatorWidth, -playerIndicatorLength, 0),
-			new THREE.Vector3(0, playerIndicatorLength, 0),
-			new THREE.Vector3(-playerIndicatorWidth, -playerIndicatorLength, 0)
-		);
-		playerIndicatorGeo.faces.push(new THREE.Face3(0, 1, 2));
-		var playerIndicator = new THREE.Mesh(
-			playerIndicatorGeo,
-			new THREE.MeshBasicMaterial({color: '#33691E'}) // dark green
-		);
-		playerIndicator.name = 'playerIndicator';
-		playerIndicator.position.z = -0.67;
-		playerIndicator.position.y = 0.9;
-		seat.add(playerIndicator);
-	}
-
 	function rebalanceTable(newTurnOrder, oldTurnOrder, newPlayerId)
 	{
 		newTurnOrder = newTurnOrder || [];
@@ -627,7 +637,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 			{
 				// TODO Move most of this to seat.js
 				// create new seat for player
-				seat = new Utils.Seat(newTurnOrder[i].id, models.pointModel);
+				seat = new Utils.Seat(newTurnOrder[i].id, models);
 				seat.position.set(-1.05*tableRadius*Math.sin(i*angle), -1.05*tableRadius*Math.cos(i*angle), 1.5);
 				seat.rotation.set(0, 0, -angle*i);
 
@@ -710,8 +720,6 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 					if(newTurnOrder[i].id === Game.playerInfo.id)
 						card.addBehavior( new Behaviors.CursorFeedback() );
 				}
-
-				addPlayerIndicatorToSeat(seat);
 
 				// add seat to the table
 				root.add(seat);
