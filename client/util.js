@@ -55,13 +55,20 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 			});
 
 			// preload nameplate model
-			colladaLoader.load('/static/models/nameplate.dae', function(result)
-			{
-				models.nameplate = result.scene.children[0].children[0];
-				models.nameplate.scale.set(2,2,2);
+			objmtlLoader.load(
+				'/static/models/nameplate/HaH_NamePlate.obj',
+				'/static/models/nameplate/HaH_NamePlate.mtl',
+				function(obj)
+				{
+					obj.scale.multiplyScalar(1 / root.scale.x);
+					obj.scale.addScalar(tableRadius / root.scale.x);
+					obj.rotation.x = Math.PI / 2;
+					obj.position.set(0, 0.3, -0.66);
+					models.nameplate = obj;
 
-				if(--modelsToGo === 0) cb();
-			});
+					if(--modelsToGo === 0) cb();
+				}
+			);
 
 			colladaLoader.load('/static/models/box.dae', function(result)
 			{
@@ -644,8 +651,8 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 				// add nameplate for the player
 				var nameplate = generateNameplate(newTurnOrder[i].displayName);
 				nameplate.name = 'nameplate';
-				nameplate.position.set(0, 0.25, -0.64);
-				nameplate.rotation.set(0, 0, Math.PI/2);
+				// nameplate.position.set(0, 0.25, -0.64);
+				// nameplate.rotation.set(0, 0, Math.PI/2);
 				nameplate.addBehavior( new Behaviors.CursorFeedback() );
 				seat.add(nameplate);
 
