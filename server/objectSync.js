@@ -1,6 +1,6 @@
 'use strict';
 
-var config = require('../config.json');
+var config = require('./config.js');
 
 var io;
 var transformStates = {};
@@ -23,12 +23,12 @@ setInterval(function()
 		{
 			// broadcast updates
 			io.sockets.to(room+'_clients').emit('objectUpdate', transformStates[room]);
-			
+
 			// reset updates
 			transformStates[room] = {};
 		}
 	}
 
-}, config.syncInterval || 100);
+}, config.syncInterval);
 
 exports.updateTransform = updateTransform;

@@ -27,7 +27,7 @@ var templateString = [
 
 var template = pug.compile(templateString, {});
 
-module.exports = function(req,res,next)
+module.exports = function(req, res)
 {
 	res.send(template({activeGames: Structs.activeGames}));
 }

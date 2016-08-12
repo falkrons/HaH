@@ -12,15 +12,9 @@ var structures = require('./structures.js'),
 	game = require('./game.js'),
 	feedback = require('./feedback.js'),
 	objectSync = require('./objectSync.js'),
-	config = require('../config.json');
+	config = require('./config.js');
 
 var activeGames = structures.activeGames;
-
-
-// set defaults for config
-config.port = config.port || 7878;
-config.minPlayers = config.minPlayers || 4;
-config.maxPlayers = config.maxPlayers || 12;
 
 // initialize http router
 var app = express();
@@ -37,7 +31,7 @@ app.get('/', require('./status.js'));
 app.post('/feedback', bodyParser.json(), feedback.feedbackRequest);
 
 // bootstrap the game page
-app.get('/play', function(req,res,next)
+app.get('/play', function(req,res)
 {
 	if(!req.query.gameId){
 		const ab = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijlkmnopqrstuvwxyz0123456789';
@@ -54,7 +48,7 @@ app.get('/play', function(req,res,next)
 });
 
 // return 404 on all other requests
-app.use(function(req,res,next)
+app.use(function(req,res)
 {
 	res.status(404).send('404 File Not Found');
 });
@@ -109,7 +103,10 @@ function registerGameListeners(socket)
 	{
 		var player = activeGames[this.gameId].playerForSocket(this);
 		if(player)
-			players.leave.call(this, player.id, player.displayName, player.displayName+' has disconnected.');
+			players.leave.call(
+				this,
+				player.id, player.displayName,
+				player.displayName+' has disconnected.', 'disconnect');
 
 		// destroy game when last client disconnects
 		if(!this.adapter.rooms[this.gameId+'_clients'])
@@ -134,10 +131,11 @@ function registerGameListeners(socket)
 
 	// register object sync events
 	socket.on('objectUpdate', objectSync.updateTransform);
-	/*socket.on('objectUpdate', function(objName, matrix){
-		//console.log('objectUpdate', objName, matrix);
-		this.to(this.gameId+'_clients').emit('objectUpdate', objName, matrix);
-	});*/
+
+	socket.on('reload', function () {
+		console.log('reloading all players', this.gameId);
+		this.server.to(this.gameId+'_clients').emit('reload');
+	});
 }
 
 

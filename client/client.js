@@ -1,3 +1,4 @@
+/* global ga, THREE, altspace, Utils, Models, Behaviors, Game */
 'use strict';
 
 // do google analytics tracking
@@ -81,7 +82,7 @@ if( altspace.inClient )
 		root.userData = enc;
 
 		var enclosureRadius = 0.5 * Math.min(enc.innerWidth, enc.innerDepth) / enc.pixelsPerMeter;
-		tableRadius = Math.min(tableRadius, enclosureRadius);
+		tableRadius = Math.min(tableRadius, enclosureRadius - 0.5);
 
 		// render 2d version if space is flat
 		if( enc.innerDepth < 10 ){
@@ -125,29 +126,8 @@ function init()
 	root.addEventListener('cursorenter', Utils.idleClear );
 	root.addEventListener('cursorleave', Utils.idleCheck );
 
-	// add suggestion box
-	/*var suggest = new THREE.Mesh(
-		new THREE.BoxGeometry(0.3, 0.3, 0.3),
-		new THREE.MeshBasicMaterial({map: window.suggestionTexture})
-	);
-	var x = root.userData.innerWidth/2 / root.userData.pixelsPerMeter - 0.15,
-		y = root.userData.innerDepth/2 / root.userData.pixelsPerMeter - 0.15,
-		z = root.userData.innerHeight / root.userData.pixelsPerMeter - 0.15;
-	suggest.position.set(x,y,z);
-	suggest.rotateX(Math.PI/2);
-	root.add(suggest);
-	suggest.addEventListener('cursorup', toggleSuggestionForm);
-	suggest.addBehavior( new Behaviors.CursorFeedback() );
-	*/
-
 	// add table surface
-	var table = new THREE.Mesh(
-		new THREE.CylinderGeometry(tableRadius, tableRadius, 0.05, 36, 1),
-		new THREE.MeshBasicMaterial({color: 0x226022})
-	);
-	table.position.setZ(0.8);
-	table.rotation.set(Math.PI/2, 0, 0);
-	root.add(table);
+	root.add(Models.table);
 
 	// add game box
 	gameObjects.box = Models.box;
@@ -195,16 +175,16 @@ function init()
 
 function render(timestamp)
 {
-	// update camera if necessary	
+	// update camera if necessary
 	if(camera)
 	{
 		// get client table position
-		var seat = root.getObjectByName(Game.playerInfo.id);
+		var seat = root.getObjectByName('seat_'+Game.playerInfo.id);
 		if(seat && camera.fov !== 90)
 		{
 			camera.fov = 100;
 			camera.updateProjectionMatrix();
-			camera.position.set(0,-0.1,-0.2);
+			camera.position.set(0,-0.3, 0.1);
 			camera.rotation.set(1.5, 0, 0);
 			seat.add(camera);
 		}
@@ -225,6 +205,8 @@ function render(timestamp)
 
 	// animate
 	scene.updateAllBehaviors();
+
+	TWEEN.update(timestamp);
 
 	// finally, render
 	renderer.render(scene, camera);

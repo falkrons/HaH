@@ -1,3 +1,7 @@
+/* global THREE, altspace,
+	Utils, Behaviors,
+	Game, socket, root, tableRadius
+*/
 'use strict';
 
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -15,46 +19,32 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		function loadTextures(cb)
 		{
 			var textureLoader = new THREE.TextureLoader();
-			var texturesToGo = 6;
+			var textureInfo = [
+				{name: 'box', url: '/static/models/box.png'},
+				{name: 'confettiLeftAO', url: '/static/models/leftao.png'},
+				{name: 'confettiRightAO', url: '/static/models/rightao.png'},
+				{name: 'check', url: '/static/check.png'},
+				{name: 'cross', url: '/static/cross.png'},
+				{name: 'suggestionTexture', url: '/static/suggestion.png'},
+			];
+			var texturesToGo = textureInfo.length;
 
-			textureLoader.load('/static/models/box.png', function(tex){
-				textures.box = tex;
-				if(--texturesToGo === 0) cb();
-			});
-
-			textureLoader.load('/static/models/leftao.png', function(tex){
-				textures.confettiLeftAO = tex;
-				if(--texturesToGo === 0) cb();
-			});
-
-			textureLoader.load('/static/models/rightao.png', function(tex){
-				textures.confettiRightAO = tex;
-				if(--texturesToGo === 0) cb();
-			});
-
-			textureLoader.load('/static/check.png', function(tex){
-				textures.check = tex;
-				if(--texturesToGo === 0) cb();
-			});
-
-			textureLoader.load('/static/cross.png', function(tex){
-				textures.cross = tex;
-				if(--texturesToGo === 0) cb();
-			});
-
-			textureLoader.load('/static/suggestion.png', function(tex){
-				window.suggestionTexture = tex;
-				if(--texturesToGo === 0) cb();
+			textureInfo.forEach(function (texture) {
+				textureLoader.load(texture.url, function(tex){
+					textures[texture.name] = tex;
+					if(--texturesToGo === 0) cb();
+				});
 			});
 		}
 
 		function loadModels(cb)
 		{
-			var modelLoader = new THREE.ColladaLoader();
-			var modelsToGo = 5;
+			var colladaLoader = new THREE.ColladaLoader();
+			var objmtlLoader = new altspace.utilities.shims.OBJMTLLoader();
+			var modelsToGo = 7;
 
 			// pre-load card model
-			modelLoader.load('/static/models/card.dae', function(result)
+			colladaLoader.load('/static/models/card.dae', function(result)
 			{
 				models.card = result.scene.children[0].children[0];
 				models.card.scale.set(2,2,2);
@@ -64,32 +54,58 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 				if(--modelsToGo === 0) cb();
 			});
 
+			// Set the scale for OBJ models based on the known width of the table model.
+			var tableModelWidth = 297.444;
+			var objScale = 1 / tableModelWidth * tableRadius * 2;
+
 			// preload nameplate model
-			modelLoader.load('/static/models/nameplate.dae', function(result)
+			objmtlLoader.load(
+				'/static/models/nameplate/HaH_NamePlate.obj',
+				'/static/models/nameplate/HaH_NamePlate.mtl',
+				function(obj)
+				{
+					obj.rotation.x = Math.PI / 2;
+					obj.scale.multiplyScalar(objScale);
+					var seatZPos = 1.5;
+					obj.position.z = -seatZPos + 0.8;
+					var seatOffset = tableRadius * -1.05;
+					obj.position.y = -seatOffset - tableRadius * 0.94;
+					models.nameplate = obj;
+
+					if(--modelsToGo === 0) cb();
+				}
+			);
+
+			colladaLoader.load('/static/models/box.dae', function(result)
 			{
-				models.nameplate = result.scene.children[0].children[0];
-				models.nameplate.scale.set(2,2,2);
+				models.box = new THREE.Group();
+
+				var _box = result.scene.children[0].children[0].clone();
+				_box.scale.set(2,2,2);
+				_box.material = new THREE.MeshBasicMaterial({map: textures.box});
+				models.box.add(_box);
+
+				var startSign = new THREE.Mesh(
+					new THREE.PlaneGeometry(1, 1),
+					generateStatusTextMaterial('Open To Start')
+				);
+				startSign.rotation.x = -Math.PI / 2;
+				startSign.scale.set(4, 1, 1);
+				startSign.scale.multiplyScalar(0.1);
+				startSign.position.z = -0.2;
+				models.box.add(startSign);
 
 				if(--modelsToGo === 0) cb();
 			});
 
-			modelLoader.load('/static/models/box.dae', function(result)
-			{
-				models.box = result.scene.children[0].children[0];
-				models.box.scale.set(2,2,2);
-				models.box.material = new THREE.MeshBasicMaterial({map: textures.box});
-
-				if(--modelsToGo === 0) cb();
-			});
-
-			modelLoader.load('/static/models/dialog.dae', function(result)
+			colladaLoader.load('/static/models/dialog.dae', function(result)
 			{
 				models.dialog = result.scene.children[0];
 
 				if(--modelsToGo === 0) cb();
 			});
 
-			modelLoader.load('/static/models/confettiball.dae', function(results)
+			colladaLoader.load('/static/models/confettiball.dae', function(results)
 			{
 				models.confettiBall = results.scene.children[0];
 				models.confettiBall.getObjectByName('left').children[0].material = new THREE.MeshBasicMaterial({
@@ -101,6 +117,54 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
 				if(--modelsToGo === 0) cb();
 			});
+
+			objmtlLoader.load(
+				'/static/models/table/HaH_TableMain.obj',
+				'/static/models/table/HaH_TableMain.mtl',
+				function (obj) {
+					obj.rotation.x = Math.PI / 2;
+					obj.scale.multiplyScalar(objScale);
+					var modelHeight = 103;
+					// The surface of the table should always be at 80cm above the ground;
+					obj.position.z = -modelHeight * objScale + 0.8;
+					models.table = obj;
+
+					if(--modelsToGo === 0) cb();
+				}
+			);
+
+			objmtlLoader.load(
+				'/static/models/playerIndicator/HaH_PlayerSlice.obj',
+				'/static/models/playerIndicator/HaH_PlayerSlice.mtl',
+				function (obj) {
+					obj.rotation.x = Math.PI / 2;
+					obj.rotation.y = Math.PI;
+					obj.scale.multiplyScalar(objScale);
+					var modelHeight = 104.229;
+					var seatZPos = 1.5;
+					obj.position.z = -modelHeight * objScale - seatZPos + 0.8;
+					var seatOffset = tableRadius * -1.05;
+					obj.position.y = -seatOffset;
+					models.playerIndicator = obj;
+
+					// Add an invisible copy to the scene, so that textures ready when a game starts.
+					var preload = obj.clone();
+					preload.children[1].visible = false;
+					root.add(preload);
+
+					if(--modelsToGo === 0) cb();
+				}
+			);
+
+			objmtlLoader.load(
+				'/static/models/trophy/HaH_Trophy.obj',
+				'/static/models/trophy/HaH_Trophy.mtl',
+				function (obj) {
+					models.pointModel = obj;
+
+					if(--modelsToGo === 0) cb();
+				}
+			);
 
 			// generate models for confirmation boxes
 			models.yesBox = new THREE.Mesh(
@@ -133,7 +197,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 							cb(buffer, gainNode);
 						},
 						function(err){
-							console.error('Failed to decode', url);
+							console.error('Failed to decode audio', url, err);
 						}
 					);
 				}
@@ -169,15 +233,33 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 				sounds.card = source;
 				sounds.cardVol = volumeControl;
 			});
+
+			loadSound('/static/audio/gameStart.ogg', function(source, volumeControl)
+			{
+				sounds.gameStart = source;
+				sounds.gameStartVol = volumeControl;
+			});
+
+			loadSound('/static/audio/playerJoin.ogg', function(source, volumeControl)
+			{
+				sounds.playerJoin = source;
+				sounds.playerJoinVol = volumeControl;
+			});
+
+			loadSound('/static/audio/playerKick.ogg', function(source, volumeControl)
+			{
+				sounds.playerKick = source;
+				sounds.playerKickVol = volumeControl;
+			});
 		}
 	}
-	
+
 	sounds.playSound = function(soundName)
 	{
 		var source = sounds.ctx.createBufferSource();
 		source.buffer = sounds[soundName];
 		source.connect( sounds[soundName+'Vol'] );
-		
+
 		if(soundName === 'fanfare')
 			source.start(0, 1.4);
 		else
@@ -211,6 +293,21 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		}
 	}
 
+	function wrapText(text)
+	{
+		var words = text.split(' ');
+		var size = 0;
+		return words.reduce(function (acc, word) {
+			if (size + word.length > 17) {
+				acc.push('');
+				size = 0;
+			}
+			acc[acc.length - 1] += ' ' + word;
+			size += word.length;
+			return acc;
+		}, ['']);
+	}
+
 	function generateCard(card, color)
 	{
 		if(color === 'black'){
@@ -239,7 +336,14 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		// write text
 		g.textAlign = 'left';
 		g.font = 'bold '+(0.09*cardWidth*fontScale)+'px '+fontStack;
-		var text = card.text.split('\n');
+		var text = card.text;
+		if (text.indexOf('\n') === -1) {
+			text = wrapText(card.text);
+		}
+		else {
+			text = text.split('\n');
+		}
+
 		makeSafeFont(g, text, 0.84*cardWidth);
 		for(var i=0; i<text.length; i++){
 			g.fillText(text[i], 0.08*cardWidth, (0.15+0.12*i)*cardWidth);
@@ -362,7 +466,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 			'Licensed under CC BY-NC-SA',
 			'cardsagainsthumanity.com',
 			'Adapted for AltspaceVR by:',
-			'StevenPatrick, falkrons, schmidtec'];
+			'Derogatory, falkrons, schmidtec'];
 		makeSafeFont(g, legal, 0.86*cardWidth);
 		for(var i=0; i<legal.length; i++){
 			g.fillText(legal[i], 0.07*cardWidth, (1.06 + 0.07*i)*cardWidth);
@@ -377,42 +481,81 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		return model;
 	}
 
-	function generateNameplate(name)
+	function generateTextMaterial(text, options)
 	{
-		// card face texture resolution
 		var texWidth = 256;
-		var model = models.nameplate.clone();
 		var fontStack = '"Helvetica Neue", Helvetica, Arial, Sans-Serif';
 
 		// set up canvas
 		var bmp = document.createElement('canvas');
-		var g = bmp.getContext('2d');
+		var ctx = bmp.getContext('2d');
 		bmp.width = texWidth;
-		bmp.height = texWidth;
+		bmp.height = options.height || texWidth;
 
-		if(name === Game.playerInfo.displayName)
-			g.fillStyle = '#541E1E'; // brick red
-		else
-			g.fillStyle = '#38281C'; // neutral brown
-		g.fillRect(0, 0, texWidth, texWidth);
+		ctx.fillStyle = options.backgroundColor;
+		ctx.fillRect(0, 0, texWidth, options.height || texWidth);
 
-		g.font = 'bold '+(0.1*texWidth*fontScale)+'px '+fontStack;
-		makeSafeFont(g, [name], 0.9*texWidth);
-		g.textAlign = 'center';
-		g.fillStyle = 'white';
-		g.fillText(name, texWidth/2, 35);
-		g.fillText(name, texWidth/2, 86);
+		// TODO: We can simplify this code if the nameplates had a sane UV mapping
+		ctx.font = 'bold '+((options.fontScale || 0.1)*bmp.height*fontScale)+'px '+fontStack;
+		makeSafeFont(ctx, [text], 0.9*texWidth);
+		ctx.textAlign = 'center';
+		if (options.textBaseline) {
+			ctx.textBaseline = options.textBaseline;
+		}
+		ctx.fillStyle = 'white';
+		if (options.single) {
+			ctx.lineWidth = 5;
+			ctx.strokeText(text, texWidth/2, bmp.height / 2);
+			ctx.fillText(text, texWidth/2, bmp.height / 2);
+		}
+		else {
+			ctx.fillText(text, texWidth/2, 35);
+			ctx.fillText(text, texWidth/2, 86);
+		}
 
-		// assign texture
-		model.material = new THREE.MeshBasicMaterial({
+		return new THREE.MeshBasicMaterial({
 			map: new THREE.CanvasTexture(bmp)
 		});
+	}
+
+	function generateStatusTextMaterial(text) {
+		var statusMat = generateTextMaterial(text, {
+			backgroundColor: 'transparent', height: 50, single: true, fontScale: 1, textBaseline: 'middle'
+		});
+		statusMat.transparent = true;
+		statusMat.side = THREE.DoubleSide;
+		return statusMat;
+	}
+
+	function generateNameplate(name)
+	{
+		var model = models.nameplate.clone();
+		var backgroundColor;
+		if(name === Game.playerInfo.displayName)
+			backgroundColor = 'magenta';
+		else
+			backgroundColor = 'white';
+		model.children[0].material = model.children[0].material.clone();
+		model.children[0].material.color.setStyle(backgroundColor);
+
+		var nameSign = new THREE.Mesh(
+			new THREE.PlaneGeometry(35, 8),
+			generateStatusTextMaterial(name, {single: true})
+		);
+		nameSign.position.z = 3.5;
+		var namePivot = new THREE.Object3D();
+		namePivot.rotation.x = -30 * Math.PI / 180;
+		namePivot.position.y = 3.5;
+		namePivot.add(nameSign);
+		model.add(namePivot);
 
 		return model;
 	}
 
-	function generateDialog(text, acceptCb, declineCb, finallyCb)
+	function generateDialog(text, acceptCb, declineCb, finallyCb, options)
 	{
+		options = options || {};
+
 		// card face texture resolution
 		var texWidth = 512;
 		var model = models.dialog.clone();
@@ -427,9 +570,9 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		// draw background
 		g.fillStyle = 'whitesmoke';
 		g.fillRect(0, 0, texWidth, texWidth-160);
-		g.fillStyle = 'red';
+		g.fillStyle = '#f44336'; // red
 		g.fillRect(0, texWidth-166, texWidth/2, 160);
-		g.fillStyle = 'green';
+		g.fillStyle = '#4CAF50'; // green
 		g.fillRect(texWidth/2, texWidth-160, texWidth/2, 160);
 
 		// set up text
@@ -445,7 +588,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		// draw answers
 		g.font = 'bold 45px '+fontStack;
 		g.fillText('No', 0.25*texWidth, texWidth-70);
-		g.fillText('Yes', 0.75*texWidth, texWidth-70);
+		g.fillText(options.acceptLabel || 'Yes', 0.75*texWidth, texWidth-70);
 
 		// assign texture
 		var dMaterial = new THREE.MeshBasicMaterial({
@@ -454,6 +597,10 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		model.traverse(function(mesh){
 			mesh.material = dMaterial;
 		});
+
+		if (options.showDecline !== undefined && !options.showDecline) {
+			model.getObjectByName('Decline').visible = false;
+		}
 
 		// assign callbacks
 		model.getObjectByName('Accept').addEventListener('cursorup', function(){
@@ -469,12 +616,12 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
 
 		// point dialog at player
-		var seat = root.getObjectByName(Game.playerInfo.id);
+		var seat = root.getObjectByName('seat_'+Game.playerInfo.id);
 		model.applyMatrix( sphericalToMatrix(0, Math.PI/8, 1.05*tableRadius, 'yzx') );
 		seat.add(model);
 
 		sounds.playSound('ding');
-		
+
 		return model;
 	}
 
@@ -515,7 +662,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		for(var i=0; i<newTurnOrder.length; i++)
 		{
 			// attempt to get seat at index
-			var seat = root.getObjectByName(newTurnOrder[i].id);
+			var seat = root.getObjectByName('seat_'+newTurnOrder[i].id);
 			if(seat)
 			{
 				// player is already in the game, move them to position
@@ -530,7 +677,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 				{
 					// register "Kick" action
 					(function(nameplate, opponentInfo){
-						nameplate.addEventListener('cursorup', function(evt)
+						nameplate.addEventListener('cursorup', function()
 						{
 							generateDialog('Do you want to kick\n'+opponentInfo.displayName+'?', function(){
 								console.log('kicking');
@@ -542,17 +689,17 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 			}
 			else
 			{
+				// TODO Move most of this to seat.js
 				// create new seat for player
-				seat = new THREE.Object3D();
-				seat.name = newTurnOrder[i].id;
+				seat = new Utils.Seat(newTurnOrder[i].id, models);
 				seat.position.set(-1.05*tableRadius*Math.sin(i*angle), -1.05*tableRadius*Math.cos(i*angle), 1.5);
 				seat.rotation.set(0, 0, -angle*i);
 
 				// add nameplate for the player
 				var nameplate = generateNameplate(newTurnOrder[i].displayName);
 				nameplate.name = 'nameplate';
-				nameplate.position.set(0, 0.25, -0.64);
-				nameplate.rotation.set(0, 0, Math.PI/2);
+				// nameplate.position.set(0, 0.25, -0.64);
+				// nameplate.rotation.set(0, 0, Math.PI/2);
 				nameplate.addBehavior( new Behaviors.CursorFeedback() );
 				seat.add(nameplate);
 
@@ -568,7 +715,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 				if(newTurnOrder[i].id === Game.playerInfo.id)
 				{
 					// register "Leave" action
-					nameplate.addEventListener('cursorup', function(evt)
+					nameplate.addEventListener('cursorup', function()
 					{
 						generateDialog('Are you sure you want to\nleave the game?', function()
 						{
@@ -584,7 +731,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 				{
 					// register "Kick" action
 					(function(nameplate, opponentInfo){
-						nameplate.addEventListener('cursorup', function(evt)
+						nameplate.addEventListener('cursorup', function()
 						{
 							generateDialog('Do you want to kick\n'+opponentInfo.displayName+'?', function(){
 								console.log('kicking');
@@ -634,20 +781,18 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		}
 
 		// remove absent players
-		for(var i=0; i<oldTurnOrder.length; i++)
+		for(var k=0; k<oldTurnOrder.length; k++)
 		{
 			// determine if old player is in new turn order
-			for(var j=0, playerIn=false; j<newTurnOrder.length && !playerIn; j++){
-				playerIn = playerIn || newTurnOrder[j].id === oldTurnOrder[i].id;
+			for(var l=0, playerIn=false; l<newTurnOrder.length && !playerIn; l++){
+				playerIn = playerIn || newTurnOrder[l].id === oldTurnOrder[k].id;
 			}
 
 			if(!playerIn){
-				var seat = root.getObjectByName(oldTurnOrder[i].id);
-				root.remove(seat);
+				var oldSeat = root.getObjectByName('seat_'+oldTurnOrder[k].id);
+				root.remove(oldSeat);
 			}
 		}
-
-
 	}
 
 	//add Idle "are you still there "timeout
@@ -655,27 +800,28 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 	var kickTimeout = {};
 	var idleCheck = function (){
 		idleTimeout = setTimeout(function(){
-        	clearTimeout(idleTimeout);
-        	generateDialog('AFK WARNING\nAre you there?', idleClear , function(){
+			clearTimeout(idleTimeout);
+			generateDialog('AFK WARNING\nAre you there?', idleClear , function(){
 				socket.emit('playerLeave', Game.playerInfo.id, Game.playerInfo.displayName,
 				Game.playerInfo.displayName+' has left the game.');
 			});
-        	kickTimeout = setTimeout(function(){
-        		clearTimeout(kickTimeout);
-        		Game.emitPlayerLeave();
-        		console.log("you have been kicked from the game due to inactivity.");
-    		}, 60000);
-    	}, 300000);
-    }
-    var idleClear = function (){
-    	clearTimeout(kickTimeout);
-    	clearTimeout(idleTimeout);
-    }
+			kickTimeout = setTimeout(function(){
+				clearTimeout(kickTimeout);
+				Game.emitPlayerLeave();
+				console.log("you have been kicked from the game due to inactivity.");
+			}, 60000);
+		}, 300000);
+	}
+	var idleClear = function (){
+		clearTimeout(kickTimeout);
+		clearTimeout(idleTimeout);
+	}
 
 
 	exports.preloadAssets = preloadAssets;
 	exports.generateCard = generateCard;
 	exports.generateTitleCard = generateTitleCard;
+	exports.generateStatusTextMaterial = generateStatusTextMaterial;
 	exports.generateNameplate = generateNameplate;
 	exports.generateDialog = generateDialog;
 	exports.sphericalToMatrix = sphericalToMatrix;
