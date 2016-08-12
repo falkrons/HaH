@@ -466,7 +466,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 			'Licensed under CC BY-NC-SA',
 			'cardsagainsthumanity.com',
 			'Adapted for AltspaceVR by:',
-			'StevenPatrick, falkrons, schmidtec'];
+			'Derogatory, falkrons, schmidtec'];
 		makeSafeFont(g, legal, 0.86*cardWidth);
 		for(var i=0; i<legal.length; i++){
 			g.fillText(legal[i], 0.07*cardWidth, (1.06 + 0.07*i)*cardWidth);
