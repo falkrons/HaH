@@ -12,5 +12,6 @@ module.exports = {
 	minPlayers: jsonConfig.minPlayers || 4,
 	maxPlayers: jsonConfig.maxPlayers || 12,
 	syncInterval: jsonConfig.syncInterval || 100,
+	gaPropertyId: jsonConfig.gaPropertyId || process.env.GA_PROPERTY_ID,
 	githubAccessToken: jsonConfig.githubAccessToken
 }

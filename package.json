@@ -9,14 +9,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/falkrons/HaH.git"
+    "url": "git+https://github.com/AltspaceVR/HaH.git"
   },
   "author": "",
   "license": "CC-BY-NC-SA-4.0",
   "bugs": {
-    "url": "https://github.com/falkrons/HaH/issues"
+    "url": "https://github.com/AltspaceVR/HaH/issues"
   },
-  "homepage": "https://github.com/falkrons/HaH#readme",
+  "homepage": "https://github.com/AltspaceVR/HaH#readme",
   "dependencies": {
     "body-parser": "^1.15.1",
     "express": "^4.13.4",

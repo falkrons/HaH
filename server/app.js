@@ -1,6 +1,7 @@
 'use strict';
 
 var express = require('express'),
+	pug = require('pug'),
 	morgan = require('morgan'),
 	libpath = require('path'),
 	socketio = require('socket.io'),
@@ -31,6 +32,8 @@ app.get('/', require('./status.js'));
 app.post('/feedback', bodyParser.json(), feedback.feedbackRequest);
 
 // bootstrap the game page
+var indexTemplateFile = libpath.join(__dirname, '../client/index.pug');
+var indexTemplate = pug.compileFile(indexTemplateFile, {pretty: true});
 app.get('/play', function(req,res)
 {
 	if(!req.query.gameId){
@@ -43,7 +46,8 @@ app.get('/play', function(req,res)
 		res.redirect('?gameId='+id);
 	}
 	else {
-		res.sendFile(libpath.join(__dirname, '../client/index.html'));
+		console.log('gaPropertyId', config.gaPropertyId);
+		res.send(indexTemplate({gaPropertyId: config.gaPropertyId}));
 	}
 });
 
