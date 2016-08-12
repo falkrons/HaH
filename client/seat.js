@@ -15,7 +15,7 @@
 		this.pointContainer = new THREE.Object3D();
 		this.pointContainer.rotation.x = Math.PI / 2;
 		this.pointContainer.scale.multiplyScalar(0.01);
-		this.pointContainer.position.set(0, 0.5, -0.66);
+		this.pointContainer.position.set(0, 0.3, -0.71);
 		this.add(this.pointContainer);
 
 		var playerIndicator = models.playerIndicator.clone();

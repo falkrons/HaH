@@ -156,6 +156,16 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 				}
 			);
 
+			objmtlLoader.load(
+				'/static/models/trophy/HaH_Trophy.obj',
+				'/static/models/trophy/HaH_Trophy.mtl',
+				function (obj) {
+					models.pointModel = obj;
+
+					if(--modelsToGo === 0) cb();
+				}
+			);
+
 			// generate models for confirmation boxes
 			models.yesBox = new THREE.Mesh(
 				new THREE.BoxGeometry(0.01, 0.1, 0.1),
@@ -169,11 +179,6 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 				new THREE.MeshBasicMaterial({
 					map: textures.cross
 				})
-			);
-
-			models.pointModel = new THREE.Mesh(
-				new THREE.CylinderGeometry(1, 1, 2, 6),
-				new THREE.MeshBasicMaterial({color: '#FFEB3B'}) // yellow
 			);
 		}
 
