@@ -41,7 +41,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		{
 			var colladaLoader = new THREE.ColladaLoader();
 			var objmtlLoader = new altspace.utilities.shims.OBJMTLLoader();
-			var modelsToGo = 7;
+			var modelsToGo = 8;
 
 			// pre-load card model
 			colladaLoader.load('/static/models/card.dae', function(result)
