@@ -54,16 +54,22 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 				if(--modelsToGo === 0) cb();
 			});
 
+			// Set the scale for OBJ models based on the known width of the table model.
+			var tableModelWidth = 297.444;
+			var objScale = 1 / tableModelWidth * tableRadius * 2;
+
 			// preload nameplate model
 			objmtlLoader.load(
 				'/static/models/nameplate/HaH_NamePlate.obj',
 				'/static/models/nameplate/HaH_NamePlate.mtl',
 				function(obj)
 				{
-					obj.scale.multiplyScalar(1 / root.scale.x);
-					obj.scale.addScalar(tableRadius / root.scale.x);
 					obj.rotation.x = Math.PI / 2;
-					obj.position.set(0, 0.3, -0.66);
+					obj.scale.multiplyScalar(objScale);
+					var seatZPos = 1.5;
+					obj.position.z = -seatZPos + 0.8;
+					var seatOffset = tableRadius * -1.05;
+					obj.position.y = -seatOffset - tableRadius * 0.94;
 					models.nameplate = obj;
 
 					if(--modelsToGo === 0) cb();
@@ -117,9 +123,10 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 				'/static/models/table/HaH_TableMain.mtl',
 				function (obj) {
 					obj.rotation.x = Math.PI / 2;
-					obj.scale.multiplyScalar(1 / root.scale.x);
-					obj.scale.addScalar(tableRadius / root.scale.x);
-					obj.position.z = -0.32;
+					obj.scale.multiplyScalar(objScale);
+					var modelHeight = 103;
+					// The surface of the table should always be at 80cm above the ground;
+					obj.position.z = -modelHeight * objScale + 0.8;
 					models.table = obj;
 
 					if(--modelsToGo === 0) cb();
@@ -132,11 +139,18 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 				function (obj) {
 					obj.rotation.x = Math.PI / 2;
 					obj.rotation.y = Math.PI;
-					obj.scale.multiplyScalar(1 / root.scale.x);
-					obj.scale.addScalar(tableRadius / root.scale.x);
-					obj.position.z = -1.83
-					obj.position.y = 1.85
+					obj.scale.multiplyScalar(objScale);
+					var modelHeight = 104.229;
+					var seatZPos = 1.5;
+					obj.position.z = -modelHeight * objScale - seatZPos + 0.8;
+					var seatOffset = tableRadius * -1.05;
+					obj.position.y = -seatOffset;
 					models.playerIndicator = obj;
+
+					// Add an invisible copy to the scene, so that textures ready when a game starts.
+					var preload = obj.clone();
+					preload.children[1].visible = false;
+					root.add(preload);
 
 					if(--modelsToGo === 0) cb();
 				}
@@ -495,12 +509,22 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		var model = models.nameplate.clone();
 		var backgroundColor;
 		if(name === Game.playerInfo.displayName)
-			backgroundColor = '#BF360C'; // deep orange
+			backgroundColor = 'magenta';
 		else
-			backgroundColor = '#3E2723'; // brown
+			backgroundColor = 'white';
+		model.children[0].material = model.children[0].material.clone();
+		model.children[0].material.color.setStyle(backgroundColor);
 
-		// assign texture
-		model.material = generateTextMaterial(name, {backgroundColor: backgroundColor});
+		var nameSign = new THREE.Mesh(
+			new THREE.PlaneGeometry(35, 8),
+			generateStatusTextMaterial(name, {single: true})
+		);
+		nameSign.position.z = 3.5;
+		var namePivot = new THREE.Object3D();
+		namePivot.rotation.x = -30 * Math.PI / 180;
+		namePivot.position.y = 3.5;
+		namePivot.add(nameSign);
+		model.add(namePivot);
 
 		return model;
 	}

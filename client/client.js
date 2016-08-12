@@ -82,7 +82,7 @@ if( altspace.inClient )
 		root.userData = enc;
 
 		var enclosureRadius = 0.5 * Math.min(enc.innerWidth, enc.innerDepth) / enc.pixelsPerMeter;
-		tableRadius = Math.min(tableRadius, enclosureRadius);
+		tableRadius = Math.min(tableRadius, enclosureRadius - 0.5);
 
 		// render 2d version if space is flat
 		if( enc.innerDepth < 10 ){
