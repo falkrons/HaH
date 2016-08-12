@@ -233,6 +233,24 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 				sounds.card = source;
 				sounds.cardVol = volumeControl;
 			});
+
+			loadSound('/static/audio/gameStart.ogg', function(source, volumeControl)
+			{
+				sounds.gameStart = source;
+				sounds.gameStartVol = volumeControl;
+			});
+
+			loadSound('/static/audio/playerJoin.ogg', function(source, volumeControl)
+			{
+				sounds.playerJoin = source;
+				sounds.playerJoinVol = volumeControl;
+			});
+
+			loadSound('/static/audio/playerKick.ogg', function(source, volumeControl)
+			{
+				sounds.playerKick = source;
+				sounds.playerKickVol = volumeControl;
+			});
 		}
 	}
 

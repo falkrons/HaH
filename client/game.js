@@ -291,12 +291,10 @@ var isInit = false;
 
 		// Announce new game
 		if (turnOrder.length === 1) {
-			// TODO sound for new game
-			Sounds.playSound('ding');
+			Sounds.playSound('gameStart');
 		}
 		else {
-			// TODO sound for new player
-			Sounds.playSound('ding');
+			Sounds.playSound('playerJoin');
 		}
 
 		updateCenterPieceState();
@@ -410,8 +408,7 @@ var isInit = false;
 		updateCenterPieceState();
 
 		if (reason === 'vote-kicked') {
-			// TODO sound for new game
-			Sounds.playSound('ding');
+			Sounds.playSound('playerKick');
 		}
 
 		console.log('Player', displayName, 'has left the game.');
