@@ -1,7 +1,7 @@
 /* global
 	ga, THREE, altspace, io,
 	Utils, Models, Sounds, Behaviors,
-	gameObjects, root, scene, camera */
+	gameObjects, root, scene, camera, gameId */
 'use strict';
 
 var socket;
@@ -331,7 +331,7 @@ var isInit = false;
 				}, null, null, {acceptLabel: 'Ok', showDecline: false});
 			}
 
-			ga('send', 'event', 'Player', 'join');
+			ga('send', 'event', 'player', 'join', gameId);
 
 			if(altspace.inClient)
 			{
@@ -378,7 +378,7 @@ var isInit = false;
 
 		if(id === playerInfo.id)
 		{
-			ga('send', 'event', 'Player', 'leave');
+			ga('send', 'event', 'player', 'leave-' + reason, gameId);
 
 			gameObjects.box.removeEventListener('cursorup');
 			gameObjects.box.addEventListener('cursorup', emitPlayerJoinRequest);
@@ -476,7 +476,7 @@ var isInit = false;
 	function updatePlayerHand(newHand, newCzarId)
 	{
 		// track player-rounds to google analytics
-		ga('send', 'event', 'PlayerRound', 'start');
+		ga('send', 'event', 'player-round', 'start', gameId);
 
 		// set hand
 		hand = newHand;
@@ -804,10 +804,9 @@ var isInit = false;
 		for(var user in selections)
 		{
 			// track played event
-			if(czarId === playerInfo.id && selections[user].length === 1)
+			if(czarId === playerInfo.id && selections[user].length > 0)
 			{
-				var text = selections[user][0].text.replace('\n', ' ');
-				ga('send', 'event', 'CardTracking', 'playedCard', text);
+				ga('send', 'event', 'card-tracking', 'played-card', gameId);
 			}
 
 			// generate card models from descriptions
@@ -982,10 +981,9 @@ var isInit = false;
 		gameState = 'roundFinished';
 
 		// track winner event
-		if(czarId === playerInfo.id && submissionMap[playerId].length === 1)
+		if(czarId === playerInfo.id && submissionMap[playerId].length > 0)
 		{
-			var text = submissionMap[playerId][0].userData.text.replace('\n', ' ');
-			ga('send', 'event', 'CardTracking', 'winningCard', text);
+			ga('send', 'event', 'card-tracking', 'winner-chosen', gameId);
 		}
 
 		if(getSeat()){
@@ -1032,7 +1030,7 @@ var isInit = false;
 			seat.remove(yes, no);
 
 			// track round completion
-			ga('send', 'event', 'PlayerRound', 'end');
+			ga('send', 'event', 'player-round', 'end', gameId);
 		}
 
 		updateCenterPieceState();

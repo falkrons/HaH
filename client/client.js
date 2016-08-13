@@ -40,6 +40,7 @@ var renderer;
 var camera;
 var scene = new THREE.Scene();
 var root = new THREE.Object3D();
+var gameId;
 scene.add(root);
 
 var gameObjects = {};
@@ -142,7 +143,7 @@ function init()
 	root.add(gameObjects.presentation);
 
 	// grab game id from URL
-	var gameId = /[?&]gameId=(\w+)\b/.exec(window.location.search);
+	gameId = /[?&]gameId=(\w+)\b/.exec(window.location.search);
 	if(gameId) gameId = gameId[1];
 
 	// initialize game
