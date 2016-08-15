@@ -8,7 +8,7 @@ catch (e) {
 }
 // defaults for config
 module.exports = {
-	port: jsonConfig.port || process.env.PORT || 80,
+	port: jsonConfig.port || process.env.PORT || 7878,
 	minPlayers: jsonConfig.minPlayers || 4,
 	maxPlayers: jsonConfig.maxPlayers || 12,
 	syncInterval: jsonConfig.syncInterval || 100,
