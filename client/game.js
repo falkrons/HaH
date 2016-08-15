@@ -378,7 +378,7 @@ var isInit = false;
 
 		if(id === playerInfo.id)
 		{
-			ga('send', 'event', 'player', 'leave-' + reason, gameId);
+			ga('send', 'event', 'player', reason ? 'leave-' + reason : 'leave', gameId);
 
 			gameObjects.box.removeEventListener('cursorup');
 			gameObjects.box.addEventListener('cursorup', emitPlayerJoinRequest);
