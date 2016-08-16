@@ -599,7 +599,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		});
 
 		if (options.showDecline !== undefined && !options.showDecline) {
-			model.getObjectByName('Decline').visible = false;
+			model.getObjectByName('Decline').children[0].visible = false;
 		}
 
 		// assign callbacks
