@@ -1,4 +1,4 @@
-/* global THREE, altspace, Utils, Models, Behaviors, Game */
+/* global TWEEN, THREE, altspace, Utils, Models, Behaviors, Game */
 'use strict';
 
 // force define String.trim
@@ -127,6 +127,8 @@ function init()
 	gameObjects.box.rotation.set(Math.PI, 0, 0);
 	gameObjects.box.addBehavior(new Behaviors.CursorFeedback());
 	root.add(gameObjects.box);
+
+	root.add(Models.boxHoverEffect);
 
 	// add a rotating presentation space
 	gameObjects.presentation = new THREE.Object3D();

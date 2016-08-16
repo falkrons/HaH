@@ -1,4 +1,4 @@
-/* global THREE, altspace,
+/* global TWEEN, THREE, altspace,
 	Utils, Behaviors,
 	Game, socket, root, tableRadius
 */
@@ -83,6 +83,11 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 				var _box = result.scene.children[0].children[0].clone();
 				_box.scale.set(2,2,2);
 				_box.material = new THREE.MeshBasicMaterial({map: textures.box});
+				new TWEEN.Tween(_box.position)
+					.to({z: 0.01}, 1000)
+					.repeat(Infinity)
+					.yoyo(true)
+					.easing(TWEEN.Easing.Sinusoidal.InOut).start(performance.now() + 500);
 				models.box.add(_box);
 
 				var startSign = new THREE.Mesh(
@@ -127,6 +132,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 					var modelHeight = 103;
 					// The surface of the table should always be at 80cm above the ground;
 					obj.position.z = -modelHeight * objScale + 0.8;
+					new TWEEN.Tween(obj.children[1].material.map.offset).to({x: 1}, 800000).repeat(Infinity).start();
 					models.table = obj;
 
 					if(--modelsToGo === 0) cb();
@@ -180,6 +186,35 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 					map: textures.cross
 				})
 			);
+
+			models.boxHoverEffect = (function () {
+				var boxHoverEffect = new THREE.Group();
+					var ringMat = new THREE.MeshBasicMaterial({color: '#199597'})
+				var ring1 = new THREE.Mesh(new THREE.RingGeometry(1.5, 2, 20), ringMat);
+				ring1.position.z = 0.7;
+				ring1.scale.multiplyScalar(0.1);
+				new TWEEN.Tween(ring1.position).to({z: 0.8}, 2000)
+					.repeat(Infinity).yoyo(true).easing(TWEEN.Easing.Sinusoidal.InOut).start();
+				boxHoverEffect.add(ring1);
+
+				var ring2 = new THREE.Mesh(new THREE.RingGeometry(2.2, 2.7, 20), ringMat);
+				ring2.position.z = 0.7;
+				ring2.scale.multiplyScalar(0.1);
+				new TWEEN.Tween(ring2.position)
+					.to({z: 0.8}, 2000).repeat(Infinity).yoyo(true)
+					.easing(TWEEN.Easing.Sinusoidal.InOut).start(performance.now() + 200);
+				boxHoverEffect.add(ring2);
+
+				var ring3 = new THREE.Mesh(new THREE.RingGeometry(0.9, 1.4, 20), ringMat);
+				ring3.position.z = 0.7;
+				ring3.scale.multiplyScalar(0.1);
+				new TWEEN.Tween(ring3.position)
+					.to({z: 0.8}, 2000).repeat(Infinity).yoyo(true)
+					.easing(TWEEN.Easing.Sinusoidal.InOut).start(performance.now() + 500);
+				boxHoverEffect.add(ring3);
+
+				return boxHoverEffect;
+			}());
 		}
 
 		function loadSound(url, cb)
