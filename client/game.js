@@ -1,5 +1,5 @@
 /* global
-	ga, THREE, altspace, io,
+	ga, THREE, TWEEN, altspace, io,
 	Utils, Models, Sounds, Behaviors,
 	gameObjects, root, scene, camera, gameId */
 'use strict';
@@ -256,6 +256,21 @@ var isInit = false;
 		var statusSign = gameObjects.box.children[1];
 		statusSign.position.z = hasStarted ? 0.2 : -0.2;
 		statusSign.rotation.x = hasStarted ? Math.PI / 2 : -Math.PI / 2;
+		if (altspace.inClient) {
+			altspace.getThreeJSTrackingSkeleton().then(function(skel){
+				var head = skel.getJoint('Head');
+				var direction = head.position.clone();
+				direction.y = 0;
+				if (!hasStarted) {
+					direction.applyEuler(new THREE.Euler(0, 0, -Math.PI, 'XYZ'));
+				}
+				direction.applyEuler(new THREE.Euler(Math.PI / 2, 0, 0, 'XYZ'));
+				direction.applyEuler(new THREE.Euler(0, 0, Math.PI / 2, 'XYZ'));
+				direction.normalize();
+				statusSign.quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), direction);
+				statusSign.rotateX(hasStarted ? Math.PI / 2 : -Math.PI / 2);
+			});
+		}
 
 		gameObjects.titleCard.visible = !hasStarted;
 
@@ -296,8 +311,6 @@ var isInit = false;
 		else {
 			Sounds.playSound('playerJoin');
 		}
-
-		updateCenterPieceState();
 
 		// add crown
 		var crown = new Utils.Crown(id);
@@ -350,6 +363,8 @@ var isInit = false;
 		}
 
 		console.log('New player joined:', displayName);
+
+		updateCenterPieceState();
 		//Utils.idleCheck();
 
 	}
@@ -538,8 +553,14 @@ var isInit = false;
 		{
 			// show black card
 			seat.add(blackCard);
+			var originalPosition = blackCard.position.z;
+			var blackCardAnimation = new TWEEN.Tween(blackCard.position)
+				.to({z: originalPosition + 0.02}, 200)
+				.repeat(5).yoyo(true).start(performance.now() + 500);
 			blackCard.addBehavior( new Behaviors.CursorFeedback() );
 			blackCard.addEventListener('cursorup', function(){
+				blackCardAnimation.stop();
+				blackCard.position.z = originalPosition;
 				blackCard.removeAllBehaviors();
 				blackCard.scale.set(2,2,2);
 				socket.emit('roundStart');
