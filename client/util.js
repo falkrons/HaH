@@ -530,6 +530,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 	function generateNameplate(name)
 	{
 		var model = models.nameplate.clone();
+		model.name = 'nameplate';
 		var backgroundColor;
 		if(name === Game.playerInfo.displayName)
 			backgroundColor = 'magenta';
@@ -538,16 +539,25 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		model.children[0].material = model.children[0].material.clone();
 		model.children[0].material.color.setStyle(backgroundColor);
 
-		var nameSign = new THREE.Mesh(
-			new THREE.PlaneGeometry(35, 8),
-			generateStatusTextMaterial(name, {single: true})
-		);
-		nameSign.position.z = 3.5;
-		var namePivot = new THREE.Object3D();
-		namePivot.rotation.x = -30 * Math.PI / 180;
-		namePivot.position.y = 3.5;
-		namePivot.add(nameSign);
-		model.add(namePivot);
+		var nameplateGeo = new THREE.PlaneGeometry(35, 8);
+		var nameplateMaterial = generateStatusTextMaterial(name, {single: true})
+
+		var nameSignFront = new THREE.Mesh(nameplateGeo, nameplateMaterial);
+		nameSignFront.position.z = 3.5;
+		var namePivotFront = new THREE.Object3D();
+		namePivotFront.rotation.x = -30 * Math.PI / 180;
+		namePivotFront.position.y = 3.5;
+		namePivotFront.add(nameSignFront);
+		model.add(namePivotFront);
+
+		var nameSignBack = new THREE.Mesh(nameplateGeo, nameplateMaterial);
+		nameSignBack.position.z = -3.5;
+		nameSignBack.rotation.y = Math.PI;
+		var namePivotBack = new THREE.Object3D();
+		namePivotBack.rotation.x = 30 * Math.PI / 180;
+		namePivotBack.position.y = 3.5;
+		namePivotBack.add(nameSignBack);
+		model.add(namePivotBack);
 
 		return model;
 	}
@@ -697,7 +707,6 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
 				// add nameplate for the player
 				var nameplate = generateNameplate(newTurnOrder[i].displayName);
-				nameplate.name = 'nameplate';
 				// nameplate.position.set(0, 0.25, -0.64);
 				// nameplate.rotation.set(0, 0, Math.PI/2);
 				nameplate.addBehavior( new Behaviors.CursorFeedback() );
