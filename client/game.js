@@ -277,11 +277,13 @@ var isInit = false;
 		var hasSeat = !!getSeat();
 		var haveEnoughPlayers = numPlayers >= minPlayers;
 		var statusText;
+		var shouldAnimate = true;
 		if (!hasStarted) {
 			statusText = 'Open To Start';
 		}
 		else if (gameState === 'roundStarted') {
 			statusText = '';
+			shouldAnimate = false;
 		}
 		else if (hasSeat) {
 			if (haveEnoughPlayers) {
@@ -290,12 +292,19 @@ var isInit = false;
 			else {
 				var neededPlayers = minPlayers - numPlayers;
 				statusText = 'Need ' + neededPlayers + ' More Player' + (neededPlayers > 1 ? 's' : '');
+				shouldAnimate = false;
 			}
 		}
 		else if (!hasSeat) {
 			statusText = 'Click To Join'
 		}
 		statusSign.material = Utils.generateStatusTextMaterial(statusText);
+		if (shouldAnimate) {
+			var originalPosition = gameObjects.box.position.z;
+			new TWEEN.Tween(gameObjects.box.position)
+				.to({z: originalPosition + 0.04}, 200)
+				.repeat(5).yoyo(true).start(performance.now() + 800);
+		}
 	}
 
 	function playerJoin(id, displayName, newTurnOrder)
