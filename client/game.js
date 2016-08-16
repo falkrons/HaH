@@ -1,5 +1,5 @@
 /* global
-	ga, THREE, TWEEN, altspace, io,
+	Promise, ga, THREE, TWEEN, altspace, io,
 	Utils, Models, Sounds, Behaviors,
 	gameObjects, root, scene, camera, gameId */
 'use strict';
@@ -246,6 +246,22 @@ var isInit = false;
 		}
 	}
 
+	function getSkeleton()
+	{
+		return new Promise(function (resolve) {
+			if (!playerInfo.skeleton) {
+				altspace.getThreeJSTrackingSkeleton().then(function(skel){
+					scene.add(skel);
+					playerInfo.skeleton = skel;
+					resolve(playerInfo.skeleton);
+				});
+			}
+			else {
+				resolve(playerInfo.skeleton);
+			}
+		});
+	}
+
 	function updateCenterPieceState()
 	{
 		var numPlayers = turnOrder.length;
@@ -257,7 +273,7 @@ var isInit = false;
 		statusSign.position.z = hasStarted ? 0.2 : -0.2;
 		statusSign.rotation.x = hasStarted ? Math.PI / 2 : -Math.PI / 2;
 		if (altspace.inClient) {
-			altspace.getThreeJSTrackingSkeleton().then(function(skel){
+			getSkeleton().then(function (skel) {
 				var head = skel.getJoint('Head');
 				var direction = head.position.clone();
 				direction.y = 0;
@@ -357,8 +373,7 @@ var isInit = false;
 
 			if(altspace.inClient)
 			{
-				altspace.getThreeJSTrackingSkeleton().then(function(skel){
-					scene.add(skel);
+				getSkeleton().then(function(skel){
 					var head = skel.getJoint('Head');
 					head.add(crown);
 					crown.scale.multiplyScalar(root.scale.x);
