@@ -23,6 +23,7 @@
 		var playerIndicatorSlice = playerIndicator.getObjectByName('PlayerSlice');
 		playerIndicatorSlice.material = playerIndicatorSlice.material.clone();
 		playerIndicatorSlice.material.map = playerIndicatorSlice.material.map.clone();
+		playerIndicatorSlice.material.map.needsUpdate = true;
 		this.playerIndicatorTexture = playerIndicatorSlice.material.map;
 		this.playerIndicatorTexture.offset.set(0, 0.5);
 		this.setIndicatorState('waiting');

@@ -107,6 +107,8 @@ else
 	camera.lookAt( new THREE.Vector3(0, 0, 0) );
 	root.add(camera);
 
+	root.add(new THREE.AmbientLight(0xffffff));
+
 	altspace.utilities.shims.cursor.init(scene, camera, {renderer: renderer});
 
 	Utils.preloadAssets(init);
@@ -176,10 +178,11 @@ function render(timestamp)
 		var seat = root.getObjectByName('seat_'+Game.playerInfo.id);
 		if(seat && camera.fov !== 90)
 		{
-			camera.fov = 100;
+			camera.fov = 90;
 			camera.updateProjectionMatrix();
-			camera.position.set(0,-0.3, 0.1);
+			camera.position.set(0,-0.5, 0.1);
 			camera.rotation.set(1.5, 0, 0);
+			camera.lookAt( new THREE.Vector3(0, 0, 0) );
 			seat.add(camera);
 		}
 		else if(!seat)
