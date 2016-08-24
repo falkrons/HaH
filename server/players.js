@@ -13,6 +13,11 @@ function joinRequest(id, displayName)
 {
 	var game = activeGames[this.gameId];
 
+	if( game.lockIds && game.lockIds.indexOf(id) === -1 ) {
+		this.emit('error', 'This game is locked to certain players.');
+		return;
+	}
+
 	// check if this player is already pending or joined
 	if( game.playerForSocket(this) ){
 		this.emit('error', 'You are already a player. Ignoring redundant request.');
@@ -168,7 +173,7 @@ function leave(id, displayName, message, reason)
 
 	// reinitialize game if last player leaves
 	if(game.turnOrder.length === 0){
-		activeGames[this.gameId] = new structs.Game(this.gameId);
+		activeGames[this.gameId] = new structs.Game(this.gameId, this.lockIds);
 	}
 
 	// game is interrupted, reset

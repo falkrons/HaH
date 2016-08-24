@@ -7,6 +7,7 @@
 var socket;
 var isInit = false;
 var isLite = false;
+var lockIds = null;
 
 // don't pollute the global namespace
 (function(exports)
@@ -25,72 +26,86 @@ var isLite = false;
 	var joinBlocked = false;
 	var minPlayers = 3;
 
+	function getUser()
+	{
+		return new Promise(function (resolve) {
+			// save player info
+			if(altspace.inClient){
+				altspace.getUser().then(function(userInfo)
+				{
+					if(userInfo && userInfo.userId && userInfo.displayName){
+						playerInfo.id = userInfo.userId;
+						playerInfo.displayName = userInfo.displayName;
+					}
+					else
+					{
+						console.log("you have been logged out of Coherent.");
+						var message = document.createElement('h1');
+						message.innerHTML = 'You\'ve been logged out of Coherent. Log in to join.';
+						document.body.insertBefore(message, document.body.children[0]);
+					}
+					resolve();
+				});
+			}
+			else {
+				playerInfo.id = ''+Math.floor(Math.random()*1000);
+				playerInfo.displayName = 'anon'+playerInfo.id;
+				resolve();
+			}
+		});
+	}
+
 	function connectToGame(gameId)
 	{
-		// save player info
-		if(altspace.inClient){
-			altspace.getUser().then(function(userInfo)
-			{
-				if(userInfo && userInfo.userId && userInfo.displayName){
-					playerInfo.id = userInfo.userId;
-					playerInfo.displayName = userInfo.displayName;
-				}
-				else
-				{
-					console.log("you have been logged out of Coherent.");
-					var message = document.createElement('h1');
-					message.innerHTML = 'You\'ve been logged out of Coherent. Log in to join.';
-					document.body.insertBefore(message, document.body.children[0]);
-				}
+		lockIds = /[&?]lockIds=([^&]+)/.exec(window.location.search);
+		if (lockIds) {
+			lockIds = lockIds[1].split(',');
+		}
+
+		getUser().then(function () {
+			// initialize the socket connection
+			socket = io('/?gameId='+gameId+(lockIds?'&lockIds='+lockIds.join(','):''));
+
+			// debug listener
+			var onevent = socket.onevent;
+			socket.onevent = function(packet){
+				var args = packet.data || [];
+				onevent.call(this, packet);
+				packet.data = ['*'].concat(args);
+				onevent.call(this, packet);
+			};
+			socket.on('*', function(){
+				// console.log(arguments);
 			});
-		}
-		else {
-			playerInfo.id = ''+Math.floor(Math.random()*1000);
-			playerInfo.displayName = 'anon'+playerInfo.id;
-		}
 
-		// initialize the socket connection
-		socket = io('/?gameId='+gameId);
+			socket.on('error', function(msg){
+				console.error(msg);
+			});
+			socket.on('objectUpdate', function(states){
+				window._syncStates = states;
+			});
 
-		// debug listener
-		var onevent = socket.onevent;
-		socket.onevent = function(packet){
-			var args = packet.data || [];
-			onevent.call(this, packet);
-			packet.data = ['*'].concat(args);
-			onevent.call(this, packet);
-		};
-		socket.on('*', function(){
-			console.log(arguments);
-		});
+			socket.on('init', init);
+			socket.on('roundReset', roundReset);
 
-		socket.on('error', function(msg){
-			console.error(msg);
-		});
-		socket.on('objectUpdate', function(states){
-			window._syncStates = states;
-		});
+			socket.on('playerJoinRequest', playerJoinRequest);
+			socket.on('playerJoin', playerJoin);
+			socket.on('playerJoinDenied', playerJoinDenied);
+			socket.on('playerLeave', playerLeave);
+			socket.on('playerKickRequest', playerKickRequest);
 
-		socket.on('init', init);
-		socket.on('roundReset', roundReset);
+			socket.on('dealCards', dealCards);
+			socket.on('roundStart', roundStart);
+			socket.on('cardSelection', animateSelection);
 
-		socket.on('playerJoinRequest', playerJoinRequest);
-		socket.on('playerJoin', playerJoin);
-		socket.on('playerJoinDenied', playerJoinDenied);
-		socket.on('playerLeave', playerLeave);
-		socket.on('playerKickRequest', playerKickRequest);
+			socket.on('cardSelectionComplete', cardSelectionComplete);
+			socket.on('presentSubmission', presentSubmission);
+			socket.on('winnerSelection', winnerSelection);
 
-		socket.on('dealCards', dealCards);
-		socket.on('roundStart', roundStart);
-		socket.on('cardSelection', animateSelection);
-
-		socket.on('cardSelectionComplete', cardSelectionComplete);
-		socket.on('presentSubmission', presentSubmission);
-		socket.on('winnerSelection', winnerSelection);
-
-		socket.on('reload', function () {
-			console.log('reloading');
-			location.reload();
+			socket.on('reload', function () {
+				console.log('reloading');
+				location.reload();
+			});
 		});
 	}
 
@@ -104,6 +119,10 @@ var isLite = false;
 		socket.emit('playerLeave', playerInfo.id, playerInfo.displayName,
 			playerInfo.displayName+' has left the game.', 'idle-kicked'
 		);
+	}
+
+	function allowedByLockId() {
+		return !lockIds || lockIds.includes(String(playerInfo.id));
 	}
 
 	function init(newTurnOrder, newGameState, blackCard, czarId, submissions)
@@ -142,7 +161,9 @@ var isLite = false;
 
 		// hook up click-to-join handler
 		gameObjects.box.removeEventListener('cursorup');
-		gameObjects.box.addEventListener('cursorup', emitPlayerJoinRequest);
+		if (allowedByLockId()) {
+			gameObjects.box.addEventListener('cursorup', emitPlayerJoinRequest);
+		}
 
 		gameState = newGameState;
 
@@ -296,9 +317,9 @@ var isLite = false;
 
 		var hasSeat = !!getSeat();
 		var haveEnoughPlayers = numPlayers >= minPlayers;
-		var statusText;
+		var statusText = '';
 		var shouldAnimate = true;
-		if (!hasStarted) {
+		if (!hasStarted && allowedByLockId()) {
 			statusText = 'Open To Start';
 		}
 		else if (gameState === 'roundStarted') {
@@ -315,7 +336,7 @@ var isLite = false;
 				shouldAnimate = false;
 			}
 		}
-		else if (!hasSeat) {
+		else if (!hasSeat && allowedByLockId()) {
 			statusText = 'Click To Join'
 		}
 		statusSign.material = Utils.generateStatusTextMaterial(statusText);
@@ -835,7 +856,6 @@ var isLite = false;
 				tempCard.addBehavior( new Behaviors.Animate(root, finalPos, finalRot, null, 600,
 					function(){
 						if(!root.getObjectByName('czarStack')){
-							console.log('naming something czarStack');
 							this.name = 'czarStack';
 						}
 						else {
