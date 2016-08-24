@@ -6,6 +6,7 @@
 
 var socket;
 var isInit = false;
+var isLite = false;
 
 // don't pollute the global namespace
 (function(exports)
@@ -60,8 +61,7 @@ var isInit = false;
 			onevent.call(this, packet);
 		};
 		socket.on('*', function(){
-			// TODO: Figure out why we're spewing objectUpdates
-			//console.log(arguments);
+			console.log(arguments);
 		});
 
 		socket.on('error', function(msg){
@@ -118,6 +118,8 @@ var isInit = false;
 		else
 			isInit = true;
 
+		isLite = /[&?]lite&?/.test(window.location.search);
+
 		var card = gameObjects.presentation.getObjectByName('blackCard');
 		if(card){
 			gameObjects.presentation.remove(card);
@@ -131,10 +133,12 @@ var isInit = false;
 
 		updateCenterPieceState();
 
-		newTurnOrder.forEach(function(p){
-			var crown = new Utils.Crown(p.id, p.wins);
-			root.add(crown);
-		});
+		if (!isLite) {
+			newTurnOrder.forEach(function(p){
+				var crown = new Utils.Crown(p.id, p.wins);
+				root.add(crown);
+			});
+		}
 
 		// hook up click-to-join handler
 		gameObjects.box.removeEventListener('cursorup');
@@ -272,7 +276,7 @@ var isInit = false;
 		var statusSign = gameObjects.box.children[1];
 		statusSign.position.z = hasStarted ? 0.2 : -0.2;
 		statusSign.rotation.x = hasStarted ? Math.PI / 2 : -Math.PI / 2;
-		if (altspace.inClient) {
+		if (altspace.inClient && (!isLite || getSeat())) {
 			getSkeleton().then(function (skel) {
 				var head = skel.getJoint('Head');
 				var direction = head.position.clone();
@@ -337,9 +341,12 @@ var isInit = false;
 			Sounds.playSound('playerJoin');
 		}
 
-		// add crown
-		var crown = new Utils.Crown(id);
-		root.add(crown);
+		var crown;
+		if (!isLite) {
+			// add crown
+			crown = new Utils.Crown(id);
+			root.add(crown);
+		}
 
 		var dialog;
 
@@ -371,18 +378,20 @@ var isInit = false;
 
 			ga('send', 'event', 'player', 'join', gameId);
 
-			if(altspace.inClient)
-			{
-				getSkeleton().then(function(skel){
-					var head = skel.getJoint('Head');
-					head.add(crown);
-					crown.scale.multiplyScalar(root.scale.x);
-					crown.updateMatrix();
-				});
-			}
-			else
-			{
-				camera.add(crown);
+			if (crown) {
+				if(altspace.inClient)
+				{
+					getSkeleton().then(function(skel){
+						var head = skel.getJoint('Head');
+						head.add(crown);
+						crown.scale.multiplyScalar(root.scale.x);
+						crown.updateMatrix();
+					});
+				}
+				else
+				{
+					camera.add(crown);
+				}
 			}
 		}
 
@@ -1050,6 +1059,9 @@ var isInit = false;
 		var winnerCrown = scene.getObjectByName('crown_'+playerId);
 		if(winnerCrown){
 			winnerCrown.addCard(blackCard)
+		}
+		else {
+			blackCard.parent.remove(blackCard);
 		}
 		winnerSeat.addPoint();
 

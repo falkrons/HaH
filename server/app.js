@@ -88,7 +88,7 @@ io.on('connection', function(socket)
 			game.turnOrder.length > game.czar ? game.turnOrder[game.czar].id : null,
 			game.submissions || null
 		);
-		console.log('Client connected to', socket.gameId);
+		console.log('Client connected to', socket.gameId, io.engine.clientsCount);
 	}
 	else {
 		socket.emit('error', 'No gameId specified');
