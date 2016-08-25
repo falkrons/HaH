@@ -4,6 +4,7 @@
   "description": "A game for terrible Altspacers.",
   "main": "server/app.js",
   "scripts": {
+    "build": "node ./build",
     "start": "node ./server/app",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -19,6 +20,7 @@
   "homepage": "https://github.com/AltspaceVR/HaH#readme",
   "dependencies": {
     "body-parser": "^1.15.1",
+    "compression": "^1.6.2",
     "express": "^4.13.4",
     "morgan": "^1.7.0",
     "pug": "^2.0.0-alpha6",
@@ -26,7 +28,8 @@
     "socket.io": "^1.4.5"
   },
   "devDependencies": {
+    "csv-parse": "^1.1.7",
     "simple-git": "^1.32.1",
-    "csv-parse": "^1.1.7"
+    "uglify-js": "^2.7.3"
   }
 }

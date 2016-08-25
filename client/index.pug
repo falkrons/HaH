@@ -1,21 +1,22 @@
 doctype html
 html
 	head
-		script(src='/socket.io/socket.io.js')
+		//
+			script(src='https://cdn.socket.io/socket.io-1.4.5.js')
 
-		script(src='/static/lib/three.min.js')
-		script(src='/static/lib/ColladaLoader.js')
-		script(src='/static/lib/OBJLoader.js')
-		script(src='/static/lib/MTLLoader.js')
-		script(src='https://sdk.altvr.com/libs/altspace.js/0.14.1/altspace.js')
-		script(src='/static/lib/Tween.js')
+			script(src='/static/lib/three.min.js')
+			script(src='/static/lib/ColladaLoader.js')
+			script(src='/static/lib/OBJLoader.js')
+			script(src='/static/lib/MTLLoader.js')
+			script(src='https://sdk.altvr.com/libs/altspace.js/0.14.1/altspace.js')
+			script(src='/static/lib/Tween.js')
 
-		script(src='/static/behaviors.js')
-		script(src='/static/util.js')
-		script(src='/static/game.js')
-		script(src='/static/confetti.js')
-		script(src='/static/crown.js')
-		script(src='/static/seat.js')
+			script(src='/static/behaviors.js')
+			script(src='/static/util.js')
+			script(src='/static/game.js')
+			script(src='/static/confetti.js')
+			script(src='/static/crown.js')
+			script(src='/static/seat.js')
 
 		title='Holograms Against Humanity'
 
@@ -33,4 +34,4 @@ html
 				var ga = function () {};
 
 	body
-		script(src='/static/client.js')
+		script(src='/static/bundle.js')

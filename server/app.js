@@ -1,6 +1,7 @@
 'use strict';
 
 var express = require('express'),
+	compression = require('compression'),
 	pug = require('pug'),
 	morgan = require('morgan'),
 	libpath = require('path'),
@@ -19,6 +20,14 @@ var activeGames = structures.activeGames;
 
 // initialize http router
 var app = express();
+
+// enable gzip compression
+app.use(compression({filter: function (req, res) {
+	if (/(dae|mtl|obj|ogg)$/.test(req.path)) {
+		return true;
+	}
+	return compression.filter(req, res);
+}}));
 
 // enable logging
 app.use(morgan('dev'));
