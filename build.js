@@ -22,7 +22,8 @@ var result = UglifyJS.minify(
 		'client/client.js'
 	],
 	{
-		compress: false
+		compress: false,
+		mangle: false
 	}
 );
 
