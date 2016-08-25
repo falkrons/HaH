@@ -78,12 +78,13 @@ io.on('connection', function(socket)
 	// get gameId, put socket in correct room
 	var url = liburl.parse(socket.request.url, true);
 	var gameId = url.query.gameId;
+	var lockIds = url.query.lockIds && url.query.lockIds.split(',');
 
 	if(gameId)
 	{
 		// initialize game
 		if(!activeGames[gameId])
-			activeGames[gameId] = new structures.Game(gameId);
+			activeGames[gameId] = new structures.Game(gameId, lockIds);
 
 		// associate socket with game
 		socket.gameId = gameId;
@@ -92,12 +93,13 @@ io.on('connection', function(socket)
 
 		// initialize new client
 		var game = activeGames[gameId];
+		socket.lockIds = game.lockIds;
 		socket.emit('init', game.getCleanTurnOrder(), game.state,
 			structures.Deck.blackCardList[game.currentBlackCard],
 			game.turnOrder.length > game.czar ? game.turnOrder[game.czar].id : null,
 			game.submissions || null
 		);
-		console.log('Client connected to', socket.gameId);
+		console.log('Client connected to', socket.gameId, io.engine.clientsCount);
 	}
 	else {
 		socket.emit('error', 'No gameId specified');

@@ -170,10 +170,13 @@ function Player(playerId, displayName, socket)
 	particular game in progress
 ***********************************************/
 
-function Game(id)
+function Game(id, lockIds)
 {
 	// the game's id
 	this.id = id;
+
+	// A list of user ids that are allowed to join the game.
+	this.lockIds = lockIds;
 
 	// this particular game's order of cards
 	this.deck = new Deck();
