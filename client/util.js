@@ -132,7 +132,6 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 					var modelHeight = 103;
 					// The surface of the table should always be at 80cm above the ground;
 					obj.position.z = -modelHeight * objScale + 0.8;
-					new TWEEN.Tween(obj.children[1].material.map.offset).to({x: 1}, 800000).repeat(Infinity).start();
 					models.table = obj;
 
 					if(--modelsToGo === 0) cb();
@@ -190,28 +189,26 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 			models.boxHoverEffect = (function () {
 				var boxHoverEffect = new THREE.Group();
 					var ringMat = new THREE.MeshBasicMaterial({color: '#199597'})
-				var ring1 = new THREE.Mesh(new THREE.RingGeometry(1.5, 2, 20), ringMat);
+				var ring1 = new THREE.Mesh(new THREE.RingGeometry(0.9, 1.4, 20), ringMat);
 				ring1.position.z = 0.7;
 				ring1.scale.multiplyScalar(0.1);
 				new TWEEN.Tween(ring1.position).to({z: 0.8}, 2000)
 					.repeat(Infinity).yoyo(true).easing(TWEEN.Easing.Sinusoidal.InOut).start();
 				boxHoverEffect.add(ring1);
 
-				var ring2 = new THREE.Mesh(new THREE.RingGeometry(2.2, 2.7, 20), ringMat);
-				ring2.position.z = 0.7;
-				ring2.scale.multiplyScalar(0.1);
+				var ring2 = new THREE.Mesh(new THREE.RingGeometry(1.5, 2, 20), ringMat);
+				ring2.position.z = -0.12;
 				new TWEEN.Tween(ring2.position)
-					.to({z: 0.8}, 2000).repeat(Infinity).yoyo(true)
-					.easing(TWEEN.Easing.Sinusoidal.InOut).start(performance.now() + 200);
-				boxHoverEffect.add(ring2);
+					.to({z: 0.12}, 2000).repeat(Infinity).yoyo(true)
+					.easing(TWEEN.Easing.Sinusoidal.InOut).start(performance.now() + 1500);
+				ring1.add(ring2);
 
-				var ring3 = new THREE.Mesh(new THREE.RingGeometry(0.9, 1.4, 20), ringMat);
-				ring3.position.z = 0.7;
-				ring3.scale.multiplyScalar(0.1);
+				var ring3 = new THREE.Mesh(new THREE.RingGeometry(2.2, 2.7, 20), ringMat);
+				ring3.position.z = -0.12;
 				new TWEEN.Tween(ring3.position)
-					.to({z: 0.8}, 2000).repeat(Infinity).yoyo(true)
-					.easing(TWEEN.Easing.Sinusoidal.InOut).start(performance.now() + 500);
-				boxHoverEffect.add(ring3);
+					.to({z: 0.12}, 2000).repeat(Infinity).yoyo(true)
+					.easing(TWEEN.Easing.Sinusoidal.InOut).start(performance.now() + 2000);
+				ring2.add(ring3);
 
 				return boxHoverEffect;
 			}());
@@ -302,8 +299,9 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 	}
 
 	// ugh, nasty hack
+	var fontScale;
 	if( /AltspaceVR-App build-[0-9a-f]{7} Mobile/.test(window.navigator.userAgent) ){
-		var fontScale = 0.85;
+		fontScale = 0.85;
 	}
 	else {
 		fontScale = 1.0;
@@ -333,7 +331,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		var words = text.split(' ');
 		var size = 0;
 		return words.reduce(function (acc, word) {
-			if (size + word.length > 17) {
+			if (size + word.length > Math.floor(17 * fontScale)) {
 				acc.push('');
 				size = 0;
 			}
@@ -447,7 +445,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 			g.fillText("HAH", x+1.5*edgeLength, y);
 		}
 		else {
-			makeSafeFont(g, ['Holograms Against Humanity'], .6525*cardWidth);
+			makeSafeFont(g, ['Holograms Against Humanity'], .6525*cardWidth*fontScale);
 			g.fillText("Holograms Against Humanity", x+1.5*edgeLength, y);
 		}
 
@@ -532,7 +530,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
 		// TODO: We can simplify this code if the nameplates had a sane UV mapping
 		ctx.font = 'bold '+((options.fontScale || 0.1)*bmp.height*fontScale)+'px '+fontStack;
-		makeSafeFont(ctx, [text], 0.9*texWidth);
+		makeSafeFont(ctx, [text], 0.9*texWidth*fontScale);
 		ctx.textAlign = 'center';
 		if (options.textBaseline) {
 			ctx.textBaseline = options.textBaseline;
@@ -555,7 +553,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
 	function generateStatusTextMaterial(text) {
 		var statusMat = generateTextMaterial(text, {
-			backgroundColor: 'transparent', height: 50, single: true, fontScale: 1, textBaseline: 'middle'
+			backgroundColor: 'transparent', height: 50, single: true, fontScale: fontScale, textBaseline: 'middle'
 		});
 		statusMat.transparent = true;
 		statusMat.side = THREE.DoubleSide;

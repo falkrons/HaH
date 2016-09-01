@@ -64,7 +64,7 @@ if( altspace.inClient )
 {
 	// convert all this altspace craziness into a normal coordinate space
 	// i.e. units in meters, z-axis up, with origin on the floor
-	renderer = altspace.getThreeJSRenderer();
+	renderer = altspace.getThreeJSRenderer({initialSerializationBufferSize: 640000});
 	altspace.getEnclosure().then(function(enc)
 	{
 		// reset coordinate space
