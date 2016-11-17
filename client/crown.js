@@ -1,3 +1,4 @@
+/* global THREE, Behaviors, Utils, socket */
 'use strict';
 
 // the hats example:

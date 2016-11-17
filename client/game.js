@@ -1,7 +1,13 @@
+/* global
+	Promise, ga, THREE, TWEEN, altspace, io,
+	Utils, Models, Sounds, Behaviors,
+	gameObjects, root, scene, camera, gameId */
 'use strict';
 
 var socket;
 var isInit = false;
+var isLite = false;
+var lockIds = null;
 
 // don't pollute the global namespace
 (function(exports)
@@ -18,81 +24,105 @@ var isInit = false;
 	var blackCard = null;
 	var czarId = '';
 	var joinBlocked = false;
+	var minPlayers = 3;
+
+	function getUser()
+	{
+		return new Promise(function (resolve) {
+			// save player info
+			if(altspace.inClient){
+				altspace.getUser().then(function(userInfo)
+				{
+					if(userInfo && userInfo.userId && userInfo.displayName){
+						playerInfo.id = userInfo.userId;
+						playerInfo.displayName = userInfo.displayName;
+					}
+					else
+					{
+						console.log("you have been logged out of Coherent.");
+						var message = document.createElement('h1');
+						message.innerHTML = 'You\'ve been logged out of Coherent. Log in to join.';
+						document.body.insertBefore(message, document.body.children[0]);
+					}
+					resolve();
+				});
+			}
+			else {
+				playerInfo.id = ''+Math.floor(Math.random()*1000);
+				playerInfo.displayName = 'anon'+playerInfo.id;
+				resolve();
+			}
+		});
+	}
 
 	function connectToGame(gameId)
 	{
-		// save player info
-		if(altspace.inClient){
-			altspace.getUser().then(function(userInfo)
-			{
-				if(userInfo && userInfo.userId && userInfo.displayName){
-					playerInfo.id = userInfo.userId;
-					playerInfo.displayName = userInfo.displayName;
-				}
-				else
-				{
-					console.log("you have been logged out of Coherent.");
-					var message = document.createElement('h1');
-					message.innerHTML = 'You\'ve been logged out of Coherent. Log in to join.';
-					document.body.insertBefore(message, document.body.children[0]);
-				}
+		lockIds = /[&?]lockIds=([^&]+)/.exec(window.location.search);
+		if (lockIds) {
+			lockIds = lockIds[1].split(',');
+		}
+
+		getUser().then(function () {
+			// initialize the socket connection
+			socket = io('/?gameId='+gameId+(lockIds?'&lockIds='+lockIds.join(','):''));
+
+			// debug listener
+			var onevent = socket.onevent;
+			socket.onevent = function(packet){
+				var args = packet.data || [];
+				onevent.call(this, packet);
+				packet.data = ['*'].concat(args);
+				onevent.call(this, packet);
+			};
+			socket.on('*', function(){
+				// console.log(arguments);
 			});
-		}
-		else {
-			playerInfo.id = ''+Math.floor(Math.random()*1000);
-			playerInfo.displayName = 'anon'+playerInfo.id;
-		}
 
-		// initialize the socket connection
-		socket = io('/?gameId='+gameId);
+			socket.on('error', function(msg){
+				console.error(msg);
+			});
+			socket.on('objectUpdate', function(states){
+				window._syncStates = states;
+			});
 
-		// debug listener
-		var onevent = socket.onevent;
-		socket.onevent = function(packet){
-			var args = packet.data || [];
-			onevent.call(this, packet);
-			packet.data = ['*'].concat(args);
-			onevent.call(this, packet);
-		};
-		socket.on('*', function(){
-			console.log(arguments);
+			socket.on('init', init);
+			socket.on('roundReset', roundReset);
+
+			socket.on('playerJoinRequest', playerJoinRequest);
+			socket.on('playerJoin', playerJoin);
+			socket.on('playerJoinDenied', playerJoinDenied);
+			socket.on('playerLeave', playerLeave);
+			socket.on('playerKickRequest', playerKickRequest);
+
+			socket.on('dealCards', dealCards);
+			socket.on('roundStart', roundStart);
+			socket.on('cardSelection', animateSelection);
+
+			socket.on('cardSelectionComplete', cardSelectionComplete);
+			socket.on('presentSubmission', presentSubmission);
+			socket.on('winnerSelection', winnerSelection);
+
+			socket.on('reload', function () {
+				console.log('reloading');
+				location.reload();
+			});
 		});
-
-		socket.on('error', function(msg){
-			console.error(msg);
-		});
-		socket.on('objectUpdate', function(states){
-			window._syncStates = states;
-		});
-
-		socket.on('init', init);
-		socket.on('roundReset', roundReset);
-
-		socket.on('playerJoinRequest', playerJoinRequest);
-		socket.on('playerJoin', playerJoin);
-		socket.on('playerJoinDenied', playerJoinDenied);
-		socket.on('playerLeave', playerLeave);
-		socket.on('playerKickRequest', playerKickRequest);
-
-		socket.on('dealCards', dealCards);
-		socket.on('roundStart', roundStart);
-		socket.on('cardSelection', animateSelection);
-
-		socket.on('cardSelectionComplete', cardSelectionComplete);
-		socket.on('presentSubmission', presentSubmission);
-		socket.on('winnerSelection', winnerSelection);
 	}
 
 
-	function emitPlayerJoinRequest(evt){
+	function emitPlayerJoinRequest(){
 		if(playerInfo.id)
 			socket.emit('playerJoinRequest', playerInfo.id, playerInfo.displayName);
 	}
 
-	function emitPlayerLeave(evt){
+	function emitPlayerLeave(){
 		socket.emit('playerLeave', playerInfo.id, playerInfo.displayName,
-			playerInfo.displayName+' has left the game.'
+			playerInfo.displayName+' has left the game.', 'idle-kicked'
 		);
+	}
+
+	function allowedByLockId() {
+		return !lockIds || lockIds.includes(String(playerInfo.id));
 	}
 
 	function init(newTurnOrder, newGameState, blackCard, czarId, submissions)
@@ -107,14 +137,7 @@ var isInit = false;
 		else
 			isInit = true;
 
-		if(newTurnOrder.length === 0){
-			gameObjects.box.rotation.set(Math.PI, 0, 0);
-			gameObjects.titleCard.visible = true;
-		}
-		else {
-			gameObjects.box.rotation.set(0, 0, 0);
-			gameObjects.titleCard.visible = false;
-		}
+		isLite = /[&?]lite&?/.test(window.location.search);
 
 		var card = gameObjects.presentation.getObjectByName('blackCard');
 		if(card){
@@ -127,14 +150,20 @@ var isInit = false;
 		// save turn order (without reassigning obj)
 		turnOrder.splice(0); turnOrder.push.apply(turnOrder, newTurnOrder);
 
-		newTurnOrder.forEach(function(p){
-			var crown = new Utils.Crown(p.id, p.wins);
-			root.add(crown);
-		});
+		updateCenterPieceState();
+
+		if (!isLite) {
+			newTurnOrder.forEach(function(p){
+				var crown = new Utils.Crown(p.id, p.wins);
+				root.add(crown);
+			});
+		}
 
 		// hook up click-to-join handler
 		gameObjects.box.removeEventListener('cursorup');
-		gameObjects.box.addEventListener('cursorup', emitPlayerJoinRequest);
+		if (allowedByLockId()) {
+			gameObjects.box.addEventListener('cursorup', emitPlayerJoinRequest);
+		}
 
 		gameState = newGameState;
 
@@ -145,10 +174,14 @@ var isInit = false;
 			dealCards(turnOrder.length > 0 ? turnOrder[0].handLength : 0, blackCard, czarId);
 		if(states.indexOf(gameState) >= 2)
 			roundStart();
-		if(states.indexOf(gameState) >= 3)
+		if(states.indexOf(gameState) >= minPlayers)
 			cardSelectionComplete(submissions);
 
 
+	}
+
+	function getSeat(playerId) {
+		return root.getObjectByName('seat_' + (playerId || playerInfo.id));
 	}
 
 	// something screwed up the turn order, so restart round
@@ -166,7 +199,7 @@ var isInit = false;
 		gameState = 'roundFinished';
 
 		// if playing
-		var seat = root.getObjectByName(playerInfo.id);
+		var seat = getSeat();
 		if(seat)
 		{
 			// return any selected cards to the hand
@@ -209,9 +242,9 @@ var isInit = false;
 
 		// kill submissions if present
 		for(var player in submissionMap){
-			for(var i=0; i<submissionMap[player].length; i++){
-				if(submissionMap[player][i].parent)
-					submissionMap[player][i].parent.remove(submissionMap[player][i]);
+			for(var j=0; j<submissionMap[player].length; j++){
+				if(submissionMap[player][j].parent)
+					submissionMap[player][j].parent.remove(submissionMap[player][j]);
 			}
 		}
 
@@ -238,37 +271,112 @@ var isInit = false;
 		}
 	}
 
+	function getSkeleton()
+	{
+		return new Promise(function (resolve) {
+			if (!playerInfo.skeleton) {
+				altspace.getThreeJSTrackingSkeleton().then(function(skel){
+					scene.add(skel);
+					playerInfo.skeleton = skel;
+					resolve(playerInfo.skeleton);
+				});
+			}
+			else {
+				resolve(playerInfo.skeleton);
+			}
+		});
+	}
+
+	function updateCenterPieceState()
+	{
+		var numPlayers = turnOrder.length;
+		var hasStarted = numPlayers !== 0;
+
+		gameObjects.box.rotation.set(hasStarted ? 0 : Math.PI, 0, 0);
+
+		var statusSign = gameObjects.box.children[1];
+		statusSign.position.z = hasStarted ? 0.2 : -0.2;
+		statusSign.rotation.x = hasStarted ? Math.PI / 2 : -Math.PI / 2;
+		if (altspace.inClient && (!isLite || getSeat())) {
+			getSkeleton().then(function (skel) {
+				var head = skel.getJoint('Head');
+				var direction = head.position.clone();
+				direction.y = 0;
+				if (!hasStarted) {
+					direction.applyEuler(new THREE.Euler(0, 0, -Math.PI, 'XYZ'));
+				}
+				direction.applyEuler(new THREE.Euler(Math.PI / 2, 0, 0, 'XYZ'));
+				direction.applyEuler(new THREE.Euler(0, 0, Math.PI / 2, 'XYZ'));
+				direction.normalize();
+				statusSign.quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), direction);
+				statusSign.rotateX(hasStarted ? Math.PI / 2 : -Math.PI / 2);
+			});
+		}
+
+		gameObjects.titleCard.visible = !hasStarted;
+
+		var hasSeat = !!getSeat();
+		var haveEnoughPlayers = numPlayers >= minPlayers;
+		var statusText = '';
+		var shouldAnimate = true;
+		if (!hasStarted && allowedByLockId()) {
+			statusText = 'Open To Start';
+		}
+		else if (gameState === 'roundStarted') {
+			statusText = '';
+			shouldAnimate = false;
+		}
+		else if (hasSeat) {
+			if (haveEnoughPlayers) {
+				statusText = 'Click To Deal';
+			}
+			else {
+				var neededPlayers = minPlayers - numPlayers;
+				statusText = 'Need ' + neededPlayers + ' More Player' + (neededPlayers > 1 ? 's' : '');
+				shouldAnimate = false;
+			}
+		}
+		else if (!hasSeat && allowedByLockId()) {
+			statusText = 'Click To Join'
+		}
+		statusSign.material = Utils.generateStatusTextMaterial(statusText);
+		if (shouldAnimate) {
+			var originalPosition = gameObjects.box.position.z;
+			new TWEEN.Tween(gameObjects.box.position)
+				.to({z: originalPosition + 0.04}, 200)
+				.repeat(5).yoyo(true).start(performance.now() + 800);
+		}
+	}
+
 	function playerJoin(id, displayName, newTurnOrder)
 	{
 
 		Utils.rebalanceTable(newTurnOrder, turnOrder, id);
 		turnOrder.splice(0); turnOrder.push.apply(turnOrder, newTurnOrder);
 
-		gameObjects.box.rotation.set(0, 0, 0);
-		gameObjects.titleCard.visible = false;
-
-		// add crown
-		var crown = new Utils.Crown(id);
-		root.add(crown);
-		console.log(crown);
-
-		if(id === playerInfo.id)
-		{
-			gameObjects.box.removeEventListener('cursorup');
-			if(gameState === 'roundFinished')
-				gameObjects.box.addEventListener('cursorup', function(){
-					socket.emit('dealCards');
-				});
-
-			ga('send', 'event', 'Player', 'join');
+		// Announce new game
+		if (turnOrder.length === 1) {
+			Sounds.playSound('gameStart');
+		}
+		else {
+			Sounds.playSound('playerJoin');
 		}
 
+		var crown;
+		if (!isLite) {
+			// add crown
+			crown = new Utils.Crown(id);
+			root.add(crown);
+		}
+
+		var dialog;
+
 		// hide request dialog if present
-		var seat = root.getObjectByName(playerInfo.id);
+		var seat = getSeat();
 		if(seat)
 		{
-			var dialog;
-			if(dialog = seat.getObjectByName('join_'+id)){
+			dialog = seat.getObjectByName('join_'+id);
+			if(dialog){
 				seat.remove(dialog);
 			}
 		}
@@ -277,56 +385,69 @@ var isInit = false;
 		{
 			gameObjects.box.removeEventListener('cursorup');
 			if(gameState === 'roundFinished')
+			{
 				gameObjects.box.addEventListener('cursorup', function(){
 					socket.emit('dealCards');
-				});
-
-			if(altspace.inClient)
-			{
-				altspace.getThreeJSTrackingSkeleton().then(function(skel){
-					scene.add(skel);
-					var head = skel.getJoint('Head');
-					head.add(crown);
-					crown.scale.multiplyScalar(root.scale.x);
-					crown.updateMatrix();
 				});
 			}
 			else
 			{
-				camera.add(crown);
+				dialog = Utils.generateDialog('Sit tight, you\'ll be\ndealt into the next round.', function () {
+					seat.remove(dialog);
+				}, null, null, {acceptLabel: 'Ok', showDecline: false});
+			}
+
+			ga('send', 'event', 'player', 'join', gameId);
+
+			if (crown) {
+				if(altspace.inClient)
+				{
+					getSkeleton().then(function(skel){
+						var head = skel.getJoint('Head');
+						head.add(crown);
+						crown.scale.multiplyScalar(root.scale.x);
+						crown.updateMatrix();
+					});
+				}
+				else
+				{
+					camera.add(crown);
+				}
 			}
 		}
 
 		console.log('New player joined:', displayName);
+
+		updateCenterPieceState();
 		//Utils.idleCheck();
 
 	}
 
-	function playerJoinDenied(id, displayName)
+	function playerJoinDenied(id)
 	{
 		// hide request dialog if present
-		var seat = root.getObjectByName(playerInfo.id);
-		var dialog;
-		if(dialog = seat.getObjectByName('join_'+id)){
+		var seat = getSeat();
+		var dialog = seat.getObjectByName('join_'+id);
+		if(dialog){
 			seat.remove(dialog);
 		}
 
 		if(id === playerInfo.id){
 			joinBlocked = true;
 			setTimeout(function(){
-	        	joinBlocked = false;
-	    	}, 5000);
+				joinBlocked = false;
+			}, 5000);
 		}
 	}
 
-	function playerLeave(id, displayName, newTurnOrder)
+	function playerLeave(id, displayName, newTurnOrder, message, reason)
 	{
 		Utils.rebalanceTable(newTurnOrder, turnOrder);
 		turnOrder.splice(0); turnOrder.push.apply(turnOrder, newTurnOrder);
 
 		if(id === playerInfo.id)
 		{
-			ga('send', 'event', 'Player', 'leave');
+			ga('send', 'event', 'player', reason ? 'leave-' + reason : 'leave', gameId);
 
 			gameObjects.box.removeEventListener('cursorup');
 			gameObjects.box.addEventListener('cursorup', emitPlayerJoinRequest);
@@ -344,18 +465,19 @@ var isInit = false;
 		}
 
 		// hide request dialog if present
-		var seat = root.getObjectByName(playerInfo.id);
+		var seat = getSeat();
 		if(seat)
 		{
-			var dialog;
-			if(dialog = seat.getObjectByName('kick_'+id)){
+			var dialog = seat.getObjectByName('kick_'+id);
+			if(dialog){
 				seat.remove(dialog);
 			}
 		}
 
-		if(newTurnOrder.length === 0){
-			gameObjects.box.rotation.set(Math.PI, 0, 0);
-			gameObjects.titleCard.visible = true;
+		updateCenterPieceState();
+
+		if (reason === 'vote-kicked') {
+			Sounds.playSound('playerKick');
 		}
 
 		console.log('Player', displayName, 'has left the game.');
@@ -364,7 +486,7 @@ var isInit = false;
 	function playerKickRequest(id, displayName)
 	{
 		if(id !== playerInfo.id){
-			var dialog = Utils.generateDialog('Do you want to kick\n'+displayName+'?',
+			var dialog = Utils.generateDialog('Group Vote:\nDo you want to kick\n'+displayName+'?',
 				function(){
 					socket.emit('playerKickResponse', id, displayName, true);
 				},
@@ -380,9 +502,11 @@ var isInit = false;
 	function dealCards(newHand, newBlackCard, newCzarId)
 	{
 		gameState = 'roundStarted';
-		if(root.getObjectByName(playerInfo.id)){
+		if(getSeat()){
 			gameObjects.box.removeEventListener('cursorup');
 		}
+
+		updateCenterPieceState();
 
 		if( newBlackCard && (!blackCard || newBlackCard.index !== blackCard.userData.index) )
 		{
@@ -421,12 +545,12 @@ var isInit = false;
 	function updatePlayerHand(newHand, newCzarId)
 	{
 		// track player-rounds to google analytics
-		ga('send', 'event', 'PlayerRound', 'start');
+		ga('send', 'event', 'player-round', 'start', gameId);
 
 		// set hand
 		hand = newHand;
 
-		var seat = root.getObjectByName(playerInfo.id);
+		var seat = getSeat();
 
 		// build a list of card positions and their contents
 		var cardRoots = [];
@@ -483,12 +607,20 @@ var isInit = false;
 		{
 			// show black card
 			seat.add(blackCard);
+			var originalPosition = blackCard.position.z;
+			var blackCardAnimation = new TWEEN.Tween(blackCard.position)
+				.to({z: originalPosition + 0.02}, 200)
+				.repeat(5).yoyo(true).start(performance.now() + 500);
 			blackCard.addBehavior( new Behaviors.CursorFeedback() );
-			blackCard.addEventListener('cursorup', function(evt){
+			blackCard.addEventListener('cursorup', function(){
+				blackCardAnimation.stop();
+				blackCard.position.z = originalPosition;
 				blackCard.removeAllBehaviors();
 				blackCard.scale.set(2,2,2);
 				socket.emit('roundStart');
 			});
+
+			seat.setIndicatorState('czar');
 		}
 		else
 		{
@@ -497,6 +629,8 @@ var isInit = false;
 				if( /^card/.test(o.parent.name) )
 					o.visible = true;
 			});
+
+			seat.setIndicatorState('submitting');
 		}
 
 		Sounds.playSound('card');
@@ -512,7 +646,7 @@ var isInit = false;
 			if(player.id === playerInfo.id)
 				continue;
 
-			var seat = root.getObjectByName(player.id);
+			var seat = getSeat(player.id);
 
 			var cardRoots = [];
 			for(var temp=0; temp<12; temp++){
@@ -557,6 +691,7 @@ var isInit = false;
 			{
 				// show black card
 				seat.add(blackCard);
+				seat.setIndicatorState('czar');
 			}
 			else
 			{
@@ -565,6 +700,7 @@ var isInit = false;
 					if( /^card/.test(o.parent.name) )
 						o.visible = true;
 				});
+				seat.setIndicatorState('submitting');
 			}
 
 		}
@@ -576,7 +712,7 @@ var isInit = false;
 		gameState = 'playerSelectionPending';
 
 		// identify pres area
-		var seat = root.getObjectByName(playerInfo.id);
+		var seat = getSeat();
 		if(seat)
 			var center = seat.getObjectByName('presentation');
 		else
@@ -594,7 +730,7 @@ var isInit = false;
 			[0,1,2,3,4,5,6,7,8,9,10,11].forEach(function(i)
 			{
 				var card = seat.getObjectByName('card'+i);
-				card.addEventListener('cursorup', function(evt){
+				card.addEventListener('cursorup', function(){
 					handleCardSelection(i);
 				});
 			});
@@ -604,7 +740,7 @@ var isInit = false;
 
 	function handleCardSelection(handIndex)
 	{
-		var seat = root.getObjectByName(playerInfo.id);
+		var seat = getSeat();
 		var cardRoot = seat.getObjectByName('card'+handIndex);
 
 		// don't add any more cards after the necessary amount
@@ -641,14 +777,6 @@ var isInit = false;
 
 		if(selection.length === (blackCard.userData.numResponses || 1))
 		{
-			// clear click handlers from cards
-			/*[0,1,2,3,4,5,6,7,8,9,10,11].forEach(function(i)
-			{
-				var card = seat.getObjectByName('card'+i);
-				card.removeEventListener('cursorup');
-			});*/
-
-
 			// spawn confirmation boxes
 			var yes = Models.yesBox.clone();
 			var no = Models.noBox.clone();
@@ -664,12 +792,12 @@ var isInit = false;
 			no.applyMatrix( Utils.sphericalToMatrix(-0.6, 0, 0.5, 'xyz') );
 			seat.add(no);
 
-			yes.addEventListener('cursorup', exports.confirmSelection = function(evt){
+			yes.addEventListener('cursorup', exports.confirmSelection = function(){
 				socket.emit('cardSelection', selection);
 				seat.remove(yes, no);
 			});
 
-			no.addEventListener('cursorup', function(evt)
+			no.addEventListener('cursorup', function()
 			{
 				// put all the cards back
 				selection.forEach(function(handIndex, selectionIndex)
@@ -681,10 +809,6 @@ var isInit = false;
 					card.scale.set(2,2,2);
 					card.name = '';
 
-					// add back click handlers
-					/*card.addEventListener('cursorup', function(evt){
-						handleCardSelection(handIndex);
-					});*/
 					spot.add(card);
 				});
 
@@ -699,7 +823,8 @@ var isInit = false;
 
 	function animateSelection(handIndexes, playerId)
 	{
-		var seat = root.getObjectByName(playerId);
+		var seat = getSeat(playerId);
+		seat.setIndicatorState('submitted');
 
 		// kill confirmation boxes if necessary
 		var yes = seat.getObjectByName('yes');
@@ -715,15 +840,15 @@ var isInit = false;
 		}
 
 		// find where selected cards should go
-		var czarSeat = root.getObjectByName(czarId);
+		var czarSeat = getSeat(czarId);
 		var finalPos = new THREE.Vector3(czarSeat.position.x/2, czarSeat.position.y/2, 0.825);
 		var finalRot = new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI, 0, czarSeat.rotation.z));
 
 		// animate to in front of czar
-		for(var i=0; i<handIndexes.length; i++)
+		for(var j=0; j<handIndexes.length; j++)
 		{
-			var tempCard = seat.getObjectByName('selection'+i)
-				|| seat.getObjectByName('card'+handIndexes[i]).children[0];
+			var tempCard = seat.getObjectByName('selection'+j)
+				|| seat.getObjectByName('card'+handIndexes[j]).children[0];
 			if(tempCard)
 			{
 				// animate, and remove all but one on completion
@@ -731,7 +856,6 @@ var isInit = false;
 				tempCard.addBehavior( new Behaviors.Animate(root, finalPos, finalRot, null, 600,
 					function(){
 						if(!root.getObjectByName('czarStack')){
-							console.log('naming something czarStack');
 							this.name = 'czarStack';
 						}
 						else {
@@ -754,10 +878,9 @@ var isInit = false;
 		for(var user in selections)
 		{
 			// track played event
-			if(czarId === playerInfo.id && selections[user].length === 1)
+			if(czarId === playerInfo.id && selections[user].length > 0)
 			{
-				var text = selections[user][0].text.replace('\n', ' ');
-				ga('send', 'event', 'CardTracking', 'playedCard', text);
+				ga('send', 'event', 'card-tracking', 'played-card', gameId);
 			}
 
 			// generate card models from descriptions
@@ -777,16 +900,16 @@ var isInit = false;
 		submissionList = displayList;
 
 		// replace placeholder stack with real cards
-		for(var i=0; i<root.children.length; i++)
+		for(var j=0; j<root.children.length; j++)
 		{
-			var temp = root.children[i];
+			var temp = root.children[j];
 			if(temp.name === 'czarStack' || temp.name === 'toCzarStack'){
 				temp.removeAllBehaviors();
 				root.remove(temp);
 			}
 		}
 
-		var czarSeat = root.getObjectByName(czarId);
+		var czarSeat = getSeat(czarId);
 		var finalPos = new THREE.Vector3(czarSeat.position.x/2, czarSeat.position.y/2, 0.825);
 		var finalRot = new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI, 0, czarSeat.rotation.z));
 
@@ -822,7 +945,7 @@ var isInit = false;
 
 	function handleCzarSelection(submissionIndex)
 	{
-		var seat = root.getObjectByName(czarId);
+		var seat = getSeat(czarId);
 		var submission = submissionList[submissionIndex];
 
 		// present the submission
@@ -834,7 +957,19 @@ var isInit = false;
 		seat.remove(yes,no);
 
 		// spawn confirmation boxes
-		yes = Models.yesBox.clone();
+		var yesBox = Models.yesBox.clone();
+		yes = new THREE.Object3D();
+		yes.add(yesBox);
+		var winnerText = new THREE.Mesh(
+			new THREE.PlaneGeometry(1, 1),
+			Utils.generateStatusTextMaterial('Winner')
+		);
+		winnerText.rotation.y = Math.PI / 2;
+		winnerText.scale.set(0.5, 0.1, 1);
+		winnerText.position.set(0, 0, -0.25);
+
+
+		yes.add(winnerText);
 		no = Models.noBox.clone();
 
 		// place confirmation boxes
@@ -861,7 +996,7 @@ var isInit = false;
 	function presentSubmission(playerId)
 	{
 		// where should the cards be placed?
-		var seat = root.getObjectByName(playerInfo.id);
+		var seat = getSeat();
 		if(seat)
 			var center = seat.getObjectByName('presentation');
 		else
@@ -873,7 +1008,7 @@ var isInit = false;
 		// put previous selection back
 		if( czarSelectionPlayer && czarSelectionPlayer !== playerId)
 		{
-			var czarSeat = root.getObjectByName(czarId);
+			var czarSeat = getSeat(czarId);
 			var czarSelectionIndex = submissionList.indexOf(submissionMap[czarSelectionPlayer]);
 			var spot = czarSeat.getObjectByName('card'+czarSelectionIndex);
 			for(var i=0; i<submissionList[czarSelectionIndex].length; i++)
@@ -895,17 +1030,17 @@ var isInit = false;
 		));
 
 		// position submission
-		for(var i=0; i<submission.length; i++)
+		for(var j=0; j<submission.length; j++)
 		{
-			var card = submission[i];
-			card.addBehavior( new Behaviors.Animate(center,
-				new THREE.Vector3(-separation*(i+1) + submission.length*separation/2, 0, 0),
+			var playerCard = submission[j];
+			playerCard.addBehavior( new Behaviors.Animate(center,
+				new THREE.Vector3(-separation*(j+1) + submission.length*separation/2, 0, 0),
 				new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI/2,0,Math.PI)),
 				new THREE.Vector3(2,2,2)
 			));
 		}
 
-		if(submission.length === 3){
+		if(submission.length === minPlayers){
 			center.scale.set(5,5,5);
 		}
 		else {
@@ -920,20 +1055,19 @@ var isInit = false;
 		gameState = 'roundFinished';
 
 		// track winner event
-		if(czarId === playerInfo.id && submissionMap[playerId].length === 1)
+		if(czarId === playerInfo.id && submissionMap[playerId].length > 0)
 		{
-			var text = submissionMap[playerId][0].userData.text.replace('\n', ' ');
-			ga('send', 'event', 'CardTracking', 'winningCard', text);
+			ga('send', 'event', 'card-tracking', 'winner-chosen', gameId);
 		}
 
-		if(root.getObjectByName(playerInfo.id)){
+		if(getSeat()){
 			gameObjects.box.addEventListener('cursorup', function(){
 				socket.emit('dealCards');
 			});
 		}
 
 		// congratulate winner
-		var winnerSeat = root.getObjectByName(playerId);
+		var winnerSeat = getSeat(playerId);
 		var confetti = new Utils.Confetti({delay: 1000});
 		confetti.position.copy(winnerSeat.position);
 		confetti.position.setZ( confetti.position.z + 1.1 );
@@ -946,17 +1080,11 @@ var isInit = false;
 		if(winnerCrown){
 			winnerCrown.addCard(blackCard)
 		}
+		else {
+			blackCard.parent.remove(blackCard);
+		}
+		winnerSeat.addPoint();
 
-		// clean up from round
-		/*for(var i=0; i<submissionList.length; i++){
-			for(var j=0; j<submissionList[i].length; j++)
-			{
-				var card = submissionList[i][j];
-				if(card.parent)
-					card.parent.remove(card);
-			}
-		}*/
-		//submissionList = [];
 		submissionMap = {};
 		selection = [];
 		czarSelectionPlayer = '';
@@ -965,7 +1093,7 @@ var isInit = false;
 		root.remove(temp);
 
 		// for player
-		var seat = root.getObjectByName(playerInfo.id);
+		var seat = getSeat();
 		if(seat)
 		{
 			// disable card selection
@@ -979,8 +1107,10 @@ var isInit = false;
 			seat.remove(yes, no);
 
 			// track round completion
-			ga('send', 'event', 'PlayerRound', 'end');
+			ga('send', 'event', 'player-round', 'end', gameId);
 		}
+
+		updateCenterPieceState();
 	}
 
 	// export objects from scope

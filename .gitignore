@@ -2,3 +2,4 @@ node_modules/
 *.swp
 *.blend1
 config.json
+client/bundle.js

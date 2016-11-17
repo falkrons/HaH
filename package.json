@@ -4,20 +4,23 @@
   "description": "A game for terrible Altspacers.",
   "main": "server/app.js",
   "scripts": {
+    "build": "node ./build",
+    "start": "node ./server/app",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/falkrons/HaH.git"
+    "url": "git+https://github.com/AltspaceVR/HaH.git"
   },
   "author": "",
   "license": "CC-BY-NC-SA-4.0",
   "bugs": {
-    "url": "https://github.com/falkrons/HaH/issues"
+    "url": "https://github.com/AltspaceVR/HaH/issues"
   },
-  "homepage": "https://github.com/falkrons/HaH#readme",
+  "homepage": "https://github.com/AltspaceVR/HaH#readme",
   "dependencies": {
     "body-parser": "^1.15.1",
+    "compression": "^1.6.2",
     "express": "^4.13.4",
     "morgan": "^1.7.0",
     "pug": "^2.0.0-alpha6",
@@ -25,6 +28,8 @@
     "socket.io": "^1.4.5"
   },
   "devDependencies": {
-    "simple-git": "^1.32.1"
+    "csv-parse": "^1.1.7",
+    "simple-git": "^1.32.1",
+    "uglify-js": "^2.7.3"
   }
 }
