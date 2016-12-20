@@ -5,7 +5,6 @@ var config = require('./config.js'),
 
 var activeGames = structs.activeGames;
 
-
 /*
  * Handle requests to join the game
  */
@@ -118,8 +117,17 @@ function join(id, displayName)
 	// subscribe client to player-only events
 	player.socket.join(game.id+'_players');
 
+	// determine correct seat for new player
+	// will be the first untaken seat in the order defined
+	var seatPriority = [0,4,8, 2,6,10, 1,5,9, 3,7,11];
+	player.seatNum = seatPriority.find(function(seat){
+		var seatIndex = game.turnOrder.findIndex(p => p.seatNum === seat);
+		return seatIndex < 0;
+	});
+
 	// add player to the end of the turn order
-	game.turnOrder.push(player);
+	var placeInTurnOrder = game.turnOrder.findIndex(p => p.seatNum > player.seatNum);
+	game.turnOrder.splice(placeInTurnOrder, 0, player);
 
 	// let other clients know about new player
 	this.server.to(game.id+'_clients').emit('playerJoin', player.id, player.displayName, game.getCleanTurnOrder());
