@@ -708,13 +708,6 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 			var seat = root.getObjectByName('seat_'+newTurnOrder[i].id);
 			if(seat)
 			{
-				// player is already in the game, move them to position
-				/*seat.addBehavior( new Behaviors.Animate(
-					null,
-					new THREE.Vector3(-1.05*tableRadius*Math.sin(i*angle), -1.05*tableRadius*Math.cos(i*angle), 1.5),
-					new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1), -angle*i)
-				));*/
-
 				// add a kick handler if the seat was added before the current player joined
 				if( Game.playerInfo.id === newPlayerId )
 				{
