@@ -204,7 +204,8 @@ function winnerSelection(playerId)
 		}
 	}
 
-	game.playerForId(playerId).wins.push( game.currentBlackCard );
+	if(game.playerForId(playerId))
+		game.playerForId(playerId).wins.push( game.currentBlackCard );
 
 	this.server.to(game.id+'_clients').emit('winnerSelection', playerId);
 	game.state = 'roundFinished';
