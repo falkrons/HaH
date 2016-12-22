@@ -124,14 +124,17 @@ function join(id, displayName)
 		var seatIndex = game.turnOrder.findIndex(p => p.seatNum === seat);
 		return seatIndex < 0;
 	});
+	console.log('seating player at', player.seatNum);
 
 	// add player to the end of the turn order
 	var placeInTurnOrder = game.turnOrder.findIndex(p => p.seatNum > player.seatNum);
 	game.turnOrder.splice(placeInTurnOrder, 0, player);
 
 	// push back czar index if joiner is before them
-	if(placeInTurnOrder <= game.czar)
+	if(placeInTurnOrder <= game.czar){
 		game.czar = (game.czar+1) % game.turnOrder.length;
+		console.log('incrementing czar to', game.czar);
+	}
 
 	// let other clients know about new player
 	this.server.to(game.id+'_clients').emit('playerJoin', player.id, player.displayName, game.getCleanTurnOrder());
