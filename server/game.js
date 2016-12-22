@@ -219,4 +219,3 @@ module.exports = {
 	presentSubmission: presentSubmission,
 	winnerSelection: winnerSelection
 };
-

@@ -129,6 +129,10 @@ function join(id, displayName)
 	var placeInTurnOrder = game.turnOrder.findIndex(p => p.seatNum > player.seatNum);
 	game.turnOrder.splice(placeInTurnOrder, 0, player);
 
+	// push back czar index if joiner is before them
+	if(placeInTurnOrder <= game.czar)
+		game.czar = (game.czar+1) % game.turnOrder.length;
+
 	// let other clients know about new player
 	this.server.to(game.id+'_clients').emit('playerJoin', player.id, player.displayName, game.getCleanTurnOrder());
 
