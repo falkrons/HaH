@@ -5,6 +5,7 @@ var config = require('./config.js'),
 
 var activeGames = structs.activeGames;
 
+
 /*
  * Handle requests to join the game
  */
@@ -127,8 +128,7 @@ function join(id, displayName)
 	console.log('seating player at', player.seatNum);
 
 	// add player to the end of the turn order
-	var placeInTurnOrder = game.turnOrder.findIndex(p => p.seatNum > player.seatNum);
-	game.turnOrder.splice(placeInTurnOrder, 0, player);
+	game.turnOrder.push(player);
 
 	// push back czar index if joiner is before them
 	if(placeInTurnOrder <= game.czar){
