@@ -55,8 +55,9 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 			});
 
 			// Set the scale for OBJ models based on the known width of the table model.
-			var tableModelWidth = 297.444;
+			var tableModelWidth = 297.444, tableModelHeight = 103;
 			var objScale = 1 / tableModelWidth * tableRadius * 2;
+			var objVScale = 0.8 / tableModelHeight;
 
 			// preload nameplate model
 			objmtlLoader.load(
@@ -127,11 +128,10 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 				'/static/models/table/HaH_TableMain.obj',
 				'/static/models/table/HaH_TableMain.mtl',
 				function (obj) {
-					obj.rotation.x = Math.PI / 2;
-					obj.scale.multiplyScalar(objScale);
-					var modelHeight = 103;
 					// The surface of the table should always be at 80cm above the ground;
-					obj.position.z = -modelHeight * objScale + 0.8;
+					obj.rotation.x = Math.PI / 2;
+					obj.scale.set(objScale, objVScale, objScale);
+					obj.position.setZ(0);
 					models.table = obj;
 
 					if(--modelsToGo === 0) cb();
@@ -144,10 +144,10 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 				function (obj) {
 					obj.rotation.x = Math.PI / 2;
 					obj.rotation.y = Math.PI;
-					obj.scale.multiplyScalar(objScale);
 					var modelHeight = 104.229;
+					obj.scale.set(objScale, objVScale, objScale);
 					var seatZPos = 1.5;
-					obj.position.z = -modelHeight * objScale - seatZPos + 0.8;
+					obj.position.z = -seatZPos;
 					var seatOffset = tableRadius * -1.05;
 					obj.position.y = -seatOffset;
 					models.playerIndicator = obj;
