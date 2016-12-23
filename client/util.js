@@ -694,7 +694,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		newTurnOrder = newTurnOrder || [];
 		oldTurnOrder = oldTurnOrder || [];
 
-		var angle = 2*Math.PI/newTurnOrder.length;
+		var angle = 2*Math.PI/12;
 		var players = newTurnOrder.map(function(e){return e.id;});
 
 		// add new players, adjust old players
@@ -704,13 +704,6 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 			var seat = root.getObjectByName('seat_'+newTurnOrder[i].id);
 			if(seat)
 			{
-				// player is already in the game, move them to position
-				seat.addBehavior( new Behaviors.Animate(
-					null,
-					new THREE.Vector3(-1.05*tableRadius*Math.sin(i*angle), -1.05*tableRadius*Math.cos(i*angle), 1.5),
-					new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1), -angle*i)
-				));
-
 				// add a kick handler if the seat was added before the current player joined
 				if( Game.playerInfo.id === newPlayerId )
 				{
@@ -730,9 +723,10 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 			{
 				// TODO Move most of this to seat.js
 				// create new seat for player
+				var seatNum = newTurnOrder[i].seatNum;
 				seat = new Utils.Seat(newTurnOrder[i].id, models);
-				seat.position.set(-1.05*tableRadius*Math.sin(i*angle), -1.05*tableRadius*Math.cos(i*angle), 1.5);
-				seat.rotation.set(0, 0, -angle*i);
+				seat.position.set(-1.05*tableRadius*Math.sin(seatNum*angle), -1.05*tableRadius*Math.cos(seatNum*angle), 1.5);
+				seat.rotation.set(0, 0, -angle*seatNum);
 
 				// add nameplate for the player
 				var nameplate = generateNameplate(newTurnOrder[i].displayName);
