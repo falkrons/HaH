@@ -44,7 +44,7 @@ var gameId;
 scene.add(root);
 
 var gameObjects = {};
-var tableRadius = 1.75;
+var tableRadius = 1.65;
 
 var staticPage = [
 	'<p style="width:250px; height:350px; background-color:black; color:white;'+
@@ -74,7 +74,7 @@ if( altspace.inClient )
 		root.userData = enc;
 
 		var enclosureRadius = 0.5 * Math.min(enc.innerWidth, enc.innerDepth) / enc.pixelsPerMeter;
-		tableRadius = Math.min(tableRadius, enclosureRadius - 0.5);
+		tableRadius = Math.min(tableRadius, enclosureRadius - 0.3);
 
 		// render 2d version if space is flat
 		if( enc.innerDepth < 10 ){

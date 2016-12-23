@@ -158,6 +158,7 @@ function Player(playerId, displayName, socket)
 	this.displayName = displayName;
 	this.socket = socket;
 
+	this.seatNum = null;
 	this.hand = [];
 	this.selection = null;
 	this.wins = [];
@@ -264,7 +265,7 @@ Game.prototype.getCleanTurnOrder = function()
 {
 	return this.turnOrder.map(function(cur){
 		var winCards = cur.wins.map(x => Deck.blackCardList[x]);
-		return {id: cur.id, displayName: cur.displayName, handLength: cur.handLength, wins: winCards};
+		return {id: cur.id, displayName: cur.displayName, seatNum: cur.seatNum, handLength: cur.handLength, wins: winCards};
 	});
 }
 
@@ -297,4 +298,3 @@ module.exports = {
 	// maps game ids to Game objects
 	activeGames: {}
 };
-

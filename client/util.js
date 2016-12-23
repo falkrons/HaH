@@ -55,8 +55,9 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 			});
 
 			// Set the scale for OBJ models based on the known width of the table model.
-			var tableModelWidth = 297.444;
-			var objScale = 1 / tableModelWidth * tableRadius * 2;
+			var tableModelWidth = 297.444, tableModelHeight = 103;
+			var tableHorizScale = 1 / tableModelWidth * tableRadius * 2;
+			var tableVertScale = 0.8 / tableModelHeight;
 
 			// preload nameplate model
 			objmtlLoader.load(
@@ -65,7 +66,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 				function(obj)
 				{
 					obj.rotation.x = Math.PI / 2;
-					obj.scale.multiplyScalar(objScale);
+					obj.scale.multiplyScalar(tableHorizScale);
 					var seatZPos = 1.5;
 					obj.position.z = -seatZPos + 0.8;
 					var seatOffset = tableRadius * -1.05;
@@ -127,11 +128,9 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 				'/static/models/table/HaH_TableMain.obj',
 				'/static/models/table/HaH_TableMain.mtl',
 				function (obj) {
-					obj.rotation.x = Math.PI / 2;
-					obj.scale.multiplyScalar(objScale);
-					var modelHeight = 103;
 					// The surface of the table should always be at 80cm above the ground;
-					obj.position.z = -modelHeight * objScale + 0.8;
+					obj.rotation.x = Math.PI / 2;
+					obj.scale.set(tableHorizScale, tableVertScale, tableHorizScale);
 					models.table = obj;
 
 					if(--modelsToGo === 0) cb();
@@ -142,14 +141,11 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 				'/static/models/playerIndicator/HaH_PlayerSlice.obj',
 				'/static/models/playerIndicator/HaH_PlayerSlice.mtl',
 				function (obj) {
-					obj.rotation.x = Math.PI / 2;
-					obj.rotation.y = Math.PI;
-					obj.scale.multiplyScalar(objScale);
-					var modelHeight = 104.229;
 					var seatZPos = 1.5;
-					obj.position.z = -modelHeight * objScale - seatZPos + 0.8;
 					var seatOffset = tableRadius * -1.05;
-					obj.position.y = -seatOffset;
+					obj.position.set(0, -seatOffset, -seatZPos);
+					obj.rotation.set(Math.PI/2, Math.PI, 0);
+					obj.scale.set(tableHorizScale, tableVertScale, tableHorizScale);
 					models.playerIndicator = obj;
 
 					// Add an invisible copy to the scene, so that textures ready when a game starts.
@@ -698,7 +694,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 		newTurnOrder = newTurnOrder || [];
 		oldTurnOrder = oldTurnOrder || [];
 
-		var angle = 2*Math.PI/newTurnOrder.length;
+		var angle = 2*Math.PI/12;
 		var players = newTurnOrder.map(function(e){return e.id;});
 
 		// add new players, adjust old players
@@ -708,13 +704,6 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 			var seat = root.getObjectByName('seat_'+newTurnOrder[i].id);
 			if(seat)
 			{
-				// player is already in the game, move them to position
-				seat.addBehavior( new Behaviors.Animate(
-					null,
-					new THREE.Vector3(-1.05*tableRadius*Math.sin(i*angle), -1.05*tableRadius*Math.cos(i*angle), 1.5),
-					new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1), -angle*i)
-				));
-
 				// add a kick handler if the seat was added before the current player joined
 				if( Game.playerInfo.id === newPlayerId )
 				{
@@ -734,9 +723,10 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 			{
 				// TODO Move most of this to seat.js
 				// create new seat for player
+				var seatNum = newTurnOrder[i].seatNum;
 				seat = new Utils.Seat(newTurnOrder[i].id, models);
-				seat.position.set(-1.05*tableRadius*Math.sin(i*angle), -1.05*tableRadius*Math.cos(i*angle), 1.5);
-				seat.rotation.set(0, 0, -angle*i);
+				seat.position.set(-1.05*tableRadius*Math.sin(seatNum*angle), -1.05*tableRadius*Math.cos(seatNum*angle), 1.5);
+				seat.rotation.set(0, 0, -angle*seatNum);
 
 				// add nameplate for the player
 				var nameplate = generateNameplate(newTurnOrder[i].displayName);
@@ -871,4 +861,3 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 	exports.idleCheck = idleCheck;
 	exports.idleClear = idleClear;
 })(window.Utils = window.Utils || {}, window.Models = window.Models || {}, window.Sounds = window.Sounds || {});
-
