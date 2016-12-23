@@ -56,8 +56,8 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
 			// Set the scale for OBJ models based on the known width of the table model.
 			var tableModelWidth = 297.444, tableModelHeight = 103;
-			var objScale = 1 / tableModelWidth * tableRadius * 2;
-			var objVScale = 0.8 / tableModelHeight;
+			var tableHorizScale = 1 / tableModelWidth * tableRadius * 2;
+			var tableVertScale = 0.8 / tableModelHeight;
 
 			// preload nameplate model
 			objmtlLoader.load(
@@ -66,7 +66,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 				function(obj)
 				{
 					obj.rotation.x = Math.PI / 2;
-					obj.scale.multiplyScalar(objScale);
+					obj.scale.multiplyScalar(tableHorizScale);
 					var seatZPos = 1.5;
 					obj.position.z = -seatZPos + 0.8;
 					var seatOffset = tableRadius * -1.05;
@@ -130,8 +130,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 				function (obj) {
 					// The surface of the table should always be at 80cm above the ground;
 					obj.rotation.x = Math.PI / 2;
-					obj.scale.set(objScale, objVScale, objScale);
-					obj.position.setZ(0);
+					obj.scale.set(tableHorizScale, tableVertScale, tableHorizScale);
 					models.table = obj;
 
 					if(--modelsToGo === 0) cb();
@@ -142,14 +141,11 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 				'/static/models/playerIndicator/HaH_PlayerSlice.obj',
 				'/static/models/playerIndicator/HaH_PlayerSlice.mtl',
 				function (obj) {
-					obj.rotation.x = Math.PI / 2;
-					obj.rotation.y = Math.PI;
-					var modelHeight = 104.229;
-					obj.scale.set(objScale, objVScale, objScale);
 					var seatZPos = 1.5;
-					obj.position.z = -seatZPos;
 					var seatOffset = tableRadius * -1.05;
-					obj.position.y = -seatOffset;
+					obj.position.set(0, -seatOffset, -seatZPos);
+					obj.rotation.set(Math.PI/2, Math.PI, 0);
+					obj.scale.set(tableHorizScale, tableVertScale, tableHorizScale);
 					models.playerIndicator = obj;
 
 					// Add an invisible copy to the scene, so that textures ready when a game starts.
@@ -871,4 +867,3 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 	exports.idleCheck = idleCheck;
 	exports.idleClear = idleClear;
 })(window.Utils = window.Utils || {}, window.Models = window.Models || {}, window.Sounds = window.Sounds || {});
-
