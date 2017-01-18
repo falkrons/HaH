@@ -13,18 +13,21 @@ function dealCards()
 	// check that requester is in game
 	if( !game.playerForSocket(this) ){
 		this.emit('error', 'Anonymous clients can\'t deal');
+		console.log('['+this.gameId+'] Anon client can\'t deal');
 		return;
 	}
 
 	// check that the time is right
 	if(game.state !== 'roundFinished'){
 		this.emit('error', 'Unexpected signal "dealCards"');
+		console.log('['+this.gameId+'] Unexpected signal "dealCards"');
 		return;
 	}
 
 	// check for minimum player count
 	if(game.turnOrder.length < 3){
 		this.emit('error', 'Too few players to deal');
+		console.log('['+this.gameId+'] Too few players to deal');
 		return;
 	}
 
@@ -63,6 +66,8 @@ function dealCards()
 			game.turnOrder[game.czar].id);
 	}
 
+	console.log('['+this.gameId+'] Dealing cards');
+
 	// prompt observers to show updated hands
 	this.server.to(game.id+'_clients').emit('dealCards',
 		10 + (structs.Deck.blackCardList[black].numDraws || 0),
@@ -88,6 +93,7 @@ function roundStart()
 		return;
 	}
 
+	console.log('['+this.gameId+'] Czar has confirmed black card');
 	game.state = 'playerSelectionPending';
 	this.server.to(game.id+'_clients').emit('roundStart');
 }

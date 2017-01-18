@@ -14,16 +14,19 @@ function joinRequest(id, displayName)
 
 	if( game.lockIds && game.lockIds.indexOf(id) === -1 ) {
 		this.emit('error', 'This game is locked to certain players.');
+		console.log('['+this.gameId+'] Player join rejected: non-VIP request');
 		return;
 	}
 
 	// check if this player is already pending or joined
 	if( game.playerForSocket(this) ){
 		this.emit('error', 'You are already a player. Ignoring redundant request.');
+		console.log('['+this.gameId+'] Player join rejected: already in game');
 		return;
 	}
 	else if( game.joinRequestForSocket(this) ){
 		this.emit('error', 'You already have a pending join request. Ignoring redundant request.');
+		console.log('['+this.gameId+'] Player join rejected: prior request pending');
 		return;
 	}
 
@@ -40,6 +43,7 @@ function joinRequest(id, displayName)
 	else if( game.turnOrder.length >= config.maxPlayers )
 	{
 		this.emit('playerJoinDenied', 'Game is already full.');
+		console.log('['+this.gameId+'] Player join rejected: room is full');
 	}
 
 	// otherwise ask current players to join
@@ -47,7 +51,7 @@ function joinRequest(id, displayName)
 	{
 		game.pendingJoinRequests.push(player);
 		this.server.to(game.id+'_players').emit('playerJoinRequest', id, displayName);
-		console.log('Player', displayName, 'is trying to join', game.id);
+		console.log('['+this.gameId+'] Player '+id+' is trying to join');
 	}
 }
 
@@ -63,6 +67,7 @@ function joinDenied(id)
 	var denier = game.playerForSocket(this);
 	if(!denier){
 		this.emit('error', 'Only current players can deny a join request');
+		console.log('['+this.gameId+'] Player '+denier.id+' submitted invalid join denial');
 		return;
 	}
 
@@ -70,6 +75,7 @@ function joinDenied(id)
 	var request = game.joinRequestForId(id);
 	if(!request){
 		this.emit('error', 'No such pending request. Ignoring denial.');
+		console.log('['+this.gameId+'] Player '+denier.id+' submitted non-existent join denial');
 		return;
 	}
 
@@ -81,6 +87,7 @@ function joinDenied(id)
 	request.socket.emit('playerJoinDenied', request.id, request.displayName, 'A player has denied your request to join.');
 	this.server.to(game.id+'_players').emit('playerJoinDenied', request.id, request.displayName,
 		denier.displayName+' has declined '+request.displayName+'\'s request to join.');
+	console.log('['+this.gameId+'] Player '+id+' join rejected');
 }
 
 
@@ -95,6 +102,7 @@ function join(id, displayName)
 	var approver = game.playerForSocket(this);
 	if( game.turnOrder.length >= config.minPlayers && !approver ){
 		this.emit('error', 'Only current players can approve join requests. Ignoring.');
+		console.log('['+this.gameId+'] Player '+approver.id+' submitted invalid join approval');
 		return;
 	}
 
@@ -102,11 +110,13 @@ function join(id, displayName)
 	var player = game.joinRequestForId(id);
 	if(!player){
 		this.emit('error', 'No join request with that ID, ignoring.');
+		console.log('['+this.gameId+'] Player '+approver.id+' submitted non-existent join approval');
 		return;
 	}
 
 	if(game.playerForId(id)){
 		this.emit('error', 'Player '+id+' is already in the game');
+		console.log('['+this.gameId+'] Player '+approver.id+' approved existing player');
 		return;
 	}
 
@@ -124,7 +134,7 @@ function join(id, displayName)
 		var seatIndex = game.turnOrder.findIndex(p => p.seatNum === seat);
 		return seatIndex < 0;
 	});
-	console.log('seating player at', player.seatNum);
+	console.log('['+this.gameId+'] Seating player '+player.id+' at '+player.seatNum);
 
 	// add player to the end of the turn order
 	var placeInTurnOrder = game.turnOrder.findIndex(p => p.seatNum > player.seatNum);
@@ -133,13 +143,12 @@ function join(id, displayName)
 	// push back czar index if joiner is before them
 	if(placeInTurnOrder <= game.czar){
 		game.czar = (game.czar+1) % game.turnOrder.length;
-		console.log('incrementing czar to', game.czar);
+		console.log('['+this.gameId+'] Advancing czar index to '+game.czar+' because of join');
 	}
 
 	// let other clients know about new player
 	this.server.to(game.id+'_clients').emit('playerJoin', player.id, player.displayName, game.getCleanTurnOrder());
-
-	console.log('Player', displayName, 'has joined game', game.id);
+	console.log('['+this.gameId+'] Player '+player.displayName+' ('+player.id+') has joined');
 }
 
 
@@ -154,6 +163,7 @@ function leave(id, displayName, message, reason)
 	var player = game.playerForId(id);
 	if(!player){
 		this.emit('error', 'No such player with id '+id);
+		console.log('['+this.gameId+'] Non-player '+id+' trying to leave');
 		return;
 	}
 
@@ -161,6 +171,7 @@ function leave(id, displayName, message, reason)
 	var kicker = game.playerForSocket(this);
 	if(!kicker){
 		this.emit('error', 'Only current players can leave the game');
+		console.log('['+this.gameId+'] Non-player '+id+' trying to kick (impossibru!)');
 		return;
 	}
 
@@ -184,14 +195,15 @@ function leave(id, displayName, message, reason)
 	this.server.to(game.id+'_clients').emit('playerLeave',
 		player.id, player.displayName, game.getCleanTurnOrder(), message, reason);
 
-	console.log('Player', player.displayName, 'has left the game.');
+	console.log('['+this.gameId+'] Player '+player.displayName+' ('+player.id+') has left the game');
 
 	// reinitialize game if last player leaves
 	if(game.turnOrder.length === 0){
 		activeGames[this.gameId] = new structs.Game(this.gameId, this.lockIds);
+		console.log('['+this.gameId+'] Resetting game');
 	}
 
-	// game is interrupted, reset
+	// round is interrupted, reset
 	else if(game.turnOrder.length < 3 || index === game.czar){
 		game.resetRound(this.server);
 		game.czar = game.czar % game.turnOrder.length;
@@ -216,6 +228,7 @@ function kickRequest(id)
 	var player = game.playerForId(id);
 	if(!player){
 		this.emit('error', 'No player with id '+id);
+		console.log('['+this.gameId+'] Non-player '+id+' cannot be kicked');
 		return;
 	}
 
@@ -223,15 +236,17 @@ function kickRequest(id)
 	var kicker = game.playerForSocket(this);
 	if(!kicker){
 		this.emit('error', 'Only players can vote to kick');
+		console.log('['+this.gameId+'] Non-player '+id+' cannot kick');
 		return;
 	}
 
 	if(game.kickVoteForId(id)){
 		this.emit('error', 'Vote to kick player already in progress');
+		console.log('['+this.gameId+'] Kick vote already in progress for '+id);
 		return;
 	}
 
-	console.log('Voting to kick', player.id);
+	console.log('['+this.gameId+'] Voting to kick '+player.id);
 
 	// vote to kick
 	game.pendingKickVotes.push({
@@ -258,23 +273,27 @@ function kickResponse(id, displayName, response)
 	// check if vote in progress
 	if(!vote){
 		this.emit('error', 'No active vote to kick '+id);
+		console.log('['+this.gameId+'] No such vote '+id);
 		return;
 	}
 
 	// check if kicker is actually in the game
 	else if(!voter){
 		this.emit('error', 'Only players can vote to kick.');
+		console.log('['+this.gameId+'] Non-player '+voter.id+' cannot vote to kick');
 		return;
 	}
 
 	// check for multiple votes
 	else if(vote.voters.indexOf(voter) > -1){
 		this.emit('error', 'Can only vote once');
+		console.log('['+this.gameId+'] Voter '+voter.id+' cannot vote again');
 		return;
 	}
 
 	else if(voter.id === vote.player.id){
 		this.emit('error', 'Cannot participate in vote to kick yourself.');
+		console.log('['+this.gameId+'] Cannot vote to kick yourself');
 		return;
 	}
 
@@ -287,7 +306,7 @@ function kickResponse(id, displayName, response)
 	if(vote.yes >= vote.majority)
 	{
 		// vote passes
-		console.log('Vote to kick', vote.player.displayName, 'passes');
+		console.log('['+this.gameId+'] Vote to kick '+vote.player.displayName+' passes');
 		leave.call(this, vote.player.id, vote.player.displayName,
 			vote.player.displayName+' was kicked from the game.', 'vote-kicked');
 
@@ -298,7 +317,7 @@ function kickResponse(id, displayName, response)
 	else if(vote.no >= vote.majority)
 	{
 		// vote fails
-		console.log('Vote to kick', vote.player.displayName, 'fails');
+		console.log('['+this.gameId+'] Vote to kick', vote.player.displayName, 'fails');
 		this.server.to(game.id+'_players').emit('kickVoteAborted', vote.player.id, vote.player.displayName);
 
 		// clear pending vote
