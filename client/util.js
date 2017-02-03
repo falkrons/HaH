@@ -296,7 +296,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
 	// ugh, nasty hack
 	var fontScale;
-	if( /AltspaceVR-App build-[0-9a-f]{7} Mobile/.test(window.navigator.userAgent) ){
+	if( /AltspaceVR-App.*Mobile/.test(window.navigator.userAgent) ){
 		fontScale = 0.85;
 	}
 	else {
