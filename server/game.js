@@ -31,6 +31,7 @@ function dealCards()
 		return;
 	}
 
+
 	// deal the black card
 	if(game.currentBlackCard !== null){
 		game.deck.discardBlackCards([game.currentBlackCard]);
@@ -66,7 +67,7 @@ function dealCards()
 			game.turnOrder[game.czar].id);
 	}
 
-	console.log('['+this.gameId+'] Dealing cards');
+	console.log(`[${this.gameId}] Dealing cards, czar is ${game.turnOrder[game.czar].displayName}`);
 
 	// prompt observers to show updated hands
 	this.server.to(game.id+'_clients').emit('dealCards',
@@ -93,7 +94,7 @@ function roundStart()
 		return;
 	}
 
-	console.log('['+this.gameId+'] Czar has confirmed black card');
+	console.log(`[${this.gameId}] Czar ${game.turnOrder[game.czar].displayName} has revealed black card`);
 	game.state = 'playerSelectionPending';
 	this.server.to(game.id+'_clients').emit('roundStart');
 }
@@ -131,6 +132,7 @@ function cardSelection(indexes)
 	}
 
 	// save hand
+	console.log(`[${this.gameId}] Player ${player.displayName} has submitted card(s).`);
 	player.selection = indexes;
 	this.server.to(game.id+'_clients').emit('cardSelection', indexes, player.id);
 
@@ -142,6 +144,7 @@ function checkForLastSelection(game)
 {
 	// check for last submission
 	var submissions = {};
+	var pendingUsers = [];
 	for(var i=0; i<game.turnOrder.length; i++)
 	{
 		var p = game.turnOrder[i];
@@ -149,18 +152,25 @@ function checkForLastSelection(game)
 		// we're done here if someone hasn't selected yet
 		if(i === game.czar)
 			continue;
-		else if(p.hand.length > 0 && p.selection === null)
-			return;
+		else if(p.hand.length > 0 && p.selection === null){
+			pendingUsers.push(p);
+		}
 		else if(p.selection !== null)
 			submissions[p.id] = p.selection.map(function(c){
 				return structs.Deck.whiteCardList[ p.hand[c] ];
 			});
 	}
 
-	// move on to the next stage if everyone has submitted
-	game.state = 'czarSelectionPending';
-	game.submissions = submissions;
-	this.server.to(game.id+'_clients').emit('cardSelectionComplete', submissions);
+	if(pendingUsers.length > 0){
+		console.log(`[${this.gameId}] Waiting for ${pendingUsers[0].displayName} and ${pendingUsers.length - 1} others.`);
+	}
+	else {
+		// move on to the next stage if everyone has submitted
+		console.log(`[${this.gameId}] All players in, begin judging.`);
+		game.state = 'czarSelectionPending';
+		game.submissions = submissions;
+		this.server.to(game.id+'_clients').emit('cardSelectionComplete', submissions);
+	}
 }
 
 function presentSubmission(playerId)
@@ -210,8 +220,11 @@ function winnerSelection(playerId)
 		}
 	}
 
-	if(game.playerForId(playerId))
-		game.playerForId(playerId).wins.push( game.currentBlackCard );
+	var player = game.playerForId(playerId);
+	if(player){
+		player.wins.push( game.currentBlackCard );
+		console.log(`[${this.gameId}] Player ${player.displayName} wins.`);
+	}
 
 	this.server.to(game.id+'_clients').emit('winnerSelection', playerId);
 	game.state = 'roundFinished';
