@@ -1068,12 +1068,15 @@ var lockIds = null;
 
 		// congratulate winner
 		var winnerSeat = getSeat(playerId);
-		var confetti = new Utils.Confetti({delay: 1000});
-		confetti.position.copy(winnerSeat.position);
-		confetti.position.setZ( confetti.position.z + 1.1 );
-		confetti.quaternion.copy(winnerSeat.quaternion);
-		root.add(confetti);
-		Sounds.playSound('fanfare');
+		if(winnerSeat){
+			var confetti = new Utils.Confetti({delay: 1000});
+			confetti.position.copy(winnerSeat.position);
+			confetti.position.setZ( confetti.position.z + 1.1 );
+			confetti.quaternion.copy(winnerSeat.quaternion);
+			root.add(confetti);
+
+			winnerSeat.addPoint();
+		}
 
 		// award black card
 		var winnerCrown = scene.getObjectByName('crown_'+playerId);
@@ -1083,7 +1086,8 @@ var lockIds = null;
 		else {
 			blackCard.parent.remove(blackCard);
 		}
-		winnerSeat.addPoint();
+
+		Sounds.playSound('fanfare');
 
 		submissionMap = {};
 		selection = [];
