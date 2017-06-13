@@ -1,7 +1,7 @@
 'use strict';
 
-var players = require('./players.js'),
-	structs = require('./structures.js');
+require('./players.js');
+var structs = require('./structures.js');
 
 var activeGames = structs.activeGames;
 
@@ -13,20 +13,24 @@ function dealCards()
 	// check that requester is in game
 	if( !game.playerForSocket(this) ){
 		this.emit('error', 'Anonymous clients can\'t deal');
+		console.log('['+this.gameId+'] Anon client can\'t deal');
 		return;
 	}
 
 	// check that the time is right
 	if(game.state !== 'roundFinished'){
 		this.emit('error', 'Unexpected signal "dealCards"');
+		console.log('['+this.gameId+'] Unexpected signal "dealCards"');
 		return;
 	}
 
 	// check for minimum player count
 	if(game.turnOrder.length < 3){
 		this.emit('error', 'Too few players to deal');
+		console.log('['+this.gameId+'] Too few players to deal');
 		return;
 	}
+
 
 	// deal the black card
 	if(game.currentBlackCard !== null){
@@ -63,6 +67,8 @@ function dealCards()
 			game.turnOrder[game.czar].id);
 	}
 
+	console.log(`[${this.gameId}] Dealing cards, czar is ${game.turnOrder[game.czar].displayName}`);
+
 	// prompt observers to show updated hands
 	this.server.to(game.id+'_clients').emit('dealCards',
 		10 + (structs.Deck.blackCardList[black].numDraws || 0),
@@ -88,6 +94,7 @@ function roundStart()
 		return;
 	}
 
+	console.log(`[${this.gameId}] Czar ${game.turnOrder[game.czar].displayName} has revealed black card`);
 	game.state = 'playerSelectionPending';
 	this.server.to(game.id+'_clients').emit('roundStart');
 }
@@ -125,6 +132,7 @@ function cardSelection(indexes)
 	}
 
 	// save hand
+	console.log(`[${this.gameId}] Player ${player.displayName} has submitted card(s).`);
 	player.selection = indexes;
 	this.server.to(game.id+'_clients').emit('cardSelection', indexes, player.id);
 
@@ -136,6 +144,7 @@ function checkForLastSelection(game)
 {
 	// check for last submission
 	var submissions = {};
+	var pendingUsers = [];
 	for(var i=0; i<game.turnOrder.length; i++)
 	{
 		var p = game.turnOrder[i];
@@ -143,18 +152,25 @@ function checkForLastSelection(game)
 		// we're done here if someone hasn't selected yet
 		if(i === game.czar)
 			continue;
-		else if(p.hand.length > 0 && p.selection === null)
-			return;
+		else if(p.hand.length > 0 && p.selection === null){
+			pendingUsers.push(p);
+		}
 		else if(p.selection !== null)
 			submissions[p.id] = p.selection.map(function(c){
 				return structs.Deck.whiteCardList[ p.hand[c] ];
 			});
 	}
 
-	// move on to the next stage if everyone has submitted
-	game.state = 'czarSelectionPending';
-	game.submissions = submissions;
-	this.server.to(game.id+'_clients').emit('cardSelectionComplete', submissions);
+	if(pendingUsers.length > 0){
+		console.log(`[${this.gameId}] Waiting for ${pendingUsers[0].displayName} and ${pendingUsers.length - 1} others.`);
+	}
+	else {
+		// move on to the next stage if everyone has submitted
+		console.log(`[${this.gameId}] All players in, begin judging.`);
+		game.state = 'czarSelectionPending';
+		game.submissions = submissions;
+		this.server.to(game.id+'_clients').emit('cardSelectionComplete', submissions);
+	}
 }
 
 function presentSubmission(playerId)
@@ -177,8 +193,8 @@ function presentSubmission(playerId)
 function winnerSelection(playerId)
 {
 	var game = activeGames[this.gameId];
-	var player = game.playerForSocket(this);
-	if(!player || player !== game.turnOrder[game.czar]){
+	var currentPlayer = game.playerForSocket(this);
+	if(!currentPlayer || currentPlayer !== game.turnOrder[game.czar]){
 		this.emit('error', 'You are not the czar');
 		return;
 	}
@@ -204,8 +220,12 @@ function winnerSelection(playerId)
 		}
 	}
 
-	game.playerForId(playerId).wins.push( game.currentBlackCard );
-	
+	var player = game.playerForId(playerId);
+	if(player){
+		player.wins.push( game.currentBlackCard );
+		console.log(`[${this.gameId}] Player ${player.displayName} wins.`);
+	}
+
 	this.server.to(game.id+'_clients').emit('winnerSelection', playerId);
 	game.state = 'roundFinished';
 	game.czar = (game.czar+1) % game.turnOrder.length;
@@ -219,4 +239,3 @@ module.exports = {
 	presentSubmission: presentSubmission,
 	winnerSelection: winnerSelection
 };
-

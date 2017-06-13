@@ -40,7 +40,7 @@ Deck.loadCards = function()
 			// try to read ones ending in .json
 			if( /\.json$/i.test(name) )
 			{
-				fs.readFile( libpath.join(__dirname, '../decks/', name), 'utf8', function(err, data)
+				fs.readFile( libpath.join(__dirname, '../decks/', name), 'utf8', function(err, json)
 				{
 					if(err){
 						console.error(err);
@@ -48,7 +48,7 @@ Deck.loadCards = function()
 					}
 
 					try {
-						var data = JSON.parse(data);
+						var data = JSON.parse(json);
 					}
 					catch(e){
 						data = null;
@@ -61,8 +61,8 @@ Deck.loadCards = function()
 						for(var j=0; j<data.white.length; j++){
 							data.white[j].index = w++;
 						}
-						for(var j=0; j<data.black.length; j++){
-							data.black[j].index = b++;
+						for(var k=0; k<data.black.length; k++){
+							data.black[k].index = b++;
 						}
 
 						Deck.whiteCardList.push.apply(Deck.whiteCardList, data.white);
@@ -89,7 +89,6 @@ Deck.prototype.dealWhiteCards = function(count)
 		hand.push( this.whiteDeck.pop() );
 	}
 
-	console.log('Dealing white', hand);
 	return hand;
 }
 
@@ -101,19 +100,16 @@ Deck.prototype.dealBlackCard = function()
 		this.blackDiscard = [];
 	}
 
-	console.log('Dealing black', this.blackDeck[this.blackDeck.length-1]);
 	return this.blackDeck.pop();
 }
 
 Deck.prototype.discardWhiteCards = function(cards)
 {
-	console.log('Discarding white', cards);
 	this.whiteDiscard.push.apply(this.whiteDiscard, cards);
 }
 
 Deck.prototype.discardBlackCards = function(cards)
 {
-	console.log('Discarding black', cards);
 	this.blackDiscard.push.apply(this.blackDiscard, cards);
 }
 
@@ -158,6 +154,7 @@ function Player(playerId, displayName, socket)
 	this.displayName = displayName;
 	this.socket = socket;
 
+	this.seatNum = null;
 	this.hand = [];
 	this.selection = null;
 	this.wins = [];
@@ -170,10 +167,13 @@ function Player(playerId, displayName, socket)
 	particular game in progress
 ***********************************************/
 
-function Game(id)
+function Game(id, lockIds)
 {
 	// the game's id
 	this.id = id;
+
+	// A list of user ids that are allowed to join the game.
+	this.lockIds = lockIds;
 
 	// this particular game's order of cards
 	this.deck = new Deck();
@@ -259,10 +259,9 @@ Game.prototype.kickVoteForId = function(id)
 
 Game.prototype.getCleanTurnOrder = function()
 {
-	var self = this;
 	return this.turnOrder.map(function(cur){
 		var winCards = cur.wins.map(x => Deck.blackCardList[x]);
-		return {id: cur.id, displayName: cur.displayName, handLength: cur.handLength, wins: winCards};
+		return {id: cur.id, displayName: cur.displayName, seatNum: cur.seatNum, handLength: cur.handLength, wins: winCards};
 	});
 }
 
@@ -295,4 +294,3 @@ module.exports = {
 	// maps game ids to Game objects
 	activeGames: {}
 };
-

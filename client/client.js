@@ -1,13 +1,5 @@
+/* global TWEEN, THREE, altspace, Utils, Models, Behaviors, Game */
 'use strict';
-
-// do google analytics tracking
-(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-ga('create', 'UA-78752535-1', 'auto');
-ga('send', 'pageview');
-
 
 // force define String.trim
 if(typeof(String.prototype.trim) === "undefined")
@@ -48,10 +40,11 @@ var renderer;
 var camera;
 var scene = new THREE.Scene();
 var root = new THREE.Object3D();
+var gameId;
 scene.add(root);
 
 var gameObjects = {};
-var tableRadius = 1.75;
+var tableRadius = 1.65;
 
 var staticPage = [
 	'<p style="width:250px; height:350px; background-color:black; color:white;'+
@@ -71,7 +64,7 @@ if( altspace.inClient )
 {
 	// convert all this altspace craziness into a normal coordinate space
 	// i.e. units in meters, z-axis up, with origin on the floor
-	renderer = altspace.getThreeJSRenderer();
+	renderer = altspace.getThreeJSRenderer({initialSerializationBufferSize: 640000});
 	altspace.getEnclosure().then(function(enc)
 	{
 		// reset coordinate space
@@ -81,7 +74,7 @@ if( altspace.inClient )
 		root.userData = enc;
 
 		var enclosureRadius = 0.5 * Math.min(enc.innerWidth, enc.innerDepth) / enc.pixelsPerMeter;
-		tableRadius = Math.min(tableRadius, enclosureRadius);
+		tableRadius = Math.min(tableRadius, enclosureRadius - 0.3);
 
 		// render 2d version if space is flat
 		if( enc.innerDepth < 10 ){
@@ -92,9 +85,11 @@ if( altspace.inClient )
 		}
 	});
 
-	altspace.open(
-		'https://docs.google.com/forms/d/1UHU5_WUsz9hoDdkiyiouvl5u49NgNUSA_ZS6qyXOtJk/viewform',
-		'_experience', {icon: window.location.origin+'/static/icon.png', hidden: true});
+	if( ! /[&?]noPopup/.test(window.location.search) ){
+		altspace.open(
+			'https://goo.gl/forms/nJwTnvb6Zoc4ezK93', '_experience',
+			{icon: window.location.origin+'/static/icon.png', hidden: true});
+	}
 }
 else
 {
@@ -114,6 +109,8 @@ else
 	camera.lookAt( new THREE.Vector3(0, 0, 0) );
 	root.add(camera);
 
+	root.add(new THREE.AmbientLight(0xffffff));
+
 	altspace.utilities.shims.cursor.init(scene, camera, {renderer: renderer});
 
 	Utils.preloadAssets(init);
@@ -125,29 +122,8 @@ function init()
 	root.addEventListener('cursorenter', Utils.idleClear );
 	root.addEventListener('cursorleave', Utils.idleCheck );
 
-	// add suggestion box
-	/*var suggest = new THREE.Mesh(
-		new THREE.BoxGeometry(0.3, 0.3, 0.3),
-		new THREE.MeshBasicMaterial({map: window.suggestionTexture})
-	);
-	var x = root.userData.innerWidth/2 / root.userData.pixelsPerMeter - 0.15,
-		y = root.userData.innerDepth/2 / root.userData.pixelsPerMeter - 0.15,
-		z = root.userData.innerHeight / root.userData.pixelsPerMeter - 0.15;
-	suggest.position.set(x,y,z);
-	suggest.rotateX(Math.PI/2);
-	root.add(suggest);
-	suggest.addEventListener('cursorup', toggleSuggestionForm);
-	suggest.addBehavior( new Behaviors.CursorFeedback() );
-	*/
-
 	// add table surface
-	var table = new THREE.Mesh(
-		new THREE.CylinderGeometry(tableRadius, tableRadius, 0.05, 36, 1),
-		new THREE.MeshBasicMaterial({color: 0x226022})
-	);
-	table.position.setZ(0.8);
-	table.rotation.set(Math.PI/2, 0, 0);
-	root.add(table);
+	root.add(Models.table);
 
 	// add game box
 	gameObjects.box = Models.box;
@@ -155,6 +131,8 @@ function init()
 	gameObjects.box.rotation.set(Math.PI, 0, 0);
 	gameObjects.box.addBehavior(new Behaviors.CursorFeedback());
 	root.add(gameObjects.box);
+
+	root.add(Models.boxHoverEffect);
 
 	// add a rotating presentation space
 	gameObjects.presentation = new THREE.Object3D();
@@ -171,7 +149,7 @@ function init()
 	root.add(gameObjects.presentation);
 
 	// grab game id from URL
-	var gameId = /[?&]gameId=(\w+)\b/.exec(window.location.search);
+	gameId = /[?&]gameId=(\w+)\b/.exec(window.location.search);
 	if(gameId) gameId = gameId[1];
 
 	// initialize game
@@ -195,17 +173,18 @@ function init()
 
 function render(timestamp)
 {
-	// update camera if necessary	
+	// update camera if necessary
 	if(camera)
 	{
 		// get client table position
-		var seat = root.getObjectByName(Game.playerInfo.id);
+		var seat = root.getObjectByName('seat_'+Game.playerInfo.id);
 		if(seat && camera.fov !== 90)
 		{
-			camera.fov = 100;
+			camera.fov = 90;
 			camera.updateProjectionMatrix();
-			camera.position.set(0,-0.1,-0.2);
+			camera.position.set(0,-0.5, 0.1);
 			camera.rotation.set(1.5, 0, 0);
+			camera.lookAt( new THREE.Vector3(0, 0, 0) );
 			seat.add(camera);
 		}
 		else if(!seat)
@@ -225,6 +204,8 @@ function render(timestamp)
 
 	// animate
 	scene.updateAllBehaviors();
+
+	TWEEN.update(timestamp);
 
 	// finally, render
 	renderer.render(scene, camera);

@@ -1,9 +1,9 @@
 'use strict';
 
 const request = require('request'),
-	config = require('../config.json');
+	config = require('./config.js');
 
-function feedbackRequest(req, res, next)
+function feedbackRequest(req, res)
 {
 	if(!req.body){
 		res.status(400).send('No JSON body supplied');
@@ -53,7 +53,7 @@ function feedbackRequest(req, res, next)
 			message: `Feedback successfully submitted. See https://github.com/falkrons/HaH/issues/${body.number} for details.`,
 			issue: body.number
 		});
-	});	
+	});
 }
 
 exports.feedbackRequest = feedbackRequest;
